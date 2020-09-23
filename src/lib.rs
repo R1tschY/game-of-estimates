@@ -1,3 +1,7 @@
+pub mod actor;
 
-pub mod server;
+pub mod game;
+pub mod game_server;
+pub mod player;
 
+pub mod remote;
