@@ -1,12 +1,15 @@
 use crate::actor::{Actor, Addr};
 use crate::player::{PlayerAddr, PlayerMessage};
+use futures_util::SinkExt;
 use rand::distributions::{Alphanumeric, Uniform};
 use rand::Rng;
+use std::collections::HashMap;
 use tokio::sync::mpsc;
 
 #[derive(Debug)]
 pub enum GameMessage {
-    InvitePlayer(PlayerAddr),
+    InvitePlayer(String, PlayerAddr),
+    PlayerLeft(String),
 }
 
 pub struct Game {
@@ -14,17 +17,21 @@ pub struct Game {
     addr: mpsc::Sender<GameMessage>,
 
     id: String,
-    players: Vec<PlayerAddr>,
+    players: HashMap<String, PlayerAddr>,
 }
 
 impl Game {
-    pub fn new(id: &str, creator: PlayerAddr) -> Self {
+    pub fn new(id: &str, creator: (String, PlayerAddr)) -> Self {
         let (addr, channel) = mpsc::channel(100);
+
+        let mut players = HashMap::new();
+        players.insert(creator.0, creator.1);
+
         Self {
             channel,
             addr,
             id: id.to_string(),
-            players: vec![creator],
+            players,
         }
     }
 
@@ -49,22 +56,25 @@ impl Actor for Game {
         self.channel.recv().await
     }
 
-    async fn setup(&mut self) {
-        for mut player in &mut self.players {
-            player
-                .send(PlayerMessage::Invite(self.id.clone(), self.addr.clone()))
-                .await; // TODO: Result
-        }
-    }
-
     async fn on_message(&mut self, msg: Self::Message) {
         match msg {
-            GameMessage::InvitePlayer(mut player) => {
+            GameMessage::InvitePlayer(player_id, mut player) => {
                 player
                     .send(PlayerMessage::Invite(self.id.clone(), self.addr()))
                     .await;
-                self.players.push(player)
+                self.players.insert(player_id, player);
             }
+            GameMessage::PlayerLeft(player) => {
+                self.players.remove(&player);
+            }
+        }
+    }
+
+    async fn setup(&mut self) {
+        for mut player in self.players.values_mut() {
+            player
+                .send(PlayerMessage::Invite(self.id.clone(), self.addr.clone()))
+                .await; // TODO: Result
         }
     }
 }

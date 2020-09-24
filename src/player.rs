@@ -1,5 +1,5 @@
 use crate::actor::{Actor, Addr};
-use crate::game::GameAddr;
+use crate::game::{GameAddr, GameMessage};
 use crate::game_server::{GameServerAddr, GameServerMessage};
 use crate::player::RejectReason::CreateGameError;
 use crate::remote::{RemoteConnection, RemoteMessage};
@@ -76,6 +76,7 @@ impl Player {
                     self.game_id = Some("<to be created>".to_string()); // as marker
                     self.game_server
                         .send(GameServerMessage::Create {
+                            player_id: self.id.clone(),
                             player: self.addr(),
                         })
                         .await; // TODO: Result
@@ -91,6 +92,7 @@ impl Player {
                     self.game_server
                         .send(GameServerMessage::Join {
                             game,
+                            player_id: self.id.clone(),
                             player: self.addr(),
                         })
                         .await; // TODO: Result
@@ -117,10 +119,7 @@ impl Actor for Player {
     }
 
     async fn run(&mut self) {
-        let welcome = RemoteMessage::Welcome {
-            player_id: self.id().to_string(),
-        };
-        self.remote.send(welcome).await.unwrap();
+        self.setup().await;
 
         let this = self; // needed because #[async_trait] ignores macros
         loop {
@@ -148,6 +147,22 @@ impl Actor for Player {
                     }
                 }
             }
+        }
+
+        this.tear_down().await;
+    }
+
+    async fn setup(&mut self) {
+        let welcome = RemoteMessage::Welcome {
+            player_id: self.id().to_string(),
+        };
+        self.remote.send(welcome).await.unwrap();
+    }
+
+    async fn tear_down(&mut self) {
+        if let Some(mut game) = self.game.as_mut() {
+            game.send(GameMessage::PlayerLeft(self.id.to_string()))
+                .await;
         }
     }
 

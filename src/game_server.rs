@@ -11,8 +11,15 @@ use tokio::sync::Mutex;
 
 #[derive(Debug)]
 pub enum GameServerMessage {
-    Join { game: String, player: PlayerAddr },
-    Create { player: PlayerAddr },
+    Join {
+        game: String,
+        player_id: String,
+        player: PlayerAddr,
+    },
+    Create {
+        player_id: String,
+        player: PlayerAddr,
+    },
 }
 
 pub struct GameServer {
@@ -63,9 +70,15 @@ impl Actor for GameServer {
 
     async fn on_message(&mut self, msg: Self::Message) {
         match msg {
-            GameServerMessage::Join { game, mut player } => {
+            GameServerMessage::Join {
+                game,
+                player_id,
+                mut player,
+            } => {
                 if let Some(mut game_addr) = self.games.get_mut(&game) {
-                    game_addr.send(GameMessage::InvitePlayer(player)).await; // TODO: Result
+                    game_addr
+                        .send(GameMessage::InvitePlayer(player_id, player))
+                        .await; // TODO: Result
                 } else {
                     player
                         .send(PlayerMessage::Rejected(RejectReason::GameNotFound))
@@ -73,9 +86,12 @@ impl Actor for GameServer {
                 }
             }
 
-            GameServerMessage::Create { mut player } => {
+            GameServerMessage::Create {
+                player_id,
+                mut player,
+            } => {
                 if let Some(game_id) = self.find_new_game_id() {
-                    let game = Game::new(&game_id, player);
+                    let game = Game::new(&game_id, (player_id, player));
                     self.games.insert(game_id, game.addr());
                     tokio::spawn(run_actor(game));
                 } else {
