@@ -1,15 +1,75 @@
-use crate::actor::{Actor, Addr};
-use crate::player::{PlayerAddr, PlayerMessage};
+use std::collections::HashMap;
+
 use futures_util::SinkExt;
 use rand::distributions::{Alphanumeric, Uniform};
 use rand::Rng;
-use std::collections::HashMap;
+use serde::{Deserialize, Serialize};
 use tokio::sync::mpsc;
+
+use crate::actor::{Actor, Addr};
+use crate::player::PlayerAddr;
 
 #[derive(Debug)]
 pub enum GameMessage {
-    InvitePlayer(String, PlayerAddr),
+    JoinRequest(String, PlayerAddr),
     PlayerLeft(String),
+}
+
+#[derive(Debug, PartialEq, Copy, Clone)]
+pub enum RejectReason {
+    GameNotFound,
+    CreateGameError,
+    JoinGameError,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct GameState {
+    cards: Vec<String>,
+    open: bool,
+    votes: HashMap<String, Option<String>>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct PlayerState {
+    id: String,
+    voter: bool,
+}
+
+#[derive(Debug, Clone)]
+pub enum GamePlayerMessage {
+    Welcome(String, GameAddr, GameState, Vec<PlayerState>),
+    Rejected(RejectReason),
+
+    OtherPlayerJoined(PlayerState),
+    OtherPlayerChanged(PlayerState),
+    OtherPlayerLeft(String),
+    GameStateChanged(GameState),
+}
+
+struct GamePlayer {
+    addr: PlayerAddr,
+
+    id: String,
+    voter: bool,
+    vote: Option<String>,
+}
+
+impl GamePlayer {
+    pub fn new(id: &str, addr: PlayerAddr, voter: bool) -> Self {
+        Self {
+            id: id.to_string(),
+            addr,
+            voter,
+            vote: None,
+        }
+    }
+
+    fn to_state(&self) -> PlayerState {
+        PlayerState {
+            id: self.id.clone(),
+            voter: self.voter,
+        }
+    }
 }
 
 pub struct Game {
@@ -17,7 +77,9 @@ pub struct Game {
     addr: mpsc::Sender<GameMessage>,
 
     id: String,
-    players: HashMap<String, PlayerAddr>,
+    cards: Vec<String>,
+    players: HashMap<String, GamePlayer>,
+    open: bool,
 }
 
 impl Game {
@@ -25,13 +87,26 @@ impl Game {
         let (addr, channel) = mpsc::channel(100);
 
         let mut players = HashMap::new();
-        players.insert(creator.0, creator.1);
+        let game_player = GamePlayer::new(&creator.0, creator.1, false);
+        players.insert(creator.0, game_player);
 
         Self {
             channel,
             addr,
+
             id: id.to_string(),
             players,
+            open: false,
+            cards: vec![
+                "0".to_string(),
+                "1/2".to_string(),
+                "1".to_string(),
+                "2".to_string(),
+                "3".to_string(),
+                "5".to_string(),
+                "8".to_string(),
+                "13".to_string(),
+            ],
         }
     }
 
@@ -39,6 +114,60 @@ impl Game {
         rand::thread_rng()
             .sample(&Uniform::from(0..10u32.pow(digits as u32)))
             .to_string()
+    }
+
+    async fn add_player(&mut self, player_id: String, mut player: PlayerAddr) {
+        let game_player = GamePlayer::new(&player_id, player.clone(), true);
+        let game_player_state = game_player.to_state();
+        self.players.insert(player_id, game_player);
+
+        // welcome
+        let players_state = self.players.values().map(|p| p.to_state()).collect();
+        player
+            .send(GamePlayerMessage::Welcome(
+                self.id.clone(),
+                self.addr(),
+                self.to_state(),
+                players_state,
+            ))
+            .await;
+
+        // introduce
+        for mut player in self.players.values_mut() {
+            if &player.id != &game_player_state.id {
+                player
+                    .addr
+                    .send(GamePlayerMessage::OtherPlayerJoined(
+                        game_player_state.clone(),
+                    ))
+                    .await;
+            }
+        }
+    }
+
+    async fn remove_player(&mut self, player_id: &str) {
+        self.players.remove(player_id);
+
+        // announce
+        for mut player in self.players.values_mut() {
+            player
+                .addr
+                .send(GamePlayerMessage::OtherPlayerLeft(player_id.to_string()))
+                .await;
+        }
+    }
+
+    fn to_state(&self) -> GameState {
+        GameState {
+            cards: self.cards.clone(),
+            open: self.open,
+            votes: self
+                .players
+                .values()
+                .filter(|p| p.voter)
+                .map(|p| (p.id.clone(), p.vote.clone()))
+                .collect(),
+        }
     }
 }
 
@@ -58,22 +187,24 @@ impl Actor for Game {
 
     async fn on_message(&mut self, msg: Self::Message) {
         match msg {
-            GameMessage::InvitePlayer(player_id, mut player) => {
-                player
-                    .send(PlayerMessage::Invite(self.id.clone(), self.addr()))
-                    .await;
-                self.players.insert(player_id, player);
-            }
-            GameMessage::PlayerLeft(player) => {
-                self.players.remove(&player);
-            }
+            GameMessage::JoinRequest(player_id, player) => self.add_player(player_id, player).await,
+            GameMessage::PlayerLeft(player) => self.remove_player(&player).await,
         }
     }
 
     async fn setup(&mut self) {
+        let players_state: Vec<PlayerState> = self.players.values().map(|p| p.to_state()).collect();
+        let game_state = self.to_state();
+
         for mut player in self.players.values_mut() {
             player
-                .send(PlayerMessage::Invite(self.id.clone(), self.addr.clone()))
+                .addr
+                .send(GamePlayerMessage::Welcome(
+                    self.id.clone(),
+                    self.addr.clone(),
+                    game_state.clone(),
+                    players_state.clone(),
+                ))
                 .await; // TODO: Result
         }
     }

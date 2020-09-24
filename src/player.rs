@@ -1,7 +1,6 @@
 use crate::actor::{Actor, Addr};
-use crate::game::{GameAddr, GameMessage};
+use crate::game::{GameAddr, GameMessage, GamePlayerMessage};
 use crate::game_server::{GameServerAddr, GameServerMessage};
-use crate::player::RejectReason::CreateGameError;
 use crate::remote::{RemoteConnection, RemoteMessage};
 use async_trait::async_trait;
 use log::{error, info, warn};
@@ -9,22 +8,9 @@ use rand::distributions::Alphanumeric;
 use rand::Rng;
 use tokio::sync::mpsc;
 
-#[derive(Debug, PartialEq)]
-pub enum RejectReason {
-    GameNotFound,
-    CreateGameError,
-    JoinGameError,
-}
-
-#[derive(Debug)]
-pub enum PlayerMessage {
-    Invite(String, GameAddr),
-    Rejected(RejectReason),
-}
-
 pub struct Player {
-    channel: mpsc::Receiver<PlayerMessage>,
-    addr: mpsc::Sender<PlayerMessage>,
+    channel: mpsc::Receiver<GamePlayerMessage>,
+    addr: mpsc::Sender<GamePlayerMessage>,
 
     id: String,
     game_id: Option<String>,
@@ -33,7 +19,7 @@ pub struct Player {
     remote: RemoteConnection,
 }
 
-pub type PlayerAddr = mpsc::Sender<PlayerMessage>;
+pub type PlayerAddr = mpsc::Sender<GamePlayerMessage>;
 
 impl Player {
     pub fn new(remote: RemoteConnection, game_server: GameServerAddr) -> Self {
@@ -108,7 +94,7 @@ impl Player {
 
 #[async_trait::async_trait]
 impl Actor for Player {
-    type Message = PlayerMessage;
+    type Message = GamePlayerMessage;
 
     fn addr(&self) -> Addr<Self::Message> {
         self.addr.clone()
@@ -152,6 +138,50 @@ impl Actor for Player {
         this.tear_down().await;
     }
 
+    async fn on_message(&mut self, msg: GamePlayerMessage) {
+        match msg {
+            GamePlayerMessage::Welcome(id, game, game_state, players) => {
+                if self.game.is_some() {
+                    // TODO: check id
+                    error!("{}: Player invited multiple times", self.id);
+                } else {
+                    info!("{}: Joined {}", self.id, id);
+                    self.game = Some(game);
+                    self.remote
+                        .send(RemoteMessage::Joined {
+                            game: id,
+                            state: game_state,
+                            players,
+                        })
+                        .await; // TODO: Result
+                }
+            }
+            GamePlayerMessage::Rejected(reason) => {
+                warn!("{}: Player was rejected: {:?}", self.id, reason);
+            }
+            GamePlayerMessage::OtherPlayerJoined(player) => {
+                self.remote
+                    .send(RemoteMessage::PlayerJoined { player })
+                    .await;
+            }
+            GamePlayerMessage::OtherPlayerChanged(player) => {
+                self.remote
+                    .send(RemoteMessage::PlayerChanged { player })
+                    .await;
+            }
+            GamePlayerMessage::OtherPlayerLeft(player_id) => {
+                self.remote
+                    .send(RemoteMessage::PlayerLeft { player_id })
+                    .await;
+            }
+            GamePlayerMessage::GameStateChanged(game_state) => {
+                self.remote
+                    .send(RemoteMessage::GameChanged { game_state })
+                    .await;
+            }
+        }
+    }
+
     async fn setup(&mut self) {
         let welcome = RemoteMessage::Welcome {
             player_id: self.id().to_string(),
@@ -163,24 +193,6 @@ impl Actor for Player {
         if let Some(mut game) = self.game.as_mut() {
             game.send(GameMessage::PlayerLeft(self.id.to_string()))
                 .await;
-        }
-    }
-
-    async fn on_message(&mut self, msg: PlayerMessage) {
-        match msg {
-            PlayerMessage::Invite(id, game) => {
-                if self.game.is_some() {
-                    // TODO: check id
-                    error!("{}: Player invited multiple times", self.id);
-                } else {
-                    info!("{}: Joined {}", self.id, id);
-                    self.game = Some(game);
-                    self.remote.send(RemoteMessage::Joined { game: id }).await; // TODO: Result
-                }
-            }
-            PlayerMessage::Rejected(reason) => {
-                warn!("{}: Player was rejected: {:?}", self.id, reason);
-            }
         }
     }
 }

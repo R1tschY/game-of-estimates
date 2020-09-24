@@ -1,6 +1,6 @@
 use crate::actor::{run_actor, Actor, Addr};
-use crate::game::{Game, GameAddr, GameMessage};
-use crate::player::{Player, PlayerAddr, PlayerMessage, RejectReason};
+use crate::game::{Game, GameAddr, GameMessage, GamePlayerMessage, RejectReason};
+use crate::player::{Player, PlayerAddr};
 use crate::remote::RemoteMessage;
 use async_trait::async_trait;
 use rand::distributions::Alphanumeric;
@@ -77,11 +77,11 @@ impl Actor for GameServer {
             } => {
                 if let Some(mut game_addr) = self.games.get_mut(&game) {
                     game_addr
-                        .send(GameMessage::InvitePlayer(player_id, player))
+                        .send(GameMessage::JoinRequest(player_id, player))
                         .await; // TODO: Result
                 } else {
                     player
-                        .send(PlayerMessage::Rejected(RejectReason::GameNotFound))
+                        .send(GamePlayerMessage::Rejected(RejectReason::GameNotFound))
                         .await; // TODO: Result
                 }
             }
@@ -96,7 +96,7 @@ impl Actor for GameServer {
                     tokio::spawn(run_actor(game));
                 } else {
                     player
-                        .send(PlayerMessage::Rejected(RejectReason::CreateGameError))
+                        .send(GamePlayerMessage::Rejected(RejectReason::CreateGameError))
                         .await; // TODO: Result
                 }
             }

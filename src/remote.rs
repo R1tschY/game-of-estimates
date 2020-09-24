@@ -1,4 +1,4 @@
-use crate::player::RejectReason;
+use crate::game::{GameState, PlayerState};
 use futures_util::{SinkExt, StreamExt};
 use quick_error::quick_error;
 use serde::{Deserialize, Serialize};
@@ -13,16 +13,40 @@ use tokio_tungstenite::WebSocketStream;
 #[serde(tag = "type")]
 pub enum RemoteMessage {
     // upstream
-    SetVoter { voter: bool },
-    SetName { name: String },
-    JoinGame { game: String },
+    SetVoter {
+        voter: bool,
+    },
+    SetName {
+        name: String,
+    },
+    JoinGame {
+        game: String,
+    },
     CreateGame,
     Close,
 
     // downstream
-    Welcome { player_id: String },
+    Welcome {
+        player_id: String,
+    },
     Rejected,
-    Joined { game: String },
+    Joined {
+        game: String,
+        state: GameState,
+        players: Vec<PlayerState>,
+    },
+    PlayerJoined {
+        player: PlayerState,
+    },
+    PlayerChanged {
+        player: PlayerState,
+    },
+    PlayerLeft {
+        player_id: String,
+    },
+    GameChanged {
+        game_state: GameState,
+    },
 }
 
 quick_error! {
