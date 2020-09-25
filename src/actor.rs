@@ -19,12 +19,8 @@ pub trait Actor: Sync + Send {
     /// run actor
     async fn run(&mut self) {
         self.setup().await;
-        loop {
-            if let Some(msg) = self.recv().await {
-                self.on_message(msg).await;
-            } else {
-                break;
-            }
+        while let Some(msg) = self.recv().await {
+            self.on_message(msg).await;
         }
         self.tear_down().await;
     }

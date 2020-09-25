@@ -134,7 +134,7 @@ impl Game {
 
         // introduce
         for player in self.players.values_mut() {
-            if &player.id != &game_player_state.id {
+            if player.id != game_player_state.id {
                 player
                     .addr
                     .send(GamePlayerMessage::OtherPlayerJoined(
