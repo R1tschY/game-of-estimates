@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
-use futures_util::SinkExt;
-use rand::distributions::{Alphanumeric, Uniform};
+use rand::distributions::Uniform;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use tokio::sync::mpsc;
@@ -130,17 +129,19 @@ impl Game {
                 self.to_state(),
                 players_state,
             ))
-            .await;
+            .await
+            .unwrap();
 
         // introduce
-        for mut player in self.players.values_mut() {
+        for player in self.players.values_mut() {
             if &player.id != &game_player_state.id {
                 player
                     .addr
                     .send(GamePlayerMessage::OtherPlayerJoined(
                         game_player_state.clone(),
                     ))
-                    .await;
+                    .await
+                    .unwrap();
             }
         }
     }
@@ -149,11 +150,12 @@ impl Game {
         self.players.remove(player_id);
 
         // announce
-        for mut player in self.players.values_mut() {
+        for player in self.players.values_mut() {
             player
                 .addr
                 .send(GamePlayerMessage::OtherPlayerLeft(player_id.to_string()))
-                .await;
+                .await
+                .unwrap();
         }
     }
 
@@ -196,7 +198,7 @@ impl Actor for Game {
         let players_state: Vec<PlayerState> = self.players.values().map(|p| p.to_state()).collect();
         let game_state = self.to_state();
 
-        for mut player in self.players.values_mut() {
+        for player in self.players.values_mut() {
             player
                 .addr
                 .send(GamePlayerMessage::Welcome(
@@ -205,7 +207,8 @@ impl Actor for Game {
                     game_state.clone(),
                     players_state.clone(),
                 ))
-                .await; // TODO: Result
+                .await
+                .unwrap(); // TODO: Result
         }
     }
 }

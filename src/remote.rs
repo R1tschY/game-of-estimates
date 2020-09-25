@@ -1,13 +1,12 @@
-use crate::game::{GameState, PlayerState};
 use futures_util::{SinkExt, StreamExt};
 use quick_error::quick_error;
 use serde::{Deserialize, Serialize};
-use std::error::Error;
-use std::pin::Pin;
 use tokio::net::TcpStream;
 use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::tungstenite::{Error as WsError, Result as WsResult};
 use tokio_tungstenite::WebSocketStream;
+
+use crate::game::{GameState, PlayerState};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 #[serde(tag = "type")]

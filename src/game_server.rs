@@ -1,13 +1,10 @@
-use crate::actor::{run_actor, Actor, Addr};
-use crate::game::{Game, GameAddr, GameMessage, GamePlayerMessage, RejectReason};
-use crate::player::{Player, PlayerAddr};
-use crate::remote::RemoteMessage;
-use async_trait::async_trait;
-use rand::distributions::Alphanumeric;
-use rand::Rng;
 use std::collections::HashMap;
+
 use tokio::sync::mpsc;
-use tokio::sync::Mutex;
+
+use crate::actor::{run_actor, Actor};
+use crate::game::{Game, GameAddr, GameMessage, GamePlayerMessage, RejectReason};
+use crate::player::PlayerAddr;
 
 #[derive(Debug)]
 pub enum GameServerMessage {
@@ -27,7 +24,6 @@ pub struct GameServer {
     addr: mpsc::Sender<GameServerMessage>,
 
     games: HashMap<String, GameAddr>,
-    players: HashMap<String, PlayerAddr>,
 }
 
 pub type GameServerAddr = mpsc::Sender<GameServerMessage>;
@@ -40,7 +36,6 @@ impl GameServer {
             addr,
 
             games: HashMap::new(),
-            players: HashMap::new(),
         }
     }
 
@@ -75,14 +70,16 @@ impl Actor for GameServer {
                 player_id,
                 mut player,
             } => {
-                if let Some(mut game_addr) = self.games.get_mut(&game) {
+                if let Some(game_addr) = self.games.get_mut(&game) {
                     game_addr
                         .send(GameMessage::JoinRequest(player_id, player))
-                        .await; // TODO: Result
+                        .await
+                        .unwrap(); // TODO: Result
                 } else {
                     player
                         .send(GamePlayerMessage::Rejected(RejectReason::GameNotFound))
-                        .await; // TODO: Result
+                        .await
+                        .unwrap(); // TODO: Result
                 }
             }
 
@@ -97,7 +94,8 @@ impl Actor for GameServer {
                 } else {
                     player
                         .send(GamePlayerMessage::Rejected(RejectReason::CreateGameError))
-                        .await; // TODO: Result
+                        .await
+                        .unwrap(); // TODO: Result
                 }
             }
         }

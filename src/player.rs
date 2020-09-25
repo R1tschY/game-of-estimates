@@ -1,13 +1,14 @@
+use std::mem::replace;
+
+use log::{info, warn};
+use rand::distributions::Alphanumeric;
+use rand::Rng;
+use tokio::sync::mpsc;
+
 use crate::actor::{Actor, Addr};
 use crate::game::{GameAddr, GameMessage, GamePlayerMessage};
 use crate::game_server::{GameServerAddr, GameServerMessage};
 use crate::remote::{RemoteConnection, RemoteMessage};
-use async_trait::async_trait;
-use log::{error, info, warn};
-use rand::distributions::Alphanumeric;
-use rand::Rng;
-use std::mem::replace;
-use tokio::sync::mpsc;
 
 pub struct Player {
     channel: mpsc::Receiver<GamePlayerMessage>,
@@ -54,7 +55,8 @@ impl Player {
             if let Some(mut old_game) = replace(&mut self.game, None) {
                 old_game
                     .send(GameMessage::PlayerLeft(self.id.to_string()))
-                    .await;
+                    .await
+                    .unwrap();
             }
         }
     }
@@ -74,7 +76,8 @@ impl Player {
                         player_id: self.id.clone(),
                         player: self.addr(),
                     })
-                    .await; // TODO: Result
+                    .await
+                    .unwrap(); // TODO: Result
             }
             RemoteMessage::JoinGame { game } => {
                 info!("{}: Wants to join {}", self.id, &game);
@@ -91,7 +94,8 @@ impl Player {
                         player_id: self.id.clone(),
                         player: self.addr(),
                     })
-                    .await; // TODO: Result
+                    .await
+                    .unwrap(); // TODO: Result
             }
             _ => {
                 info!("{}: Ignored `{:?}`", self.id, msg);
@@ -125,8 +129,9 @@ impl Actor for Player {
                             Ok(msg) => if !this.on_remote_message(msg).await {
                                 break;
                             }
-                            Err(err) => {
+                            Err(_err) => {
                                 // TODO
+                                panic!()
                             }
                         };
                     } else {
@@ -159,11 +164,13 @@ impl Actor for Player {
                             state: game_state,
                             players,
                         })
-                        .await; // TODO: Result
+                        .await
+                        .unwrap(); // TODO: Result
                 } else {
                     info!("{}: Reject welcome of game {}", self.id, id);
                     game.send(GameMessage::PlayerLeft(self.id.to_string()))
-                        .await;
+                        .await
+                        .unwrap();
                 }
             }
             GamePlayerMessage::Rejected(reason) => {
@@ -172,22 +179,26 @@ impl Actor for Player {
             GamePlayerMessage::OtherPlayerJoined(player) => {
                 self.remote
                     .send(RemoteMessage::PlayerJoined { player })
-                    .await;
+                    .await
+                    .unwrap();
             }
             GamePlayerMessage::OtherPlayerChanged(player) => {
                 self.remote
                     .send(RemoteMessage::PlayerChanged { player })
-                    .await;
+                    .await
+                    .unwrap();
             }
             GamePlayerMessage::OtherPlayerLeft(player_id) => {
                 self.remote
                     .send(RemoteMessage::PlayerLeft { player_id })
-                    .await;
+                    .await
+                    .unwrap();
             }
             GamePlayerMessage::GameStateChanged(game_state) => {
                 self.remote
                     .send(RemoteMessage::GameChanged { game_state })
-                    .await;
+                    .await
+                    .unwrap();
             }
         }
     }
@@ -200,9 +211,10 @@ impl Actor for Player {
     }
 
     async fn tear_down(&mut self) {
-        if let Some(mut game) = self.game.as_mut() {
+        if let Some(game) = self.game.as_mut() {
             game.send(GameMessage::PlayerLeft(self.id.to_string()))
-                .await;
+                .await
+                .unwrap();
         }
     }
 }
