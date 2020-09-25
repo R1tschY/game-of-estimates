@@ -6,6 +6,7 @@ use async_trait::async_trait;
 use log::{error, info, warn};
 use rand::distributions::Alphanumeric;
 use rand::Rng;
+use std::mem::replace;
 use tokio::sync::mpsc;
 
 pub struct Player {
@@ -47,42 +48,50 @@ impl Player {
         &self.id
     }
 
-    pub async fn on_remote_message(&mut self, msg: RemoteMessage) -> bool {
+    async fn leave_old_game(&mut self) {
+        if let Some(old_game_id) = &self.game_id {
+            info!("{}: Leaves already joined game {}", self.id, old_game_id);
+            if let Some(mut old_game) = replace(&mut self.game, None) {
+                old_game
+                    .send(GameMessage::PlayerLeft(self.id.to_string()))
+                    .await;
+            }
+        }
+    }
+
+    async fn on_remote_message(&mut self, msg: RemoteMessage) -> bool {
         match msg {
             RemoteMessage::Close => {
                 info!("{}: Player disconnected friendly", self.id);
                 return false;
             }
             RemoteMessage::CreateGame => {
-                info!("{}: Wants to create a room", self.id);
-                if self.game_id.is_some() {
-                    error!("{}: Already joined a room", self.id);
-                    self.remote.send(RemoteMessage::Rejected).await;
-                } else {
-                    self.game_id = Some("<to be created>".to_string()); // as marker
-                    self.game_server
-                        .send(GameServerMessage::Create {
-                            player_id: self.id.clone(),
-                            player: self.addr(),
-                        })
-                        .await; // TODO: Result
-                }
+                info!("{}: Wants to create a game", self.id);
+                self.leave_old_game().await;
+                self.game_id = Some("<to be created>".to_string()); // as marker
+                self.game_server
+                    .send(GameServerMessage::Create {
+                        player_id: self.id.clone(),
+                        player: self.addr(),
+                    })
+                    .await; // TODO: Result
             }
             RemoteMessage::JoinGame { game } => {
                 info!("{}: Wants to join {}", self.id, &game);
-                if self.game_id.is_some() {
-                    error!("{}: Already joined a room", self.id);
-                    self.remote.send(RemoteMessage::Rejected).await;
-                } else {
-                    self.game_id = Some(game.clone());
-                    self.game_server
-                        .send(GameServerMessage::Join {
-                            game,
-                            player_id: self.id.clone(),
-                            player: self.addr(),
-                        })
-                        .await; // TODO: Result
+                if self.game_id.as_ref() == Some(&game) {
+                    info!("{}: Already joined {}", self.id, &game);
+                    return true;
                 }
+
+                self.leave_old_game().await;
+                self.game_id = Some(game.clone());
+                self.game_server
+                    .send(GameServerMessage::Join {
+                        game,
+                        player_id: self.id.clone(),
+                        player: self.addr(),
+                    })
+                    .await; // TODO: Result
             }
             _ => {
                 info!("{}: Ignored `{:?}`", self.id, msg);
@@ -140,11 +149,8 @@ impl Actor for Player {
 
     async fn on_message(&mut self, msg: GamePlayerMessage) {
         match msg {
-            GamePlayerMessage::Welcome(id, game, game_state, players) => {
-                if self.game.is_some() {
-                    // TODO: check id
-                    error!("{}: Player invited multiple times", self.id);
-                } else {
+            GamePlayerMessage::Welcome(id, mut game, game_state, players) => {
+                if self.game_id.as_ref() == Some(&id) {
                     info!("{}: Joined {}", self.id, id);
                     self.game = Some(game);
                     self.remote
@@ -154,6 +160,10 @@ impl Actor for Player {
                             players,
                         })
                         .await; // TODO: Result
+                } else {
+                    info!("{}: Reject welcome of game {}", self.id, id);
+                    game.send(GameMessage::PlayerLeft(self.id.to_string()))
+                        .await;
                 }
             }
             GamePlayerMessage::Rejected(reason) => {
