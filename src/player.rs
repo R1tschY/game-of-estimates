@@ -1,14 +1,16 @@
 use std::mem::replace;
 
-use log::{info, warn};
+use log::{error, info, warn};
 use rand::distributions::Alphanumeric;
 use rand::Rng;
 use tokio::sync::mpsc;
 
-use crate::actor::{Actor, Addr};
+use crate::actor::Addr;
 use crate::game::{GameAddr, GameMessage, GamePlayerMessage};
 use crate::game_server::{GameServerAddr, GameServerMessage};
 use crate::remote::{RemoteConnection, RemoteMessage};
+
+const TO_BE_CREATED: &str = "<to be created>";
 
 pub struct Player {
     channel: mpsc::Receiver<GamePlayerMessage>,
@@ -25,7 +27,7 @@ pub type PlayerAddr = mpsc::Sender<GamePlayerMessage>;
 
 impl Player {
     pub fn new(remote: RemoteConnection, game_server: GameServerAddr) -> Self {
-        let (tx, rx) = mpsc::channel(8);
+        let (tx, rx) = mpsc::channel(16);
         Self {
             channel: rx,
             addr: tx,
@@ -70,7 +72,7 @@ impl Player {
             RemoteMessage::CreateGame => {
                 info!("{}: Wants to create a game", self.id);
                 self.leave_old_game().await;
-                self.game_id = Some("<to be created>".to_string()); // as marker
+                self.game_id = Some(TO_BE_CREATED.to_string()); // as marker
                 self.game_server
                     .send(GameServerMessage::Create {
                         player_id: self.id.clone(),
@@ -103,45 +105,35 @@ impl Player {
         }
         true
     }
-}
 
-#[async_trait::async_trait]
-impl Actor for Player {
-    type Message = GamePlayerMessage;
-
-    fn addr(&self) -> Addr<Self::Message> {
+    pub fn addr(&self) -> Addr<GamePlayerMessage> {
         self.addr.clone()
     }
 
-    async fn recv(&mut self) -> Option<Self::Message> {
-        self.channel.recv().await
-    }
-
-    async fn run(&mut self) {
+    pub async fn run(&mut self) {
         self.setup().await;
 
-        let this = self; // needed because #[async_trait] ignores macros
         loop {
             tokio::select! {
-                maybe_recv_res = this.remote.recv() => {
+                maybe_recv_res = self.remote.recv() => {
                     if let Some(recv_res) = maybe_recv_res {
                         match recv_res {
-                            Ok(msg) => if !this.on_remote_message(msg).await {
+                            Ok(msg) => if !self.on_remote_message(msg).await {
                                 break;
                             }
-                            Err(_err) => {
+                            Err(err) => {
                                 // TODO
-                                panic!()
+                                error!("{}: Message error: {}", self.id, err)
                             }
                         };
                     } else {
-                        info!("{}: Player disconnected", this.id);
+                        info!("{}: Player disconnected", self.id);
                         break;
                     }
                 },
-                recv_res = this.channel.recv() => {
+                recv_res = self.channel.recv() => {
                     if let Some(msg) = recv_res {
-                        this.on_message(msg).await
+                        self.on_message(msg).await
                     } else {
                         break;
                     }
@@ -149,13 +141,15 @@ impl Actor for Player {
             }
         }
 
-        this.tear_down().await;
+        self.tear_down().await;
     }
 
     async fn on_message(&mut self, msg: GamePlayerMessage) {
         match msg {
             GamePlayerMessage::Welcome(id, mut game, game_state, players) => {
-                if self.game_id.as_ref() == Some(&id) {
+                if self.game_id.as_ref() == Some(&id)
+                    || self.game_id.as_ref().map(|e| &e as &str) == Some(&TO_BE_CREATED)
+                {
                     info!("{}: Joined {}", self.id, id);
                     self.game = Some(game);
                     self.remote
@@ -167,7 +161,10 @@ impl Actor for Player {
                         .await
                         .unwrap(); // TODO: Result
                 } else {
-                    info!("{}: Reject welcome of game {}", self.id, id);
+                    info!(
+                        "{}: Reject welcome of game {}, got {:?}",
+                        self.id, id, self.game_id
+                    );
                     game.send(GameMessage::PlayerLeft(self.id.to_string()))
                         .await
                         .unwrap();

@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use tokio::sync::mpsc;
 
-use crate::actor::{run_actor, Actor};
+use crate::actor::{Actor, ActorContext};
 use crate::game::{Game, GameAddr, GameMessage, GamePlayerMessage, RejectReason};
 use crate::player::PlayerAddr;
 
@@ -20,9 +20,6 @@ pub enum GameServerMessage {
 }
 
 pub struct GameServer {
-    channel: mpsc::Receiver<GameServerMessage>,
-    addr: mpsc::Sender<GameServerMessage>,
-
     games: HashMap<String, GameAddr>,
 }
 
@@ -30,11 +27,7 @@ pub type GameServerAddr = mpsc::Sender<GameServerMessage>;
 
 impl GameServer {
     pub fn new() -> Self {
-        let (addr, channel) = mpsc::channel(100);
         Self {
-            channel,
-            addr,
-
             games: HashMap::new(),
         }
     }
@@ -55,15 +48,7 @@ impl GameServer {
 impl Actor for GameServer {
     type Message = GameServerMessage;
 
-    fn addr(&self) -> GameServerAddr {
-        self.addr.clone()
-    }
-
-    async fn recv(&mut self) -> Option<GameServerMessage> {
-        self.channel.recv().await
-    }
-
-    async fn on_message(&mut self, msg: Self::Message) {
+    async fn on_message(&mut self, msg: Self::Message, _ctx: &ActorContext<Self>) {
         match msg {
             GameServerMessage::Join {
                 game,
@@ -89,8 +74,7 @@ impl Actor for GameServer {
             } => {
                 if let Some(game_id) = self.find_new_game_id() {
                     let game = Game::new(&game_id, (player_id, player));
-                    self.games.insert(game_id, game.addr());
-                    tokio::spawn(run_actor(game));
+                    self.games.insert(game_id, game.start());
                 } else {
                     player
                         .send(GamePlayerMessage::Rejected(RejectReason::CreateGameError))

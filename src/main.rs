@@ -3,7 +3,7 @@ use std::{env, io::Error};
 use log::info;
 use tokio::net::{TcpListener, TcpStream};
 
-use game_of_estimates::actor::{run_actor, Actor};
+use game_of_estimates::actor::Actor;
 use game_of_estimates::game_server::{GameServer, GameServerAddr};
 use game_of_estimates::player::Player;
 use game_of_estimates::remote::RemoteConnection;
@@ -21,8 +21,7 @@ async fn main() -> Result<(), Error> {
     info!("Listening on: {}", addr);
 
     let game_server = GameServer::new();
-    let game_server_addr = game_server.addr();
-    tokio::spawn(run_actor(game_server));
+    let game_server_addr = game_server.start();
 
     while let Ok((stream, _)) = listener.accept().await {
         tokio::spawn(client_main(stream, game_server_addr.clone()));

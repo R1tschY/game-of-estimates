@@ -3,9 +3,8 @@ use std::collections::HashMap;
 use rand::distributions::Uniform;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
-use tokio::sync::mpsc;
 
-use crate::actor::{Actor, Addr};
+use crate::actor::{Actor, ActorContext, Addr, IActorContext};
 use crate::player::PlayerAddr;
 
 #[derive(Debug)]
@@ -36,9 +35,11 @@ pub struct PlayerState {
 
 #[derive(Debug, Clone)]
 pub enum GamePlayerMessage {
+    // join mgmt
     Welcome(String, GameAddr, GameState, Vec<PlayerState>),
     Rejected(RejectReason),
 
+    // room state sync
     OtherPlayerJoined(PlayerState),
     OtherPlayerChanged(PlayerState),
     OtherPlayerLeft(String),
@@ -72,9 +73,6 @@ impl GamePlayer {
 }
 
 pub struct Game {
-    channel: mpsc::Receiver<GameMessage>,
-    addr: mpsc::Sender<GameMessage>,
-
     id: String,
     cards: Vec<String>,
     players: HashMap<String, GamePlayer>,
@@ -83,16 +81,11 @@ pub struct Game {
 
 impl Game {
     pub fn new(id: &str, creator: (String, PlayerAddr)) -> Self {
-        let (addr, channel) = mpsc::channel(100);
-
         let mut players = HashMap::new();
         let game_player = GamePlayer::new(&creator.0, creator.1, false);
         players.insert(creator.0, game_player);
 
         Self {
-            channel,
-            addr,
-
             id: id.to_string(),
             players,
             open: false,
@@ -115,7 +108,12 @@ impl Game {
             .to_string()
     }
 
-    async fn add_player(&mut self, player_id: String, mut player: PlayerAddr) {
+    async fn add_player(
+        &mut self,
+        player_id: String,
+        mut player: PlayerAddr,
+        ctx: &ActorContext<Self>,
+    ) {
         let game_player = GamePlayer::new(&player_id, player.clone(), true);
         let game_player_state = game_player.to_state();
         self.players.insert(player_id, game_player);
@@ -125,7 +123,7 @@ impl Game {
         player
             .send(GamePlayerMessage::Welcome(
                 self.id.clone(),
-                self.addr(),
+                ctx.addr(),
                 self.to_state(),
                 players_state,
             ))
@@ -173,28 +171,22 @@ impl Game {
     }
 }
 
-pub type GameAddr = mpsc::Sender<GameMessage>;
+pub type GameAddr = Addr<GameMessage>;
 
 #[async_trait::async_trait]
 impl Actor for Game {
     type Message = GameMessage;
 
-    fn addr(&self) -> Addr<Self::Message> {
-        self.addr.clone()
-    }
-
-    async fn recv(&mut self) -> Option<Self::Message> {
-        self.channel.recv().await
-    }
-
-    async fn on_message(&mut self, msg: Self::Message) {
+    async fn on_message(&mut self, msg: Self::Message, ctx: &ActorContext<Self>) {
         match msg {
-            GameMessage::JoinRequest(player_id, player) => self.add_player(player_id, player).await,
+            GameMessage::JoinRequest(player_id, player) => {
+                self.add_player(player_id, player, ctx).await
+            }
             GameMessage::PlayerLeft(player) => self.remove_player(&player).await,
         }
     }
 
-    async fn setup(&mut self) {
+    async fn setup(&mut self, ctx: &ActorContext<Self>) {
         let players_state: Vec<PlayerState> = self.players.values().map(|p| p.to_state()).collect();
         let game_state = self.to_state();
 
@@ -203,7 +195,7 @@ impl Actor for Game {
                 .addr
                 .send(GamePlayerMessage::Welcome(
                     self.id.clone(),
-                    self.addr.clone(),
+                    ctx.addr(),
                     game_state.clone(),
                     players_state.clone(),
                 ))
