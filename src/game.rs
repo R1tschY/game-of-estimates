@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use log::warn;
 use rand::distributions::Uniform;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
@@ -11,6 +12,7 @@ use crate::player::PlayerAddr;
 pub enum GameMessage {
     JoinRequest(String, PlayerAddr),
     PlayerLeft(String),
+    PlayerVoted(String, Option<String>),
 }
 
 #[derive(Debug, PartialEq, Copy, Clone)]
@@ -157,6 +159,33 @@ impl Game {
         }
     }
 
+    async fn set_vote(&mut self, player_id: &str, vote: Option<String>) {
+        if let Some(mut player) = self.players.get_mut(player_id) {
+            if player.voter {
+                player.vote = vote;
+            } else {
+                warn!("{}: Non-voter voted", player_id);
+                return;
+            }
+        } else {
+            warn!("{}: Failed to set vote for non-existing player", player_id);
+            return;
+        }
+
+        self.send_game_state().await;
+    }
+
+    async fn send_game_state(&mut self) {
+        let state = self.to_state();
+        for player in self.players.values_mut() {
+            player
+                .addr
+                .send(GamePlayerMessage::GameStateChanged(state.clone()))
+                .await
+                .unwrap();
+        }
+    }
+
     fn to_state(&self) -> GameState {
         GameState {
             cards: self.cards.clone(),
@@ -183,6 +212,7 @@ impl Actor for Game {
                 self.add_player(player_id, player, ctx).await
             }
             GameMessage::PlayerLeft(player) => self.remove_player(&player).await,
+            GameMessage::PlayerVoted(player_id, vote) => self.set_vote(&player_id, vote).await,
         }
     }
 

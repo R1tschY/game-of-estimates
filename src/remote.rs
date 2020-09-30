@@ -15,6 +15,9 @@ pub enum RemoteMessage {
     SetVoter {
         voter: bool,
     },
+    Vote {
+        vote: Option<String>,
+    },
     SetName {
         name: String,
     },

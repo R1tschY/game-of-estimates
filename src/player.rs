@@ -99,6 +99,16 @@ impl Player {
                     .await
                     .unwrap(); // TODO: Result
             }
+            RemoteMessage::Vote { vote } => {
+                if let Some(ref mut game) = &mut self.game {
+                    info!("{}: Voted {:?}", self.id, &vote);
+                    game.send(GameMessage::PlayerVoted(self.id.clone(), vote))
+                        .await
+                        .unwrap();
+                } else {
+                    warn!("{}: No room to send vote to", self.id);
+                }
+            }
             _ => {
                 info!("{}: Ignored `{:?}`", self.id, msg);
             }
