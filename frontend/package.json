@@ -1,0 +1,50 @@
+{
+    "name": "game-of-estimates",
+    "version": "0.1.0",
+    "devDependencies": {
+        "@babel/core": "^7.11.6",
+        "@babel/preset-env": "^7.11.5",
+        "@babel/register": "^7.11.5",
+        "babel-jest": "^26.3.0",
+        "babel-loader": "^8.1.0",
+        "babel-plugin-add-module-exports": "^1.0.4",
+        "cross-env": "^7.0.2",
+        "css-loader": "^4.3.0",
+        "eslint": "^7.9.0",
+        "eslint-config-prettier": "^6.12.0",
+        "eslint-plugin-prettier": "^3.1.4",
+        "eslint-plugin-svelte3": "^2.7.3",
+        "jest": "^26.4.2",
+        "jest-transform-svelte": "^2.1.1",
+        "mini-css-extract-plugin": "^0.11.2",
+        "sass": "^1.26.11",
+        "sass-loader": "^10.0.2",
+        "fibers": "^4.0.1",
+        "postcss-loader": "^4.0.2",
+        "prettier": "^2.1.2",
+        "prettier-plugin-svelte": "^1.3.0",
+        "serve": "^11.3.2",
+        "style-loader": "^1.2.1",
+        "svelte": "^3.28.0",
+        "svelte-loader": "2.13.6",
+        "svelte-preprocess": "^4.3.2",
+        "webpack": "^4.44.2",
+        "webpack-cli": "^3.3.12",
+        "webpack-dev-server": "^3.11.0"
+    },
+    "scripts": {
+        "build": "cross-env NODE_ENV=production webpack",
+        "dev": "webpack-dev-server --content-base public",
+        "test": "jest --coverage --runInBand",
+        "lint": "eslint -c .eslintrc --ext .svelte,.js src",
+        "format": "eslint -c .eslintrc --fix --ext .svelte,.js --fix src",
+        "format:prettier": "prettier --write src/**/{*.svelte,*.js}"
+    },
+    "dependencies": {
+        "@babel/polyfill": "^7.11.5",
+        "bulma": "^0.9.0",
+        "bulma-divider": "^0.2.0",
+        "nprogress": "^0.2.0",
+        "svelte-routing": "^1.4.2"
+    }
+}
