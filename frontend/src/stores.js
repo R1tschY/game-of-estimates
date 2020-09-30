@@ -129,7 +129,7 @@ export const game = (function createRoomState() {
             update((game) => {
                 game.players.push(player)
                 if (player.voter) {
-                    game.state.votes[player_id] = null
+                    game.state.votes[player.id] = null
                 }
                 return game
             })
