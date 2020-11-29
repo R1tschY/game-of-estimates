@@ -66,7 +66,9 @@
         <div class="container">
             <h2 class="title is-4">Estimates</h2>
             {#each votes as player_vote (player_vote.id)}
-                <div class="box game-card">{player_vote.vote}</div>
+                <div class="box game-card" class:active={player_vote.vote}>
+                    {player_vote.vote ? player_vote.vote : 'x'}
+                </div>
             {/each}
         </div>
     </section>
