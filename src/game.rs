@@ -5,7 +5,7 @@ use rand::distributions::Uniform;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
-use crate::actor::{Actor, ActorContext, Addr, IActorContext};
+use crate::actor::{Actor, ActorContext, Addr, Context};
 use crate::player::PlayerAddr;
 
 #[derive(Debug)]
@@ -110,12 +110,7 @@ impl Game {
             .to_string()
     }
 
-    async fn add_player(
-        &mut self,
-        player_id: String,
-        mut player: PlayerAddr,
-        ctx: &ActorContext<Self>,
-    ) {
+    async fn add_player(&mut self, player_id: String, mut player: PlayerAddr, ctx: &Context<Self>) {
         let game_player = GamePlayer::new(&player_id, player.clone(), true);
         let game_player_state = game_player.to_state();
         self.players.insert(player_id, game_player);
@@ -205,8 +200,9 @@ pub type GameAddr = Addr<GameMessage>;
 #[async_trait::async_trait]
 impl Actor for Game {
     type Message = GameMessage;
+    type Context = Context<Self>;
 
-    async fn on_message(&mut self, msg: Self::Message, ctx: &ActorContext<Self>) {
+    async fn on_message(&mut self, msg: Self::Message, ctx: &Context<Self>) {
         match msg {
             GameMessage::JoinRequest(player_id, player) => {
                 self.add_player(player_id, player, ctx).await
@@ -216,7 +212,7 @@ impl Actor for Game {
         }
     }
 
-    async fn setup(&mut self, ctx: &ActorContext<Self>) {
+    async fn setup(&mut self, ctx: &Context<Self>) {
         let players_state: Vec<PlayerState> = self.players.values().map(|p| p.to_state()).collect();
         let game_state = self.to_state();
 

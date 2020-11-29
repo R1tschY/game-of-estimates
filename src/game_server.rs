@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use tokio::sync::mpsc;
 
-use crate::actor::{Actor, ActorContext};
+use crate::actor::{Actor, Context};
 use crate::game::{Game, GameAddr, GameMessage, GamePlayerMessage, RejectReason};
 use crate::player::PlayerAddr;
 
@@ -47,8 +47,9 @@ impl GameServer {
 #[async_trait::async_trait]
 impl Actor for GameServer {
     type Message = GameServerMessage;
+    type Context = Context<Self>;
 
-    async fn on_message(&mut self, msg: Self::Message, _ctx: &ActorContext<Self>) {
+    async fn on_message(&mut self, msg: Self::Message, _ctx: &Context<Self>) {
         match msg {
             GameServerMessage::Join {
                 game,
