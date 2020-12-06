@@ -1,6 +1,7 @@
 <script>
     import { connected, player_id, game, vote } from '../stores.js'
     import Banner from '../components/Banner.svelte'
+    import CopyLink from '../components/CopyLink.svelte'
     import { decks, get_deck } from '../consts'
 
     export let id = null
@@ -8,7 +9,6 @@
         console.log('init join')
         game.join(id)
     }
-    let open = false
 
     function mapVotes() {
         let new_votes = []
@@ -28,13 +28,19 @@
         })
     }
 
-    function toggleOpen() {
-        open = !open
+    function forceOpen() {
+        if (!open) {
+            game.force_open()
+        }
+    }
+
+    function restart() {
+        game.restart()
     }
 
     $: cards = $game.state ? get_deck($game.state.deck).cards : []
     $: votes = $game.state ? mapVotes() : []
-    //$: open = $game.state && $game.state.open
+    $: open = $game.state && $game.state.open
 </script>
 
 <style>
@@ -50,7 +56,7 @@
         border: 1px solid #999;
         box-shadow: 0 0em 0.5em -0.125em rgba(10, 10, 10, 0.1);
         outline: 0;
-        transition: margin 0.1s;
+        transition: margin 0.5s;
         transition: transform 5s;
         border-radius: 8px;
         transform: rotateY(0deg);
@@ -62,7 +68,8 @@
     }
 
     .game-card.active {
-        background-color: bisque;
+        background-color: orange;
+        color: white;
     }
 
     .game-card.selected {
@@ -120,31 +127,34 @@
 
 <div>
     <Banner />
+    <div class="container">
+        <CopyLink />
+    </div>
 
     <section class="section">
         <div class="container">
             <h2 class="title is-4">Estimates</h2>
-            <div>
-                <button class="button is-primary">Restart</button>
-                <button
-                    class="button is-primary"
-                    on:click={toggleOpen}>Open</button>
-            </div>
             <ul>
                 {#each votes as player_vote (player_vote.id)}
-                    <li class="game-card-item">
-                        <div class:backcover={!open} class:hidden={!player_vote.vote}>
-                            <div class="game-card game-card-back">
-                                ♠️
-                            </div>
-                            <div class="game-card game-card-front">
-                                {player_vote.vote ? player_vote.vote : '\xA0'}
-                            </div>
+                <li class="game-card-item">
+                    <div class:backcover={!open} class:hidden={!player_vote.vote}>
+                        <div class="game-card game-card-back">
+                            ♠️
                         </div>
-                        <div class="game-card empty"></div>
-                    </li>
+                        <div class="game-card game-card-front">
+                            {player_vote.vote ? player_vote.vote : '\xA0'}
+                        </div>
+                    </div>
+                    <div class="game-card empty"></div>
+                </li>
                 {/each}
             </ul>
+            <div>
+                <button class="button is-primary"on:click={restart}>Restart</button>
+                <button
+                    class="button is-primary"
+                    on:click={forceOpen}>Open</button>
+            </div>
         </div>
     </section>
 

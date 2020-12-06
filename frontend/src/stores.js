@@ -80,6 +80,44 @@ export const game = (function createRoomState() {
             }
         },
 
+        restart: () => {
+            console.log('Trying to restart')
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                update((game) => {
+                    if (game.status === 'joined') {
+                        socket.send(JSON.stringify({ type: 'Restart' }))
+                    }
+                    return game
+                })
+            } else {
+                update((game) => {
+                    game.id = id
+                    game.status = 'outside'
+                    game.last_error = 'disconnected'
+                    return game
+                })
+            }
+        },
+
+        force_open: () => {
+            console.log('Trying to force open')
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                update((game) => {
+                    if (game.status === 'joined') {
+                        socket.send(JSON.stringify({ type: 'ForceOpen' }))
+                    }
+                    return game
+                })
+            } else {
+                update((game) => {
+                    game.id = id
+                    game.status = 'outside'
+                    game.last_error = 'disconnected'
+                    return game
+                })
+            }
+        },
+
         on_welcome: (player_id) => {
             update((state) => {
                 if (state.id !== null) {
