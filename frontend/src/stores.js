@@ -34,10 +34,10 @@ export const game = (function createRoomState() {
     return {
         subscribe,
 
-        create: () => {
+        create: (deckId) => {
             console.log('Trying to create game')
             if (socket && socket.readyState === WebSocket.OPEN) {
-                socket.send(JSON.stringify({ type: 'CreateGame' }))
+                socket.send(JSON.stringify({ type: 'CreateGame', deck: deckId }))
                 set({
                     id: null,
                     status: 'creating',

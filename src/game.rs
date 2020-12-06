@@ -24,7 +24,7 @@ pub enum RejectReason {
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct GameState {
-    cards: Vec<String>,
+    deck: String,
     open: bool,
     votes: HashMap<String, Option<String>>,
 }
@@ -76,13 +76,13 @@ impl GamePlayer {
 
 pub struct Game {
     id: String,
-    cards: Vec<String>,
+    deck: String,
     players: HashMap<String, GamePlayer>,
     open: bool,
 }
 
 impl Game {
-    pub fn new(id: &str, creator: (String, PlayerAddr)) -> Self {
+    pub fn new(id: &str, creator: (String, PlayerAddr), deck: String) -> Self {
         let mut players = HashMap::new();
         let game_player = GamePlayer::new(&creator.0, creator.1, false);
         players.insert(creator.0, game_player);
@@ -91,16 +91,7 @@ impl Game {
             id: id.to_string(),
             players,
             open: false,
-            cards: vec![
-                "0".to_string(),
-                "1/2".to_string(),
-                "1".to_string(),
-                "2".to_string(),
-                "3".to_string(),
-                "5".to_string(),
-                "8".to_string(),
-                "13".to_string(),
-            ],
+            deck,
         }
     }
 
@@ -183,7 +174,7 @@ impl Game {
 
     fn to_state(&self) -> GameState {
         GameState {
-            cards: self.cards.clone(),
+            deck: self.deck.clone(),
             open: self.open,
             votes: self
                 .players

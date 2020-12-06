@@ -16,6 +16,7 @@ pub enum GameServerMessage {
     Create {
         player_id: String,
         player: PlayerAddr,
+        deck: String,
     },
 }
 
@@ -72,9 +73,10 @@ impl Actor for GameServer {
             GameServerMessage::Create {
                 player_id,
                 mut player,
+                deck,
             } => {
                 if let Some(game_id) = self.find_new_game_id() {
-                    let game = Game::new(&game_id, (player_id, player));
+                    let game = Game::new(&game_id, (player_id, player), deck);
                     self.games.insert(game_id, game.start());
                 } else {
                     player

@@ -69,7 +69,7 @@ impl Player {
                 info!("{}: Player disconnected friendly", self.id);
                 return false;
             }
-            RemoteMessage::CreateGame => {
+            RemoteMessage::CreateGame { deck } => {
                 info!("{}: Wants to create a game", self.id);
                 self.leave_old_game().await;
                 self.game_id = Some(TO_BE_CREATED.to_string()); // as marker
@@ -77,6 +77,7 @@ impl Player {
                     .send(GameServerMessage::Create {
                         player_id: self.id.clone(),
                         player: self.addr(),
+                        deck,
                     })
                     .await
                     .unwrap(); // TODO: Result

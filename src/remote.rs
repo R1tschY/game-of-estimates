@@ -24,7 +24,9 @@ pub enum RemoteMessage {
     JoinGame {
         game: String,
     },
-    CreateGame,
+    CreateGame {
+        deck: String,
+    },
     Close,
 
     // downstream
