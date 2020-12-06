@@ -5,7 +5,8 @@ use rand::distributions::Alphanumeric;
 use rand::Rng;
 use tokio::sync::mpsc;
 
-use crate::actor::Addr;
+use uactor::blocking::Addr;
+
 use crate::game::{GameAddr, GameMessage, GamePlayerMessage};
 use crate::game_server::{GameServerAddr, GameServerMessage};
 use crate::remote::{RemoteConnection, RemoteMessage};
@@ -108,6 +109,22 @@ impl Player {
                         .unwrap();
                 } else {
                     warn!("{}: No room to send vote to", self.id);
+                }
+            }
+            RemoteMessage::ForceOpen => {
+                if let Some(ref mut game) = &mut self.game {
+                    info!("{}: Force open", self.id);
+                    game.send(GameMessage::ForceOpen).await.unwrap()
+                } else {
+                    warn!("{}: No room to force open", self.id);
+                }
+            }
+            RemoteMessage::Restart => {
+                if let Some(ref mut game) = &mut self.game {
+                    info!("{}: Restart", self.id);
+                    game.send(GameMessage::Restart).await.unwrap()
+                } else {
+                    warn!("{}: No room to restart", self.id);
                 }
             }
             _ => {

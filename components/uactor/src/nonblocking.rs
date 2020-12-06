@@ -1,53 +1,34 @@
 //! simple actor framework
 
+use std::future::Future;
 use std::marker::PhantomData;
 
-use futures_util::core_reexport::future::Future;
 use tokio::sync::mpsc;
-pub use tokio::task::JoinHandle;
+use tokio::task::JoinHandle;
+
+use crate::core::AsyncSystem;
+use crate::tokio::TokioSystem;
 
 /// address of actor
-pub type Addr<T> = mpsc::Sender<T>;
+pub type Addr<T> = mpsc::UnboundedSender<T>;
 
 /// Message box for actors
-pub type MailBox<T> = mpsc::Receiver<T>;
+pub type MailBox<T> = mpsc::UnboundedReceiver<T>;
 
 /// actor
-#[async_trait::async_trait]
 pub trait Actor: Send + Sized + 'static {
     /// message type
     type Message: Send;
 
     type Context: ActorContext<Self>; // FUTURE: = Context<Self>;
 
-    async fn on_message(&mut self, msg: Self::Message, ctx: &Self::Context);
+    fn on_message(&mut self, msg: Self::Message, ctx: &Self::Context);
 
-    async fn setup(&mut self, _ctx: &Self::Context) {}
-    async fn tear_down(&mut self, _ctx: &Self::Context) {}
+    fn setup(&mut self, _ctx: &Self::Context) {}
+    fn tear_down(&mut self, _ctx: &Self::Context) {}
 
     fn start(self) -> Addr<Self::Message> {
         Self::Context::run(self)
-    }
-}
-
-/// Abstraction for async system
-pub trait AsyncSystem: std::marker::Sync + std::marker::Send + 'static {
-    fn spawn<T>(task: T) -> JoinHandle<T::Output>
-    where
-        T: Future + Send + 'static,
-        T::Output: Send + 'static;
-}
-
-/// Tokio as async system
-pub struct TokioSystem;
-
-impl AsyncSystem for TokioSystem {
-    fn spawn<T>(task: T) -> JoinHandle<<T as Future>::Output>
-    where
-        T: Future + Send + 'static,
-        T::Output: Send + 'static,
-    {
-        tokio::spawn(task)
     }
 }
 
@@ -88,11 +69,11 @@ where
     }
 
     async fn into_future(mut self: Self, mut actor: A) -> () {
-        actor.setup(&self).await;
+        actor.setup(&self);
         while let Some(msg) = self.rx.recv().await {
-            actor.on_message(msg, &self).await;
+            actor.on_message(msg, &self);
         }
-        actor.tear_down(&self).await;
+        actor.tear_down(&self);
     }
 }
 
@@ -114,7 +95,7 @@ where
     }
 
     fn run(actor: A) -> Addr<A::Message> {
-        let (tx, rx) = mpsc::channel(64); // TODO: config to change size
+        let (tx, rx) = mpsc::unbounded_channel();
         let ctx = Self::new(tx.clone(), rx);
         S::spawn(ctx.into_future(actor));
         tx

@@ -5,7 +5,8 @@ use rand::distributions::Uniform;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
-use crate::actor::{Actor, ActorContext, Addr, Context};
+use uactor::blocking::{Actor, ActorContext, Addr, Context};
+
 use crate::player::PlayerAddr;
 
 #[derive(Debug)]
@@ -13,6 +14,8 @@ pub enum GameMessage {
     JoinRequest(String, PlayerAddr),
     PlayerLeft(String),
     PlayerVoted(String, Option<String>),
+    ForceOpen,
+    Restart,
 }
 
 #[derive(Debug, PartialEq, Copy, Clone)]
@@ -200,6 +203,19 @@ impl Actor for Game {
             }
             GameMessage::PlayerLeft(player) => self.remove_player(&player).await,
             GameMessage::PlayerVoted(player_id, vote) => self.set_vote(&player_id, vote).await,
+            GameMessage::ForceOpen => {
+                if !self.open {
+                    self.open = true;
+                    self.send_game_state().await;
+                }
+            }
+            GameMessage::Restart => {
+                self.open = false;
+                for player in self.players.values_mut() {
+                    player.vote = None;
+                }
+                self.send_game_state().await;
+            }
         }
     }
 
