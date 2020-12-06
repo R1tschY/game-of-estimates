@@ -14,15 +14,15 @@
         "eslint-config-prettier": "^6.12.0",
         "eslint-plugin-prettier": "^3.1.4",
         "eslint-plugin-svelte3": "^2.7.3",
+        "fibers": "^4.0.1",
         "jest": "^26.4.2",
         "jest-transform-svelte": "^2.1.1",
         "mini-css-extract-plugin": "^0.11.2",
-        "sass": "^1.26.11",
-        "sass-loader": "^10.0.2",
-        "fibers": "^4.0.1",
         "postcss-loader": "^4.0.2",
         "prettier": "^2.1.2",
         "prettier-plugin-svelte": "^1.3.0",
+        "sass": "^1.26.11",
+        "sass-loader": "^10.0.2",
         "serve": "^11.3.2",
         "style-loader": "^1.2.1",
         "svelte": "^3.28.0",
@@ -45,6 +45,7 @@
         "bulma": "^0.9.0",
         "bulma-divider": "^0.2.0",
         "nprogress": "^0.2.0",
-        "svelte-routing": "^1.4.2"
+        "svelte-routing": "^1.4.2",
+        "@creativebulma/bulma-tooltip": "^1.2.0"
     }
 }
