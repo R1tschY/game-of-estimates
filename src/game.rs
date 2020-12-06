@@ -14,6 +14,11 @@ pub enum GameMessage {
     JoinRequest(String, PlayerAddr),
     PlayerLeft(String),
     PlayerVoted(String, Option<String>),
+    UpdatePlayer {
+        id: String,
+        voter: bool,
+        name: Option<String>,
+    },
     ForceOpen,
     Restart,
 }
@@ -35,6 +40,7 @@ pub struct GameState {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PlayerState {
     id: String,
+    name: Option<String>,
     voter: bool,
 }
 
@@ -57,6 +63,7 @@ struct GamePlayer {
     id: String,
     voter: bool,
     vote: Option<String>,
+    name: Option<String>,
 }
 
 impl GamePlayer {
@@ -66,12 +73,14 @@ impl GamePlayer {
             addr,
             voter,
             vote: None,
+            name: None,
         }
     }
 
     fn to_state(&self) -> PlayerState {
         PlayerState {
             id: self.id.clone(),
+            name: self.name.clone(),
             voter: self.voter,
         }
     }
@@ -153,11 +162,14 @@ impl Game {
             if player.voter {
                 player.vote = vote;
             } else {
-                warn!("{}: Non-voter voted", player_id);
+                warn!("{}: Non-voter {} voted", self.id, player_id);
                 return;
             }
         } else {
-            warn!("{}: Failed to set vote for non-existing player", player_id);
+            warn!(
+                "{}: Failed to set vote for non-existing player {}",
+                self.id, player_id
+            );
             return;
         }
 
@@ -183,7 +195,15 @@ impl Game {
                 .players
                 .values()
                 .filter(|p| p.voter)
-                .map(|p| (p.id.clone(), p.vote.clone()))
+                .map(|p| {
+                    let vote = if self.open {
+                        p.vote.clone()
+                    } else {
+                        p.vote.as_ref().map(|_vote| "�".to_string())
+                    };
+
+                    (p.id.clone(), vote)
+                })
                 .collect(),
         }
     }
@@ -215,6 +235,14 @@ impl Actor for Game {
                     player.vote = None;
                 }
                 self.send_game_state().await;
+            }
+            GameMessage::UpdatePlayer { id, name, voter } => {
+                if let Some(player) = self.players.get_mut(&id) {
+                    player.voter = voter;
+                    player.name = name;
+                } else {
+                    warn!("{}: Ignoring update on unknown player {}", self.id, id);
+                }
             }
         }
     }

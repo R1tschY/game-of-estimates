@@ -18,6 +18,10 @@ pub enum RemoteMessage {
     Vote {
         vote: Option<String>,
     },
+    UpdatePlayer {
+        voter: bool,
+        name: Option<String>,
+    },
     ForceOpen,
     Restart,
     SetName {
