@@ -155,6 +155,10 @@ impl Game {
                 .await
                 .unwrap();
         }
+
+        if self.players.is_empty() {
+            // TODO: remove room in 1min
+        }
     }
 
     async fn set_vote(&mut self, player_id: &str, vote: Option<String>) {
@@ -173,6 +177,19 @@ impl Game {
             return;
         }
 
+        // TODO: open if everyone has voted
+        let all_voted = self
+            .players
+            .values()
+            .all(|player| player.vote.is_some() || !player.voter);
+        if all_voted {
+            // at least 2 voter must exist to make sense
+            let voters = self.players.values().filter(|player| player.voter).count();
+            if voters > 1 {
+                self.open = true;
+            }
+        }
+
         self.send_game_state().await;
     }
 
@@ -184,6 +201,41 @@ impl Game {
                 .send(GamePlayerMessage::GameStateChanged(state.clone()))
                 .await
                 .unwrap();
+        }
+    }
+
+    async fn force_open(&mut self) {
+        if !self.open {
+            self.open = true;
+            self.send_game_state().await;
+        }
+    }
+
+    async fn restart(&mut self) {
+        self.open = false;
+        for player in self.players.values_mut() {
+            player.vote = None;
+        }
+        self.send_game_state().await;
+    }
+
+    async fn update_player(&mut self, id: &str, name: Option<String>, voter: bool) {
+        if let Some(player) = self.players.get_mut(id) {
+            player.voter = voter;
+            player.name = name;
+
+            let player_state = player.to_state();
+            for other_player in self.players.values_mut() {
+                if other_player.id != id {
+                    other_player
+                        .addr
+                        .send(GamePlayerMessage::OtherPlayerChanged(player_state.clone()))
+                        .await
+                        .unwrap();
+                }
+            }
+        } else {
+            warn!("{}: Ignoring update on unknown player {}", self.id, id);
         }
     }
 
@@ -223,26 +275,10 @@ impl Actor for Game {
             }
             GameMessage::PlayerLeft(player) => self.remove_player(&player).await,
             GameMessage::PlayerVoted(player_id, vote) => self.set_vote(&player_id, vote).await,
-            GameMessage::ForceOpen => {
-                if !self.open {
-                    self.open = true;
-                    self.send_game_state().await;
-                }
-            }
-            GameMessage::Restart => {
-                self.open = false;
-                for player in self.players.values_mut() {
-                    player.vote = None;
-                }
-                self.send_game_state().await;
-            }
+            GameMessage::ForceOpen => self.force_open().await,
+            GameMessage::Restart => self.restart().await,
             GameMessage::UpdatePlayer { id, name, voter } => {
-                if let Some(player) = self.players.get_mut(&id) {
-                    player.voter = voter;
-                    player.name = name;
-                } else {
-                    warn!("{}: Ignoring update on unknown player {}", self.id, id);
-                }
+                self.update_player(&id, name, voter).await
             }
         }
     }
