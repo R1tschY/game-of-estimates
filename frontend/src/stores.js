@@ -7,6 +7,8 @@ let socket = null
 
 export const connected = writable(false)
 export const player_id = writable(null)
+export const name = writable(null)
+export const voter = writable(null)
 
 export const vote = writable(null)
 vote.subscribe((value) => {
@@ -105,6 +107,25 @@ export const game = (function createRoomState() {
                 update((game) => {
                     if (game.status === 'joined') {
                         socket.send(JSON.stringify({ type: 'ForceOpen' }))
+                    }
+                    return game
+                })
+            } else {
+                update((game) => {
+                    game.id = id
+                    game.status = 'outside'
+                    game.last_error = 'disconnected'
+                    return game
+                })
+            }
+        },
+
+        set_voter: (voter) => {
+            console.log('Trying to set as voter: ' + voter)
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                update((game) => {
+                    if (game.status === 'joined') {
+                        socket.send(JSON.stringify({ type: 'UpdatePlayer', voter: voter, name: null }))
                     }
                     return game
                 })

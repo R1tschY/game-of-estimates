@@ -42,10 +42,11 @@
     },
     "dependencies": {
         "@babel/polyfill": "^7.11.5",
+        "@creativebulma/bulma-tooltip": "^1.2.0",
         "bulma": "^0.9.0",
         "bulma-divider": "^0.2.0",
+        "bulma-switch": "^2.0.0",
         "nprogress": "^0.2.0",
-        "svelte-routing": "^1.4.2",
-        "@creativebulma/bulma-tooltip": "^1.2.0"
+        "svelte-routing": "^1.4.2"
     }
 }

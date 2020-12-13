@@ -1,48 +1,3 @@
-<script>
-    import { connected, player_id, game, vote } from '../stores.js'
-    import Banner from '../components/Banner.svelte'
-    import CopyLink from '../components/CopyLink.svelte'
-    import { decks, get_deck } from '../consts'
-
-    export let id = null
-    if (id !== null && id !== $game.id) {
-        console.log('init join')
-        game.join(id)
-    }
-
-    function mapVotes() {
-        let new_votes = []
-        let game_votes = $game.state.votes
-        $game.players.forEach((player) => {
-            let player_id = player.id
-            if (game_votes.hasOwnProperty(player_id)) {
-                new_votes.push({ id: player_id, vote: game_votes[player_id] })
-            }
-        })
-        return new_votes
-    }
-
-    function setVote(value) {
-        vote.update((v) => {
-            return v !== value ? value : null
-        })
-    }
-
-    function forceOpen() {
-        if (!open) {
-            game.force_open()
-        }
-    }
-
-    function restart() {
-        game.restart()
-    }
-
-    $: cards = $game.state ? get_deck($game.state.deck).cards : []
-    $: votes = $game.state ? mapVotes() : []
-    $: open = $game.state && $game.state.open
-</script>
-
 <style>
     .game-card {
         width: 2.5em;
@@ -125,10 +80,71 @@
     }
 </style>
 
+<script>
+    import { connected, player_id, game, vote } from '../stores.js'
+    import Banner from '../components/Banner.svelte'
+    import CopyLink from '../components/CopyLink.svelte'
+    import { decks, get_deck } from '../consts'
+
+    export let id = null
+    if (id !== null && id !== $game.id) {
+        console.log('init join')
+        game.join(id)
+    }
+
+    let voter = null
+
+    function mapVotes() {
+        let new_votes = []
+        let game_votes = $game.state.votes
+        $game.players.forEach((player) => {
+            let player_id = player.id
+            if (game_votes.hasOwnProperty(player_id)) {
+                new_votes.push({ id: player_id, vote: game_votes[player_id] })
+            }
+        })
+        return new_votes
+    }
+
+    function setVote(value) {
+        vote.update((v) => {
+            return v !== value ? value : null
+        })
+    }
+
+    function updateVoter(value) {
+        vote.update((v) => {
+            return v !== value ? value : null
+        })
+    }
+
+    function forceOpen() {
+        if (!open) {
+            game.force_open()
+        }
+    }
+
+    function restart() {
+        game.restart()
+    }
+
+    $: cards = $game.state ? get_deck($game.state.deck).cards : []
+    $: votes = $game.state ? mapVotes() : []
+    $: open = $game.state && $game.state.open
+</script>
+
 <div>
     <Banner />
     <div class="container">
-        <CopyLink />
+        <div class="field">
+            <CopyLink />
+        </div>
+
+        <div class="field">
+            <!-- User -->
+            <input id="voterField" type="checkbox" class="switch" bind:checked={voter}>
+            <label for="voterField">Voter</label>
+        </div>
     </div>
 
     <section class="section">
@@ -188,6 +204,7 @@
             <div>game state: {JSON.stringify($game.state)}</div>
             <div>votes: {JSON.stringify(votes)}</div>
             <div>vote: {$vote}</div>
+            <div>voter: {voter}</div>
             <div>Open: {open}</div>
             <div>game players: {JSON.stringify($game.players)}</div>
         </div>
