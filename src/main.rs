@@ -62,26 +62,32 @@ impl StreamAcceptor {
             }
         }
     }
+
+    pub fn scheme(&self) -> &'static str {
+        match self {
+            StreamAcceptor::Plain => "ws",
+            StreamAcceptor::Tls(_) => "wss",
+        }
+    }
 }
 
 #[tokio::main]
 async fn main() -> Result<(), String> {
     env_logger::try_init().in_context("Failed to init logger")?;
 
-    let url =
-        env::var("GOE_WEBSOCKET_LISTEN_URL").unwrap_or_else(|_| "ws://127.0.0.1:5500".to_string());
-    let (addr, acceptor) = if url.starts_with("ws://") {
-        (url.split_at("ws://".len()).1, StreamAcceptor::Plain)
-    } else if url.starts_with("wss://") {
-        (url.split_at("wss://".len()).1, create_tls_acceptor()?)
+    let addr = env::var("GOE_WEBSOCKET_ADDR").unwrap_or_else(|_| "127.0.0.1:5500".to_string());
+
+    let acceptor = if let Some(cert) = env::var("GOE_CERT_PKCS12").ok() {
+        create_tls_acceptor(cert)?
     } else {
-        panic!("Address must start with ws:// or wss://");
+        StreamAcceptor::Plain
     };
 
     // Create the event loop and TCP listener we'll accept connections on.
-    let try_socket = TcpListener::bind(addr.split_at("wss://".len()).1).await;
-    let listener = try_socket.expect("Failed to bind");
-    info!("Listening on {}", addr);
+    let listener = TcpListener::bind(addr.clone())
+        .await
+        .in_context("Failed to bind")?;
+    info!("Listening on {}://{}", acceptor.scheme(), &addr);
 
     let game_server = GameServer::new();
     let game_server_addr = game_server.start();
@@ -97,9 +103,7 @@ async fn main() -> Result<(), String> {
     Ok(())
 }
 
-fn create_tls_acceptor() -> Result<StreamAcceptor, String> {
-    let cert_file =
-        env::var("GOE_CERT_PKCS12").in_context("Missing GOE_CERT_PKCS12 environment variable")?;
+fn create_tls_acceptor(cert_file: String) -> Result<StreamAcceptor, String> {
     let cert_content = fs::read(cert_file).in_context("Failed to read certificate")?;
     let identity = Identity::from_pkcs12(&cert_content, "").in_context("Invalid certificate")?;
     let acceptor: TlsAcceptor = tokio_native_tls::native_tls::TlsAcceptor::new(identity)
