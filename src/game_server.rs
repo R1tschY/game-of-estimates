@@ -56,7 +56,7 @@ impl Actor for GameServer {
             GameServerMessage::Join {
                 game,
                 player_id,
-                mut player,
+                player,
             } => {
                 if let Some(game_addr) = self.games.get_mut(&game) {
                     game_addr
@@ -73,7 +73,7 @@ impl Actor for GameServer {
 
             GameServerMessage::Create {
                 player_id,
-                mut player,
+                player,
                 deck,
             } => {
                 if let Some(game_id) = self.find_new_game_id() {

@@ -113,7 +113,7 @@ impl Game {
             .to_string()
     }
 
-    async fn add_player(&mut self, player_id: String, mut player: PlayerAddr, ctx: &Context<Self>) {
+    async fn add_player(&mut self, player_id: String, player: PlayerAddr, ctx: &Context<Self>) {
         let game_player = GamePlayer::new(&player_id, player.clone(), true);
         let game_player_state = game_player.to_state();
         self.players.insert(player_id, game_player);

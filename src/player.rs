@@ -55,7 +55,7 @@ impl Player {
     async fn leave_old_game(&mut self) {
         if let Some(old_game_id) = &self.game_id {
             info!("{}: Leaves already joined game {}", self.id, old_game_id);
-            if let Some(mut old_game) = replace(&mut self.game, None) {
+            if let Some(old_game) = replace(&mut self.game, None) {
                 old_game
                     .send(GameMessage::PlayerLeft(self.id.to_string()))
                     .await
@@ -174,7 +174,7 @@ impl Player {
 
     async fn on_message(&mut self, msg: GamePlayerMessage) {
         match msg {
-            GamePlayerMessage::Welcome(id, mut game, game_state, players) => {
+            GamePlayerMessage::Welcome(id, game, game_state, players) => {
                 if self.game_id.as_ref() == Some(&id)
                     || self.game_id.as_ref().map(|e| &e as &str) == Some(&TO_BE_CREATED)
                 {
