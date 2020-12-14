@@ -1,8 +1,13 @@
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const path = require('path')
+const webpack = require('webpack')
 
 const mode = process.env.NODE_ENV || 'development'
 const prod = mode === 'production'
+
+require('dotenv').config({ 
+    path: path.resolve('..', '.env.' + mode),
+})
 
 const { scss } = require('svelte-preprocess')
 
@@ -33,7 +38,7 @@ module.exports = {
                     loader: 'svelte-loader',
                     options: {
                         emitCss: true,
-                        hotReload: true,
+                        hotReload: !prod,
                         preprocess: require('svelte-preprocess')([scss()]),
                     },
                 },
@@ -41,10 +46,6 @@ module.exports = {
             {
                 test: /\.css$/,
                 use: [
-                    /**
-                     * MiniCssExtractPlugin doesn't support HMR.
-                     * For developing, use 'style-loader' instead.
-                     * */
                     prod ? MiniCssExtractPlugin.loader : 'style-loader',
                     'css-loader',
                     'postcss-loader',
@@ -53,11 +54,8 @@ module.exports = {
             {
                 test: /\.s[ac]ss$/i,
                 use: [
-                    // Creates `style` nodes from JS strings
-                    'style-loader',
-                    // Translates CSS into CommonJS
+                    prod ? MiniCssExtractPlugin.loader : 'style-loader',
                     'css-loader',
-                    // Compiles Sass to CSS
                     'sass-loader',
                 ],
             },
@@ -68,6 +66,10 @@ module.exports = {
         new MiniCssExtractPlugin({
             filename: '[name].css',
         }),
+        new webpack.EnvironmentPlugin([
+            'NODE_ENV',
+            'GOE_WEBSOCKET_URL'
+        ])
     ],
     devtool: prod ? false : 'source-map',
 }

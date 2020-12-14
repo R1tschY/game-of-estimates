@@ -279,7 +279,7 @@ function on_message_arrived(event) {
 }
 
 function connectWs() {
-    socket = new WebSocket('ws://localhost:5500')
+    socket = new WebSocket(process.env.GOE_WEBSOCKET_URL || 'ws://localhost:5500')
     socket.addEventListener('open', on_connected)
     socket.addEventListener('message', on_message_arrived)
     socket.addEventListener('close', on_disconnected)
