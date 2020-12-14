@@ -1,5 +1,5 @@
 [package]
-name = "game_of_estimates"
+name = "game-of-estimates"
 version = "0.1.0"
 authors = ["R1tschY <r1tschy@posteo.de>"]
 edition = "2018"
@@ -7,10 +7,11 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-tokio = { version = "^0.2.22", features = ["macros", "sync"] }
-tokio-tungstenite = "^0.11.0"
+tokio = { version = "^0.3", features = ["macros", "sync", "net", "rt-multi-thread"] }
+tokio-tungstenite = "^0.12.0"
+tokio-native-tls = "^0.2.0"
 env_logger = "^0.7.1"
-futures-util = "^0.3.5"
+futures-util = "^0.3.8"
 log = "^0.4.11"
 serde = { version = "^1.0.116", features = ["derive"] }
 serde_json = "^1.0.57"

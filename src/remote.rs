@@ -2,6 +2,7 @@ use futures_util::{SinkExt, StreamExt};
 use quick_error::quick_error;
 use serde::{Deserialize, Serialize};
 use tokio::net::TcpStream;
+use tokio_native_tls::TlsStream;
 use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::tungstenite::{Error as WsError, Result as WsResult};
 use tokio_tungstenite::WebSocketStream;
@@ -79,12 +80,41 @@ quick_error! {
 type ConnResult<T> = Result<T, ConnError>;
 
 pub struct RemoteConnection {
-    socket: WebSocketStream<TcpStream>,
+    socket: WebSocket,
+}
+
+enum WebSocket {
+    Plain(WebSocketStream<TcpStream>),
+    Tls(WebSocketStream<TlsStream<TcpStream>>),
+}
+
+impl WebSocket {
+    pub async fn send(&mut self, msg: Message) -> Result<(), WsError> {
+        match self {
+            WebSocket::Plain(stream) => stream.send(msg).await,
+            WebSocket::Tls(stream) => stream.send(msg).await,
+        }
+    }
+
+    pub async fn next(&mut self) -> Option<Result<Message, WsError>> {
+        match self {
+            WebSocket::Plain(stream) => stream.next().await,
+            WebSocket::Tls(stream) => stream.next().await,
+        }
+    }
 }
 
 impl RemoteConnection {
     pub fn new(socket: WebSocketStream<TcpStream>) -> Self {
-        Self { socket }
+        Self {
+            socket: WebSocket::Plain(socket),
+        }
+    }
+
+    pub fn new_with_tls(socket: WebSocketStream<TlsStream<TcpStream>>) -> Self {
+        Self {
+            socket: WebSocket::Tls(socket),
+        }
     }
 
     pub async fn send(&mut self, message: RemoteMessage) -> ConnResult<()> {
