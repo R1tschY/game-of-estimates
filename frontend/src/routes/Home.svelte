@@ -1,8 +1,9 @@
 <script>
-    import { connected, player_id, game } from '../stores.js'
+    import { connected, connecting, player_id, game } from '../stores.js'
     import { decks } from '../consts'
     import Banner from '../components/Banner.svelte'
     import SelectWithButton from '../components/SelectWithButton.svelte'
+    import DisconnectedMW from '../components/DisconnectedMW.svelte'
 
     let deckId = decks[0].id
     let roomId = ''
@@ -66,6 +67,7 @@
     <section class="section">
         <div class="container">
             <div>Connected: {$connected}</div>
+            <div>Connecting: {$connecting}</div>
             <div>Player ID: {$player_id}</div>
             <div>game ID: {$game.id}</div>
             <div>game State: {$game.status}</div>
@@ -73,4 +75,5 @@
             <div>Deck ID: {deckId}</div>
         </div>
     </section>
+    <DisconnectedMW active="{true}" />
 </div>

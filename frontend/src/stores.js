@@ -2,13 +2,50 @@ import { writable } from 'svelte/store'
 import { navigate } from 'svelte-routing'
 
 let socket = null
+let reconnectTimer = null
+
+// consts
+const reconnectTimeout = 5000
 
 // state
 
 export const connected = writable(false)
+export const connecting = writable(true)
 export const player_id = writable(null)
 export const name = writable(null)
 export const voter = writable(null)
+
+export const reconnectingIn = function() {
+    const { subscribe, set } = writable(0);
+    let reconnecting = { at: null, updateTimer: null }
+
+    function updateValue() {
+        console.log("update " + (reconnecting.at - new Date().getTime()))
+        if (reconnecting.at !== null) {
+            set((reconnecting.at - new Date().getTime()) / 1000)
+        } else {
+            set(0)
+        }
+    }
+
+    function onTimerChange() {
+        console.log("change " + value)
+        if (value !== null) {
+            reconnecting.at = new Date().getTime() + reconnectTimeout
+            reconnecting.updateTimer = setInterval(updateValue, 1000)
+        } else {
+            clearInterval(reconnecting.updateTimer)
+            reconnecting.at = null
+            reconnecting.updateTimer = null
+        }
+        updateValue()
+    }
+
+    return {
+        subscribe,
+        onTimerChange
+    }
+}();
 
 export const vote = writable(null)
 vote.subscribe((value) => {
@@ -224,21 +261,42 @@ export const game = (function createRoomState() {
     }
 })()
 
+
+function clearReconnectTimer() {
+    if (reconnectTimer !== null) {
+        clearTimeout(reconnectTimer)
+        reconnectTimer = null
+    }
+}
+
+
+function startReconnectTimer() {
+    clearReconnectTimer()
+    reconnectTimer = setTimeout(connectWs, reconnectTimeout)
+}
+
+
 function on_connected(event) {
-    console.log('Connected', event)
+    console.log('connected', event)
     connected.set(true)
+    connecting.set(false)
+    clearReconnectTimer()
 }
 
 function on_disconnected(event) {
-    console.log('Disconnected', event)
+    console.log('disconnected', event)
+    connecting.set(false)
     connected.set(false)
     game.on_disconnected()
+    startReconnectTimer()
 }
 
 function on_connection_error(event) {
-    console.log('Error', event)
+    console.log('error', event)
     connected.set(false)
+    connecting.set(false)
     game.on_error()
+    startReconnectTimer()
 }
 
 function on_message_arrived(event) {
@@ -279,6 +337,8 @@ function on_message_arrived(event) {
 }
 
 function connectWs() {
+    console.debug("connecting ...")
+    connecting.set(true)
     socket = new WebSocket(process.env.GOE_WEBSOCKET_URL || 'ws://localhost:5500')
     socket.addEventListener('open', on_connected)
     socket.addEventListener('message', on_message_arrived)

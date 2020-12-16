@@ -66,10 +66,10 @@ module.exports = {
         new MiniCssExtractPlugin({
             filename: '[name].css',
         }),
-        new webpack.EnvironmentPlugin([
-            'NODE_ENV',
-            'GOE_WEBSOCKET_URL'
-        ])
+        new webpack.EnvironmentPlugin({
+            'NODE_ENV': 'development',
+            'GOE_WEBSOCKET_URL': 'ws://localhost:5500'
+        })
     ],
     devtool: prod ? false : 'source-map',
 }
