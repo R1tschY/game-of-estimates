@@ -78,6 +78,10 @@
         z-index: -10;
         position: relative;
     }
+
+    .card-row {
+        height: calc(2.5em * 4 / 3);
+    }
 </style>
 
 <script>
@@ -150,7 +154,7 @@
     <section class="section">
         <div class="container">
             <h2 class="title is-4">Estimates</h2>
-            <ul>
+            <ul class="card-row">
                 {#each votes as player_vote (player_vote.id)}
                 <li class="game-card-item">
                     <div class:backcover={!open} class:hidden={!player_vote.vote}>
