@@ -81,6 +81,8 @@
 
     .card-row {
         height: calc(2.5em * 4 / 3);
+
+        
     }
 </style>
 
