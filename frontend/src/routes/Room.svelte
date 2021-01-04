@@ -1,33 +1,43 @@
-<style>
+<style lang="scss">
+    $card-width: 63mm * 0.25;
+    $card-height: 88mm * 0.25;
+
+    $tt-gray:#63666a;
+    $tt-orange: #ed8b00;
+    $tt-petrol: #208CA3;
+
+    .card-inner {
+        border: 1px solid #ccc;
+        border-radius: 7px 0 7px 0;
+        margin: 3px;
+        line-height: calc(#{$card-height} - 10px);
+        vertical-align: middle;
+    }
+
     .game-card {
-        width: 2.5em;
-        height: calc(2.5em * 4 / 3);
+        width: $card-width;
+        height: $card-height;
         padding: 0;
-        font-size: 2em;
+        font-size: 1.7em;
         text-align: center;
         display: inline-block;
-        line-height: 3em;
-        margin: 10px 10px;
-        border: 1px solid #999;
+        // line-height: 3em;
+        margin: 0 7px;
+        border: 1px solid $tt-gray;
         box-shadow: 0 0em 0.5em -0.125em rgba(10, 10, 10, 0.1);
         outline: 0;
-        transition: margin 0.5s;
-        transition: transform 5s;
-        border-radius: 8px;
+        transition: transform 1s, margin-top 0.2s;
+        border-radius: 10px 0 10px 0;
         transform: rotateY(0deg);
-        transition: transform 1s;
     }
 
     .game-card.selectable {
         cursor: pointer;
-    }
-
-    .game-card.active {
-        background-color: orange;
-        color: white;
-    }
+    }  
 
     .game-card.selected {
+        background-color: #{adjust-color($tt-orange, $lightness: 40%)};
+        //color: white;
         margin-top: -0.5rem;
     }
 
@@ -39,8 +49,8 @@
     }
 
     .game-card-back {
-        background-color: whitesmoke;
-        color: white;
+        background-color: $tt-orange;
+        color: black;
         padding: 2px;
         backface-visibility: hidden;
         transform: rotateY(180deg);
@@ -80,9 +90,8 @@
     }
 
     .card-row {
-        height: calc(2.5em * 4 / 3);
-
-        
+        height: $card-height;
+        margin: 10px 0;
     }
 </style>
 
@@ -161,10 +170,10 @@
                 <li class="game-card-item">
                     <div class:backcover={!open} class:hidden={!player_vote.vote}>
                         <div class="game-card game-card-back">
-                            ♠️
+                            <div class="card-inner">♠️</div>
                         </div>
                         <div class="game-card game-card-front">
-                            {player_vote.vote ? player_vote.vote : '\xA0'}
+                            <div class="card-inner">{player_vote.vote ? player_vote.vote : '\xA0'}</div>
                         </div>
                     </div>
                     <div class="game-card empty"></div>
@@ -183,15 +192,14 @@
     <section class="section">
         <div class="container">
             <h2 class="title is-4">Choose your estimate</h2>
-            <ul>
+            <ul class="card-row">
                 {#each cards as card}
                     <li class="game-card-item">
                         <button
                             class="game-card game-card-normal selectable"
                             on:click={setVote(card)}
-                            class:active={$vote === card}
                             class:selected={$vote === card}>
-                            {card}
+                            <div class="card-inner">{card}</div>
                         </button>
                     </li>
                 {/each}
