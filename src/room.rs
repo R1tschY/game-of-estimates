@@ -25,7 +25,7 @@ pub enum RoomMessage {
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum RejectReason {
-    GameNotFound,
+    RoomDoesNotExist,
     CreateGameError,
     JoinGameError,
 }

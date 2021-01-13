@@ -44,6 +44,10 @@ impl GameServer {
 
         None
     }
+
+    async fn send_rejection(player: &PlayerAddr, reason: RejectReason) {
+        let _ = player.send(GamePlayerMessage::Rejected(reason)).await;
+    }
 }
 
 #[async_trait::async_trait]
@@ -59,15 +63,16 @@ impl Actor for GameServer {
                 player,
             } => {
                 if let Some(room_addr) = self.rooms.get_mut(&room) {
-                    room_addr
-                        .send(RoomMessage::JoinRequest(player_id, player))
-                        .await
-                        .unwrap(); // TODO: Result
+                    let result = room_addr
+                        .send(RoomMessage::JoinRequest(player_id, player.clone()))
+                        .await;
+                    if let Err(_) = result {
+                        // room does not exist anymore
+                        Self::send_rejection(&player, RejectReason::RoomDoesNotExist).await;
+                        self.rooms.remove(&room);
+                    }
                 } else {
-                    player
-                        .send(GamePlayerMessage::Rejected(RejectReason::GameNotFound))
-                        .await
-                        .unwrap(); // TODO: Result
+                    Self::send_rejection(&player, RejectReason::RoomDoesNotExist).await;
                 }
             }
 
@@ -80,10 +85,7 @@ impl Actor for GameServer {
                     let room = Room::new(&room_id, (player_id, player), deck);
                     self.rooms.insert(room_id, room.start());
                 } else {
-                    player
-                        .send(GamePlayerMessage::Rejected(RejectReason::CreateGameError))
-                        .await
-                        .unwrap(); // TODO: Result
+                    Self::send_rejection(&player, RejectReason::CreateGameError).await;
                 }
             }
         }
