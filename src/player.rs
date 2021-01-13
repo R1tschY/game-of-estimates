@@ -201,19 +201,19 @@ impl Player {
             GamePlayerMessage::Rejected(reason) => {
                 warn!("{}: Player was rejected: {:?}", self.id, reason);
             }
-            GamePlayerMessage::OtherPlayerJoined(player) => {
+            GamePlayerMessage::PlayerJoined(player) => {
                 self.remote
                     .send(RemoteMessage::PlayerJoined { player })
                     .await
                     .unwrap();
             }
-            GamePlayerMessage::OtherPlayerChanged(player) => {
+            GamePlayerMessage::PlayerChanged(player) => {
                 self.remote
                     .send(RemoteMessage::PlayerChanged { player })
                     .await
                     .unwrap();
             }
-            GamePlayerMessage::OtherPlayerLeft(player_id) => {
+            GamePlayerMessage::PlayerLeft(player_id) => {
                 self.remote
                     .send(RemoteMessage::PlayerLeft { player_id })
                     .await

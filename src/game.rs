@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use log::warn;
+use log::{error, warn};
 use rand::distributions::Uniform;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
@@ -51,12 +51,13 @@ pub enum GamePlayerMessage {
     Rejected(RejectReason),
 
     // room state sync
-    OtherPlayerJoined(PlayerState),
-    OtherPlayerChanged(PlayerState),
-    OtherPlayerLeft(String),
+    PlayerJoined(PlayerState),
+    PlayerChanged(PlayerState),
+    PlayerLeft(String),
     GameStateChanged(GameState),
 }
 
+#[derive(Clone)]
 struct GamePlayer {
     addr: PlayerAddr,
 
@@ -95,6 +96,7 @@ pub struct Game {
 
 impl Game {
     pub fn new(id: &str, creator: (String, PlayerAddr), deck: String) -> Self {
+        warn!("{}: new room", id);
         let mut players = HashMap::new();
         let game_player = GamePlayer::new(&creator.0, creator.1, false);
         players.insert(creator.0, game_player);
@@ -113,50 +115,57 @@ impl Game {
             .to_string()
     }
 
+    async fn send_to_player(&mut self, player: &GamePlayer, msg: GamePlayerMessage) {
+        let result = player.addr.send(msg).await;
+        if result.is_err() {
+            error!(
+                "{}: Failed to send message to player {}",
+                self.id, player.id
+            );
+            // TODO: self.remove_player(player.)
+        }
+    }
+
+    async fn send_to_players(&mut self, msg: GamePlayerMessage) {
+        for player in self.players.values_mut() {
+            let result = player.addr.send(msg.clone()).await;
+            if result.is_err() {
+                error!(
+                    "{}: Failed to send message to player {}",
+                    self.id, player.id
+                );
+                // TODO: self.remove_player(player.)
+            }
+        }
+    }
+
     async fn add_player(&mut self, player_id: String, player: PlayerAddr, ctx: &Context<Self>) {
         let game_player = GamePlayer::new(&player_id, player.clone(), true);
         let game_player_state = game_player.to_state();
-        self.players.insert(player_id, game_player);
+        self.players.insert(player_id, game_player.clone());
 
         // welcome
         let players_state = self.players.values().map(|p| p.to_state()).collect();
-        player
-            .send(GamePlayerMessage::Welcome(
-                self.id.clone(),
-                ctx.addr(),
-                self.to_state(),
-                players_state,
-            ))
-            .await
-            .unwrap();
+        self.send_to_player(
+            &game_player,
+            GamePlayerMessage::Welcome(self.id.clone(), ctx.addr(), self.to_state(), players_state),
+        )
+        .await;
 
         // introduce
-        for player in self.players.values_mut() {
-            if player.id != game_player_state.id {
-                player
-                    .addr
-                    .send(GamePlayerMessage::OtherPlayerJoined(
-                        game_player_state.clone(),
-                    ))
-                    .await
-                    .unwrap();
-            }
-        }
+        self.send_to_players(GamePlayerMessage::PlayerJoined(game_player_state.clone()))
+            .await;
     }
 
     async fn remove_player(&mut self, player_id: &str) {
         self.players.remove(player_id);
 
         // announce
-        for player in self.players.values_mut() {
-            player
-                .addr
-                .send(GamePlayerMessage::OtherPlayerLeft(player_id.to_string()))
-                .await
-                .unwrap();
-        }
+        self.send_to_players(GamePlayerMessage::PlayerLeft(player_id.to_string()))
+            .await;
 
         if self.players.is_empty() {
+            warn!("{}: room is now empty", self.id);
             // TODO: remove room in 1min
         }
     }
@@ -194,14 +203,8 @@ impl Game {
     }
 
     async fn send_game_state(&mut self) {
-        let state = self.to_state();
-        for player in self.players.values_mut() {
-            player
-                .addr
-                .send(GamePlayerMessage::GameStateChanged(state.clone()))
-                .await
-                .unwrap();
-        }
+        self.send_to_players(GamePlayerMessage::GameStateChanged(self.to_state()))
+            .await;
     }
 
     async fn force_open(&mut self) {
@@ -224,16 +227,9 @@ impl Game {
             player.voter = voter;
             player.name = name;
 
-            let player_state = player.to_state();
-            for other_player in self.players.values_mut() {
-                if other_player.id != id {
-                    other_player
-                        .addr
-                        .send(GamePlayerMessage::OtherPlayerChanged(player_state.clone()))
-                        .await
-                        .unwrap();
-                }
-            }
+            let state = player.to_state();
+            self.send_to_players(GamePlayerMessage::PlayerChanged(state))
+                .await;
         } else {
             warn!("{}: Ignoring update on unknown player {}", self.id, id);
         }
@@ -287,17 +283,12 @@ impl Actor for Game {
         let players_state: Vec<PlayerState> = self.players.values().map(|p| p.to_state()).collect();
         let game_state = self.to_state();
 
-        for player in self.players.values_mut() {
-            player
-                .addr
-                .send(GamePlayerMessage::Welcome(
-                    self.id.clone(),
-                    ctx.addr(),
-                    game_state.clone(),
-                    players_state.clone(),
-                ))
-                .await
-                .unwrap(); // TODO: Result
-        }
+        self.send_to_players(GamePlayerMessage::Welcome(
+            self.id.clone(),
+            ctx.addr(),
+            game_state.clone(),
+            players_state.clone(),
+        ))
+        .await;
     }
 }
