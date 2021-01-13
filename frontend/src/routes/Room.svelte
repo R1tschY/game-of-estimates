@@ -7,7 +7,7 @@
     $tt-petrol: #208CA3;
 
     .card-inner {
-        border: 1px solid #ccc;
+        border: 1px solid #eee;
         border-radius: 7px 0 7px 0;
         margin: 3px;
         line-height: calc(#{$card-height} - 10px);
