@@ -96,23 +96,23 @@
 </style>
 
 <script>
-    import { connected, player_id, game, vote } from '../stores.js'
+    import { connected, player_id, room, vote } from '../stores.js'
     import Banner from '../components/Banner.svelte'
     import CopyLink from '../components/CopyLink.svelte'
     import { decks, get_deck } from '../consts'
 
     export let id = null
-    if (id !== null && id !== $game.id) {
+    if (id !== null && id !== $room.id) {
         console.log('init join')
-        game.join(id)
+        room.join(id)
     }
 
     let voter = null
 
     function mapVotes() {
         let new_votes = []
-        let game_votes = $game.state.votes
-        $game.players.forEach((player) => {
+        let game_votes = $room.state.votes
+        $room.players.forEach((player) => {
             let player_id = player.id
             if (game_votes.hasOwnProperty(player_id)) {
                 new_votes.push({ id: player_id, vote: game_votes[player_id] })
@@ -135,17 +135,17 @@
 
     function forceOpen() {
         if (!open) {
-            game.force_open()
+            room.force_open()
         }
     }
 
     function restart() {
-        game.restart()
+        room.restart()
     }
 
-    $: cards = $game.state ? get_deck($game.state.deck).cards : []
-    $: votes = $game.state ? mapVotes() : []
-    $: open = $game.state && $game.state.open
+    $: cards = $room.state ? get_deck($room.state.deck).cards : []
+    $: votes = $room.state ? mapVotes() : []
+    $: open = $room.state && $room.state.open
 </script>
 
 <div>
@@ -212,15 +212,15 @@
             <div>Connected: {$connected}</div>
             <div>Player ID: {$player_id}</div>
             <div>ID: {id}</div>
-            <div>game ID: {$game.id}</div>
-            <div>game State: {$game.status}</div>
-            <div>game Error: {$game.last_error}</div>
-            <div>game state: {JSON.stringify($game.state)}</div>
+            <div>game ID: {$room.id}</div>
+            <div>game State: {$room.status}</div>
+            <div>game Error: {$room.last_error}</div>
+            <div>game state: {JSON.stringify($room.state)}</div>
             <div>votes: {JSON.stringify(votes)}</div>
             <div>vote: {$vote}</div>
             <div>voter: {voter}</div>
             <div>Open: {open}</div>
-            <div>game players: {JSON.stringify($game.players)}</div>
+            <div>game players: {JSON.stringify($room.players)}</div>
         </div>
     </section>
 </div>

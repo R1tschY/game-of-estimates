@@ -61,7 +61,7 @@ export const creating_room = writable(false)
 
 // actions
 
-export const game = (function createRoomState() {
+export const room = (function createRoomState() {
     const { subscribe, set, update } = writable({
         id: null,
         status: 'outside',
@@ -74,9 +74,9 @@ export const game = (function createRoomState() {
         subscribe,
 
         create: (deckId) => {
-            console.log('Trying to create game')
+            console.log('Trying to create room')
             if (socket && socket.readyState === WebSocket.OPEN) {
-                socket.send(JSON.stringify({ type: 'CreateGame', deck: deckId }))
+                socket.send(JSON.stringify({ type: 'CreateRoom', deck: deckId }))
                 set({
                     id: null,
                     status: 'creating',
@@ -85,10 +85,10 @@ export const game = (function createRoomState() {
                     state: null,
                 })
             } else {
-                update((game) => {
-                    game.status = 'outside'
-                    game.last_error = 'disconnected'
-                    return game
+                update((room) => {
+                    room.status = 'outside'
+                    room.last_error = 'disconnected'
+                    return room
                 })
             }
         },
@@ -96,11 +96,11 @@ export const game = (function createRoomState() {
         join: (id) => {
             console.log('Trying to join ' + id)
             if (socket && socket.readyState === WebSocket.OPEN) {
-                update((game) => {
-                    if (game.status === 'joined' && game.id === id) {
-                        return game
+                update((room) => {
+                    if (room.status === 'joined' && room.id === id) {
+                        return room
                     }
-                    socket.send(JSON.stringify({ type: 'JoinGame', game: id }))
+                    socket.send(JSON.stringify({ type: 'JoinRoom', room: id }))
                     return {
                         id: null,
                         status: 'joining',
@@ -110,11 +110,11 @@ export const game = (function createRoomState() {
                     }
                 })
             } else {
-                update((game) => {
-                    game.id = id
-                    game.status = 'outside'
-                    game.last_error = 'disconnected'
-                    return game
+                update((room) => {
+                    room.id = id
+                    room.status = 'outside'
+                    room.last_error = 'disconnected'
+                    return room
                 })
             }
         },
@@ -122,18 +122,18 @@ export const game = (function createRoomState() {
         restart: () => {
             console.log('Trying to restart')
             if (socket && socket.readyState === WebSocket.OPEN) {
-                update((game) => {
-                    if (game.status === 'joined') {
+                update((room) => {
+                    if (room.status === 'joined') {
                         socket.send(JSON.stringify({ type: 'Restart' }))
                     }
-                    return game
+                    return room
                 })
             } else {
-                update((game) => {
-                    game.id = id
-                    game.status = 'outside'
-                    game.last_error = 'disconnected'
-                    return game
+                update((room) => {
+                    room.id = id
+                    room.status = 'outside'
+                    room.last_error = 'disconnected'
+                    return room
                 })
             }
         },
@@ -141,18 +141,18 @@ export const game = (function createRoomState() {
         force_open: () => {
             console.log('Trying to force open')
             if (socket && socket.readyState === WebSocket.OPEN) {
-                update((game) => {
-                    if (game.status === 'joined') {
+                update((room) => {
+                    if (room.status === 'joined') {
                         socket.send(JSON.stringify({ type: 'ForceOpen' }))
                     }
-                    return game
+                    return room
                 })
             } else {
-                update((game) => {
-                    game.id = id
-                    game.status = 'outside'
-                    game.last_error = 'disconnected'
-                    return game
+                update((room) => {
+                    room.id = id
+                    room.status = 'outside'
+                    room.last_error = 'disconnected'
+                    return room
                 })
             }
         },
@@ -160,18 +160,18 @@ export const game = (function createRoomState() {
         set_voter: (voter) => {
             console.log('Trying to set as voter: ' + voter)
             if (socket && socket.readyState === WebSocket.OPEN) {
-                update((game) => {
-                    if (game.status === 'joined') {
+                update((room) => {
+                    if (room.status === 'joined') {
                         socket.send(JSON.stringify({ type: 'UpdatePlayer', voter: voter, name: null }))
                     }
-                    return game
+                    return room
                 })
             } else {
-                update((game) => {
-                    game.id = id
-                    game.status = 'outside'
-                    game.last_error = 'disconnected'
-                    return game
+                update((room) => {
+                    room.id = id
+                    room.status = 'outside'
+                    room.last_error = 'disconnected'
+                    return room
                 })
             }
         },
@@ -179,7 +179,7 @@ export const game = (function createRoomState() {
         on_welcome: (player_id) => {
             update((state) => {
                 if (state.id !== null) {
-                    game.join(state.id)
+                    room.join(state.id)
                 }
                 return state
             })
@@ -187,10 +187,10 @@ export const game = (function createRoomState() {
 
         // TODO: connect to websocket on your own
         on_joined: (data) => {
-            update((game) => {
-                if (game.id === null) navigate('/room/' + data.game)
+            update((room) => {
+                if (room.id === null) navigate('/room/' + data.room)
                 return {
-                    id: data.game,
+                    id: data.room,
                     status: 'joined',
                     last_error: null,
                     players: data.players,
@@ -201,61 +201,61 @@ export const game = (function createRoomState() {
 
         // TODO: connect to websocket on your own
         on_disconnected: () => {
-            update((game) => {
-                if (game.state !== 'outside') {
-                    game.status = 'outside'
-                    game.last_error = 'disconnected'
+            update((room) => {
+                if (room.state !== 'outside') {
+                    room.status = 'outside'
+                    room.last_error = 'disconnected'
                 }
-                return game
+                return room
             })
         },
 
         // TODO: connect to websocket on your own
         on_error: () => {
-            update((game) => {
-                if (game.state !== 'outside') {
-                    game.status = 'outside'
-                    game.last_error = 'error'
+            update((room) => {
+                if (room.state !== 'outside') {
+                    room.status = 'outside'
+                    room.last_error = 'error'
                 }
-                return game
+                return room
             })
         },
 
         on_player_joined: (player) => {
-            update((game) => {
-                game.players.push(player)
+            update((room) => {
+                room.players.push(player)
                 if (player.voter) {
-                    game.state.votes[player.id] = null
+                    room.state.votes[player.id] = null
                 }
-                return game
+                return room
             })
         },
 
         on_player_changed: (player) => {
-            update((game) => {
-                let index = game.players.findIndex((p) => p.id == player.id)
+            update((room) => {
+                let index = room.players.findIndex((p) => p.id == player.id)
                 if (index !== -1) {
-                    game.players[index] = player
+                    room.players[index] = player
                 }
-                return game
+                return room
             })
         },
 
         on_player_left: (player_id) => {
-            update((game) => {
-                let index = game.players.findIndex((p) => p.id == player_id)
+            update((room) => {
+                let index = room.players.findIndex((p) => p.id == player_id)
                 if (index !== -1) {
-                    game.players.splice(index, 1)
+                    room.players.splice(index, 1)
                 }
-                delete game.state.votes[player_id]
-                return game
+                delete room.state.votes[player_id]
+                return room
             })
         },
 
         on_state_changed: (state) => {
-            update((game) => {
-                game.state = state
-                return game
+            update((room) => {
+                room.state = state
+                return room
             })
         },
     }
@@ -287,7 +287,7 @@ function on_disconnected(event) {
     console.log('disconnected', event)
     connecting.set(false)
     connected.set(false)
-    game.on_disconnected()
+    room.on_disconnected()
     startReconnectTimer()
 }
 
@@ -295,7 +295,7 @@ function on_connection_error(event) {
     console.log('error', event)
     connected.set(false)
     connecting.set(false)
-    game.on_error()
+    room.on_error()
     startReconnectTimer()
 }
 
@@ -306,28 +306,28 @@ function on_message_arrived(event) {
         case 'Welcome':
             console.debug('Welcome message')
             player_id.set(data.player_id)
-            game.on_welcome(data.player_id)
+            room.on_welcome(data.player_id)
             break
 
         case 'Joined':
             console.debug('Joined')
-            game.on_joined(data)
+            room.on_joined(data)
             break
 
         case 'PlayerJoined':
-            game.on_player_joined(data.player)
+            room.on_player_joined(data.player)
             break
 
         case 'PlayerChanged':
-            game.on_player_changed(data.player)
+            room.on_player_changed(data.player)
             break
 
         case 'PlayerLeft':
-            game.on_player_left(data.player_id)
+            room.on_player_left(data.player_id)
             break
 
         case 'GameChanged':
-            game.on_state_changed(data.game_state)
+            room.on_state_changed(data.game_state)
             break
 
         default:

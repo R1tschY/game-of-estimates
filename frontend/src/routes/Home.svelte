@@ -1,5 +1,5 @@
 <script>
-    import { connected, connecting, player_id, game } from '../stores.js'
+    import { connected, connecting, player_id, room } from '../stores.js'
     import { decks } from '../consts'
     import Banner from '../components/Banner.svelte'
     import SelectWithButton from '../components/SelectWithButton.svelte'
@@ -34,7 +34,7 @@
                             <button
                                 type="submit"
                                 class="button is-fullwidth is-primary"
-                                on:click={game.join(roomId)}>Join existing room</button>
+                                on:click={room.join(roomId)}>Join existing room</button>
                         </div>
                     </div>
                 </form>
@@ -56,7 +56,7 @@
                             <button
                                 type="button"
                                 class="button is-fullwidth is-warning"
-                                on:click={game.create(deckId)}>Create room</button>
+                                on:click={room.create(deckId)}>Create room</button>
                         </div>
                     </div>
                 </form>
@@ -69,9 +69,9 @@
             <div>Connected: {$connected}</div>
             <div>Connecting: {$connecting}</div>
             <div>Player ID: {$player_id}</div>
-            <div>game ID: {$game.id}</div>
-            <div>game State: {$game.status}</div>
-            <div>game Error: {$game.last_error}</div>
+            <div>Room ID: {$room.id}</div>
+            <div>Room State: {$room.status}</div>
+            <div>Room Error: {$room.last_error}</div>
             <div>Deck ID: {deckId}</div>
         </div>
     </section>
