@@ -10,7 +10,7 @@ use uactor::blocking::{Actor, ActorContext, Addr, Context};
 use crate::player::PlayerAddr;
 
 #[derive(Debug)]
-pub enum GameMessage {
+pub enum RoomMessage {
     JoinRequest(String, PlayerAddr),
     PlayerLeft(String),
     PlayerVoted(String, Option<String>),
@@ -47,7 +47,7 @@ pub struct PlayerState {
 #[derive(Debug, Clone)]
 pub enum GamePlayerMessage {
     // join mgmt
-    Welcome(String, GameAddr, GameState, Vec<PlayerState>),
+    Welcome(String, RoomAddr, GameState, Vec<PlayerState>),
     Rejected(RejectReason),
 
     // room state sync
@@ -87,14 +87,14 @@ impl GamePlayer {
     }
 }
 
-pub struct Game {
+pub struct Room {
     id: String,
     deck: String,
     players: HashMap<String, GamePlayer>,
     open: bool,
 }
 
-impl Game {
+impl Room {
     pub fn new(id: &str, creator: (String, PlayerAddr), deck: String) -> Self {
         warn!("{}: new room", id);
         let mut players = HashMap::new();
@@ -257,23 +257,23 @@ impl Game {
     }
 }
 
-pub type GameAddr = Addr<GameMessage>;
+pub type RoomAddr = Addr<RoomMessage>;
 
 #[async_trait::async_trait]
-impl Actor for Game {
-    type Message = GameMessage;
+impl Actor for Room {
+    type Message = RoomMessage;
     type Context = Context<Self>;
 
     async fn on_message(&mut self, msg: Self::Message, ctx: &Context<Self>) {
         match msg {
-            GameMessage::JoinRequest(player_id, player) => {
+            RoomMessage::JoinRequest(player_id, player) => {
                 self.add_player(player_id, player, ctx).await
             }
-            GameMessage::PlayerLeft(player) => self.remove_player(&player).await,
-            GameMessage::PlayerVoted(player_id, vote) => self.set_vote(&player_id, vote).await,
-            GameMessage::ForceOpen => self.force_open().await,
-            GameMessage::Restart => self.restart().await,
-            GameMessage::UpdatePlayer { id, name, voter } => {
+            RoomMessage::PlayerLeft(player) => self.remove_player(&player).await,
+            RoomMessage::PlayerVoted(player_id, vote) => self.set_vote(&player_id, vote).await,
+            RoomMessage::ForceOpen => self.force_open().await,
+            RoomMessage::Restart => self.restart().await,
+            RoomMessage::UpdatePlayer { id, name, voter } => {
                 self.update_player(&id, name, voter).await
             }
         }

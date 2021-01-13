@@ -7,9 +7,9 @@ use tokio::sync::mpsc;
 
 use uactor::blocking::Addr;
 
-use crate::game::{GameAddr, GameMessage, GamePlayerMessage};
 use crate::game_server::{GameServerAddr, GameServerMessage};
 use crate::remote::{RemoteConnection, RemoteMessage};
+use crate::room::{GamePlayerMessage, RoomAddr, RoomMessage};
 
 const TO_BE_CREATED: &str = "<to be created>";
 
@@ -18,8 +18,8 @@ pub struct Player {
     addr: mpsc::Sender<GamePlayerMessage>,
 
     id: String,
-    game_id: Option<String>,
-    game: Option<GameAddr>,
+    room_id: Option<String>,
+    room: Option<RoomAddr>,
     game_server: GameServerAddr,
     remote: RemoteConnection,
 }
@@ -36,8 +36,8 @@ impl Player {
             id: Self::gen_id(),
             remote,
             game_server,
-            game: None,
-            game_id: None,
+            room: None,
+            room_id: None,
         }
     }
 
@@ -52,12 +52,12 @@ impl Player {
         &self.id
     }
 
-    async fn leave_old_game(&mut self) {
-        if let Some(old_game_id) = &self.game_id {
-            info!("{}: Leaves already joined game {}", self.id, old_game_id);
-            if let Some(old_game) = replace(&mut self.game, None) {
-                old_game
-                    .send(GameMessage::PlayerLeft(self.id.to_string()))
+    async fn leave_old_room(&mut self) {
+        if let Some(old_room_id) = &self.room_id {
+            info!("{}: Leaves already joined room {}", self.id, old_room_id);
+            if let Some(old_room) = replace(&mut self.room, None) {
+                old_room
+                    .send(RoomMessage::PlayerLeft(self.id.to_string()))
                     .await
                     .unwrap();
             }
@@ -70,10 +70,10 @@ impl Player {
                 info!("{}: Player disconnected friendly", self.id);
                 return false;
             }
-            RemoteMessage::CreateGame { deck } => {
-                info!("{}: Wants to create a game", self.id);
-                self.leave_old_game().await;
-                self.game_id = Some(TO_BE_CREATED.to_string()); // as marker
+            RemoteMessage::CreateRoom { deck } => {
+                info!("{}: Wants to create a room", self.id);
+                self.leave_old_room().await;
+                self.room_id = Some(TO_BE_CREATED.to_string()); // as marker
                 self.game_server
                     .send(GameServerMessage::Create {
                         player_id: self.id.clone(),
@@ -83,18 +83,18 @@ impl Player {
                     .await
                     .unwrap(); // TODO: Result
             }
-            RemoteMessage::JoinGame { game } => {
-                info!("{}: Wants to join {}", self.id, &game);
-                if self.game_id.as_ref() == Some(&game) {
-                    info!("{}: Already joined {}", self.id, &game);
+            RemoteMessage::JoinRoom { room: room } => {
+                info!("{}: Wants to join {}", self.id, &room);
+                if self.room_id.as_ref() == Some(&room) {
+                    info!("{}: Already joined {}", self.id, &room);
                     return true;
                 }
 
-                self.leave_old_game().await;
-                self.game_id = Some(game.clone());
+                self.leave_old_room().await;
+                self.room_id = Some(room.clone());
                 self.game_server
                     .send(GameServerMessage::Join {
-                        game,
+                        room,
                         player_id: self.id.clone(),
                         player: self.addr(),
                     })
@@ -102,9 +102,9 @@ impl Player {
                     .unwrap(); // TODO: Result
             }
             RemoteMessage::Vote { vote } => {
-                if let Some(ref mut game) = &mut self.game {
+                if let Some(ref mut room) = &mut self.room {
                     info!("{}: Voted {:?}", self.id, &vote);
-                    game.send(GameMessage::PlayerVoted(self.id.clone(), vote))
+                    room.send(RoomMessage::PlayerVoted(self.id.clone(), vote))
                         .await
                         .unwrap();
                 } else {
@@ -112,17 +112,17 @@ impl Player {
                 }
             }
             RemoteMessage::ForceOpen => {
-                if let Some(ref mut game) = &mut self.game {
+                if let Some(ref mut room) = &mut self.room {
                     info!("{}: Force open", self.id);
-                    game.send(GameMessage::ForceOpen).await.unwrap()
+                    room.send(RoomMessage::ForceOpen).await.unwrap()
                 } else {
                     warn!("{}: No room to force open", self.id);
                 }
             }
             RemoteMessage::Restart => {
-                if let Some(ref mut game) = &mut self.game {
+                if let Some(ref mut room) = &mut self.room {
                     info!("{}: Restart", self.id);
-                    game.send(GameMessage::Restart).await.unwrap()
+                    room.send(RoomMessage::Restart).await.unwrap()
                 } else {
                     warn!("{}: No room to restart", self.id);
                 }
@@ -174,15 +174,15 @@ impl Player {
 
     async fn on_message(&mut self, msg: GamePlayerMessage) {
         match msg {
-            GamePlayerMessage::Welcome(id, game, game_state, players) => {
-                if self.game_id.as_ref() == Some(&id)
-                    || self.game_id.as_ref().map(|e| &e as &str) == Some(&TO_BE_CREATED)
+            GamePlayerMessage::Welcome(id, room, game_state, players) => {
+                if self.room_id.as_ref() == Some(&id)
+                    || self.room_id.as_ref().map(|e| &e as &str) == Some(&TO_BE_CREATED)
                 {
                     info!("{}: Joined {}", self.id, id);
-                    self.game = Some(game);
+                    self.room = Some(room);
                     self.remote
                         .send(RemoteMessage::Joined {
-                            game: id,
+                            room: id,
                             state: game_state,
                             players,
                         })
@@ -190,10 +190,10 @@ impl Player {
                         .unwrap(); // TODO: Result
                 } else {
                     info!(
-                        "{}: Reject welcome of game {}, got {:?}",
-                        self.id, id, self.game_id
+                        "{}: Reject welcome of room {}, got {:?}",
+                        self.id, id, self.room_id
                     );
-                    game.send(GameMessage::PlayerLeft(self.id.to_string()))
+                    room.send(RoomMessage::PlayerLeft(self.id.to_string()))
                         .await
                         .unwrap();
                 }
@@ -236,8 +236,8 @@ impl Player {
     }
 
     async fn tear_down(&mut self) {
-        if let Some(game) = self.game.as_mut() {
-            game.send(GameMessage::PlayerLeft(self.id.to_string()))
+        if let Some(room) = self.room.as_mut() {
+            room.send(RoomMessage::PlayerLeft(self.id.to_string()))
                 .await
                 .unwrap();
         }

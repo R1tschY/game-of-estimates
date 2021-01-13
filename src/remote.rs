@@ -7,7 +7,7 @@ use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::tungstenite::{Error as WsError, Result as WsResult};
 use tokio_tungstenite::WebSocketStream;
 
-use crate::game::{GameState, PlayerState};
+use crate::room::{GameState, PlayerState};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 #[serde(tag = "type")]
@@ -28,10 +28,10 @@ pub enum RemoteMessage {
     SetName {
         name: String,
     },
-    JoinGame {
-        game: String,
+    JoinRoom {
+        room: String,
     },
-    CreateGame {
+    CreateRoom {
         deck: String,
     },
     Close,
@@ -42,7 +42,7 @@ pub enum RemoteMessage {
     },
     Rejected,
     Joined {
-        game: String,
+        room: String,
         state: GameState,
         players: Vec<PlayerState>,
     },

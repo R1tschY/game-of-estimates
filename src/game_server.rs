@@ -4,13 +4,13 @@ use tokio::sync::mpsc;
 
 use uactor::blocking::{Actor, Context};
 
-use crate::game::{Game, GameAddr, GameMessage, GamePlayerMessage, RejectReason};
 use crate::player::PlayerAddr;
+use crate::room::{GamePlayerMessage, RejectReason, Room, RoomAddr, RoomMessage};
 
 #[derive(Debug)]
 pub enum GameServerMessage {
     Join {
-        game: String,
+        room: String,
         player_id: String,
         player: PlayerAddr,
     },
@@ -22,7 +22,7 @@ pub enum GameServerMessage {
 }
 
 pub struct GameServer {
-    games: HashMap<String, GameAddr>,
+    rooms: HashMap<String, RoomAddr>,
 }
 
 pub type GameServerAddr = mpsc::Sender<GameServerMessage>;
@@ -30,14 +30,14 @@ pub type GameServerAddr = mpsc::Sender<GameServerMessage>;
 impl GameServer {
     pub fn new() -> Self {
         Self {
-            games: HashMap::new(),
+            rooms: HashMap::new(),
         }
     }
 
     pub fn find_new_game_id(&self) -> Option<String> {
         for digits in 6..20 {
-            let id = Game::gen_id(digits);
-            if !self.games.contains_key(&id) {
+            let id = Room::gen_id(digits);
+            if !self.rooms.contains_key(&id) {
                 return Some(id);
             }
         }
@@ -54,13 +54,13 @@ impl Actor for GameServer {
     async fn on_message(&mut self, msg: Self::Message, _ctx: &Context<Self>) {
         match msg {
             GameServerMessage::Join {
-                game,
+                room,
                 player_id,
                 player,
             } => {
-                if let Some(game_addr) = self.games.get_mut(&game) {
-                    game_addr
-                        .send(GameMessage::JoinRequest(player_id, player))
+                if let Some(room_addr) = self.rooms.get_mut(&room) {
+                    room_addr
+                        .send(RoomMessage::JoinRequest(player_id, player))
                         .await
                         .unwrap(); // TODO: Result
                 } else {
@@ -76,9 +76,9 @@ impl Actor for GameServer {
                 player,
                 deck,
             } => {
-                if let Some(game_id) = self.find_new_game_id() {
-                    let game = Game::new(&game_id, (player_id, player), deck);
-                    self.games.insert(game_id, game.start());
+                if let Some(room_id) = self.find_new_game_id() {
+                    let room = Room::new(&room_id, (player_id, player), deck);
+                    self.rooms.insert(room_id, room.start());
                 } else {
                     player
                         .send(GamePlayerMessage::Rejected(RejectReason::CreateGameError))
