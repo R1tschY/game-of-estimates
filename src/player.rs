@@ -4,6 +4,7 @@ use log::{error, info, warn};
 use rand::distributions::Alphanumeric;
 use rand::Rng;
 use tokio::sync::mpsc;
+use tokio::time::{interval, Duration, Interval};
 
 use uactor::blocking::Addr;
 
@@ -22,6 +23,7 @@ pub struct Player {
     room: Option<RoomAddr>,
     game_server: GameServerAddr,
     remote: RemoteConnection,
+    ping_interval: Interval,
 }
 
 pub type PlayerAddr = mpsc::Sender<GamePlayerMessage>;
@@ -34,10 +36,12 @@ impl Player {
             addr: tx,
 
             id: Self::gen_id(),
-            remote,
             game_server,
             room: None,
             room_id: None,
+
+            remote,
+            ping_interval: interval(Duration::from_secs(30)),
         }
     }
 
@@ -137,6 +141,9 @@ impl Player {
                 info!("{}: Restart", self.id);
                 self.send_to_room(RoomMessage::Restart).await;
             }
+            RemoteMessage::Ping(duration) => {
+                info!("{}: Ping {}ms", self.id, duration.as_millis())
+            }
             _ => {
                 info!("{}: Ignored `{:?}`", self.id, msg);
             }
@@ -161,19 +168,14 @@ impl Player {
         loop {
             tokio::select! {
                 maybe_recv_res = self.remote.recv() => {
-                    if let Some(recv_res) = maybe_recv_res {
-                        match recv_res {
-                            Ok(msg) => if !self.on_remote_message(msg).await {
-                                break;
-                            }
-                            Err(err) => {
-                                // TODO
-                                error!("{}: Message error: {}", self.id, err)
-                            }
-                        };
-                    } else {
-                        info!("{}: Player disconnected", self.id);
-                        break;
+                    match maybe_recv_res {
+                        Ok(msg) => if !self.on_remote_message(msg).await {
+                            break;
+                        }
+                        Err(err) => {
+                            // TODO
+                            error!("{}: Message error: {}", self.id, err)
+                        }
                     }
                 },
                 recv_res = self.channel.recv() => {
@@ -181,6 +183,11 @@ impl Player {
                         self.on_message(msg).await
                     } else {
                         break;
+                    }
+                }
+                _ = self.ping_interval.tick() => {
+                    if let Err(err) = self.remote.ping().await {
+                        warn!("{}: Failed to send ping: {:?}", self.id, err);
                     }
                 }
             }
@@ -239,6 +246,7 @@ impl Player {
             player_id: self.id().to_string(),
         };
         self.send_to_remote(welcome).await;
+        let _ = self.remote.ping().await;
     }
 
     async fn tear_down(&mut self) {

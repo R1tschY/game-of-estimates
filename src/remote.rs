@@ -2,9 +2,10 @@ use futures_util::{SinkExt, StreamExt};
 use quick_error::quick_error;
 use serde::{Deserialize, Serialize};
 use tokio::net::TcpStream;
+use tokio::time::{Duration, Instant};
 use tokio_native_tls::TlsStream;
+use tokio_tungstenite::tungstenite::Error as WsError;
 use tokio_tungstenite::tungstenite::Message;
-use tokio_tungstenite::tungstenite::{Error as WsError, Result as WsResult};
 use tokio_tungstenite::WebSocketStream;
 
 use crate::room::{GameState, PlayerState};
@@ -34,6 +35,7 @@ pub enum RemoteMessage {
     CreateRoom {
         deck: String,
     },
+    Ping(Duration),
     Close,
 
     // downstream
@@ -81,6 +83,9 @@ type ConnResult<T> = Result<T, ConnError>;
 
 pub struct RemoteConnection {
     socket: WebSocket,
+
+    last_ping_start: Instant,
+    last_ping_id: u8,
 }
 
 enum WebSocket {
@@ -106,14 +111,22 @@ impl WebSocket {
 
 impl RemoteConnection {
     pub fn new(socket: WebSocketStream<TcpStream>) -> Self {
+        let now = Instant::now();
         Self {
             socket: WebSocket::Plain(socket),
+
+            last_ping_start: now,
+            last_ping_id: 0,
         }
     }
 
     pub fn new_with_tls(socket: WebSocketStream<TlsStream<TcpStream>>) -> Self {
+        let now = Instant::now();
         Self {
             socket: WebSocket::Tls(socket),
+
+            last_ping_start: now,
+            last_ping_id: 0,
         }
     }
 
@@ -124,15 +137,40 @@ impl RemoteConnection {
             .map_err(|err| err.into())
     }
 
-    pub async fn recv(&mut self) -> Option<ConnResult<RemoteMessage>> {
-        self.socket.next().await.map(Self::from_message)
+    pub async fn ping(&mut self) -> ConnResult<()> {
+        let now = Instant::now();
+        self.last_ping_id += 1;
+        self.last_ping_start = now;
+
+        self.socket
+            .send(Message::Ping(vec![self.last_ping_id]))
+            .await
+            .map_err(|err| err.into())
     }
 
-    fn from_message(msg: WsResult<Message>) -> ConnResult<RemoteMessage> {
-        match msg? {
-            Message::Text(text) => Ok(serde_json::from_str(&text)?),
-            Message::Close(_reason) => Ok(RemoteMessage::Close), // TODO: log reason
-            msg => Err(ConnError::UnsupportedMessageFormat(msg)),
+    pub async fn recv(&mut self) -> ConnResult<RemoteMessage> {
+        loop {
+            if let Some(msg) = self.socket.next().await {
+                match msg? {
+                    Message::Text(text) => return Ok(serde_json::from_str(&text)?),
+                    Message::Close(_reason) => return Ok(RemoteMessage::Close),
+                    Message::Pong(payload) => {
+                        if payload.len() == 1 && payload[0] == self.last_ping_id {
+                            let duration =
+                                Instant::now().checked_duration_since(self.last_ping_start);
+                            if let Some(duration) = duration {
+                                return Ok(RemoteMessage::Ping(duration));
+                            }
+                        }
+                    }
+                    Message::Ping(payload) => {
+                        let _ = self.socket.send(Message::Pong(payload)).await;
+                    }
+                    msg => return Err(ConnError::UnsupportedMessageFormat(msg)),
+                }
+            } else {
+                return Ok(RemoteMessage::Close);
+            }
         }
     }
 }
