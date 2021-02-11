@@ -1,5 +1,6 @@
 {
     "files.associations": {
         "*.ts": "typescript"
-    }
+    },
+    "auto-close-tag.activationOnLanguage": ["html", "xml", "css", "svelte"]
 }

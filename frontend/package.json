@@ -31,6 +31,7 @@
         "svelte-check": "^1.1.34",
         "svelte-loader": "2.13.6",
         "svelte-preprocess": "^4.6.8",
+        "ts-loader": "^8.0.17",
         "typescript": "^4.1.5",
         "webpack": "^4.44.2",
         "webpack-cli": "^3.3.12",

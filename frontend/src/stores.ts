@@ -1,4 +1,4 @@
-import { writable } from 'svelte/store'
+import { Writable, writable } from 'svelte/store'
 import { navigate } from 'svelte-routing'
 
 let socket = null
@@ -7,47 +7,33 @@ let reconnectTimer = null
 // consts
 const reconnectTimeout = 5000
 
+// types
+
+type Optional<T> = T | null
+
+interface Player {
+    id: string
+    voter: boolean
+}
+
+interface RoomState {}
+
+declare var process: {
+    env: {
+        NODE_ENV: "development" | "production",
+        GOE_WEBSOCKET_URL: string,
+    }
+}
+
 // state
 
-export const connected = writable(false)
-export const connecting = writable(true)
-export const player_id = writable(null)
-export const name = writable(null)
-export const voter = writable(null)
+export const connected: Writable<boolean> = writable(false)
+export const connecting: Writable<boolean> = writable(true)
+export const player_id: Writable<Optional<string>> = writable(null)
+export const name: Writable<Optional<string>> = writable(null)
+export const voter: Writable<boolean> = writable(null)
 
-export const reconnectingIn = function() {
-    const { subscribe, set } = writable(0);
-    let reconnecting = { at: null, updateTimer: null }
-
-    function updateValue() {
-        console.log("update " + (reconnecting.at - new Date().getTime()))
-        if (reconnecting.at !== null) {
-            set((reconnecting.at - new Date().getTime()) / 1000)
-        } else {
-            set(0)
-        }
-    }
-
-    function onTimerChange() {
-        console.log("change " + value)
-        if (value !== null) {
-            reconnecting.at = new Date().getTime() + reconnectTimeout
-            reconnecting.updateTimer = setInterval(updateValue, 1000)
-        } else {
-            clearInterval(reconnecting.updateTimer)
-            reconnecting.at = null
-            reconnecting.updateTimer = null
-        }
-        updateValue()
-    }
-
-    return {
-        subscribe,
-        onTimerChange
-    }
-}();
-
-export const vote = writable(null)
+export const vote: Writable<boolean> = writable(null)
 vote.subscribe((value) => {
     if (socket && socket.readyState === WebSocket.OPEN) {
         // TODO: check: within a room?
@@ -73,10 +59,12 @@ export const room = (function createRoomState() {
     return {
         subscribe,
 
-        create: (deckId) => {
+        create: (deckId: string) => {
             console.log('Trying to create room')
             if (socket && socket.readyState === WebSocket.OPEN) {
-                socket.send(JSON.stringify({ type: 'CreateRoom', deck: deckId }))
+                socket.send(
+                    JSON.stringify({ type: 'CreateRoom', deck: deckId }),
+                )
                 set({
                     id: null,
                     status: 'creating',
@@ -84,16 +72,10 @@ export const room = (function createRoomState() {
                     players: [],
                     state: null,
                 })
-            } else {
-                update((room) => {
-                    room.status = 'outside'
-                    room.last_error = 'disconnected'
-                    return room
-                })
             }
         },
 
-        join: (id) => {
+        join: (id: string) => {
             console.log('Trying to join ' + id)
             if (socket && socket.readyState === WebSocket.OPEN) {
                 update((room) => {
@@ -109,13 +91,6 @@ export const room = (function createRoomState() {
                         state: null,
                     }
                 })
-            } else {
-                update((room) => {
-                    room.id = id
-                    room.status = 'outside'
-                    room.last_error = 'disconnected'
-                    return room
-                })
             }
         },
 
@@ -126,13 +101,6 @@ export const room = (function createRoomState() {
                     if (room.status === 'joined') {
                         socket.send(JSON.stringify({ type: 'Restart' }))
                     }
-                    return room
-                })
-            } else {
-                update((room) => {
-                    room.id = id
-                    room.status = 'outside'
-                    room.last_error = 'disconnected'
                     return room
                 })
             }
@@ -147,36 +115,28 @@ export const room = (function createRoomState() {
                     }
                     return room
                 })
-            } else {
-                update((room) => {
-                    room.id = id
-                    room.status = 'outside'
-                    room.last_error = 'disconnected'
-                    return room
-                })
             }
         },
 
-        set_voter: (voter) => {
+        set_voter: (voter: boolean) => {
             console.log('Trying to set as voter: ' + voter)
             if (socket && socket.readyState === WebSocket.OPEN) {
                 update((room) => {
                     if (room.status === 'joined') {
-                        socket.send(JSON.stringify({ type: 'UpdatePlayer', voter: voter, name: null }))
+                        socket.send(
+                            JSON.stringify({
+                                type: 'UpdatePlayer',
+                                voter: voter,
+                                name: null,
+                            }),
+                        )
                     }
-                    return room
-                })
-            } else {
-                update((room) => {
-                    room.id = id
-                    room.status = 'outside'
-                    room.last_error = 'disconnected'
                     return room
                 })
             }
         },
 
-        on_welcome: (player_id) => {
+        on_welcome: (player_id: string) => {
             update((state) => {
                 if (state.id !== null) {
                     room.join(state.id)
@@ -221,7 +181,7 @@ export const room = (function createRoomState() {
             })
         },
 
-        on_player_joined: (player) => {
+        on_player_joined: (player: Player) => {
             update((room) => {
                 room.players.push(player)
                 if (player.voter) {
@@ -231,7 +191,7 @@ export const room = (function createRoomState() {
             })
         },
 
-        on_player_changed: (player) => {
+        on_player_changed: (player: Player) => {
             update((room) => {
                 let index = room.players.findIndex((p) => p.id == player.id)
                 if (index !== -1) {
@@ -241,7 +201,7 @@ export const room = (function createRoomState() {
             })
         },
 
-        on_player_left: (player_id) => {
+        on_player_left: (player_id: string) => {
             update((room) => {
                 let index = room.players.findIndex((p) => p.id == player_id)
                 if (index !== -1) {
@@ -252,7 +212,7 @@ export const room = (function createRoomState() {
             })
         },
 
-        on_state_changed: (state) => {
+        on_state_changed: (state: RoomState) => {
             update((room) => {
                 room.state = state
                 return room
@@ -261,7 +221,6 @@ export const room = (function createRoomState() {
     }
 })()
 
-
 function clearReconnectTimer() {
     if (reconnectTimer !== null) {
         clearTimeout(reconnectTimer)
@@ -269,12 +228,10 @@ function clearReconnectTimer() {
     }
 }
 
-
 function startReconnectTimer() {
     clearReconnectTimer()
     reconnectTimer = setTimeout(connectWs, reconnectTimeout)
 }
-
 
 function on_connected(event) {
     console.log('connected', event)
@@ -337,9 +294,11 @@ function on_message_arrived(event) {
 }
 
 function connectWs() {
-    console.debug("connecting ...")
+    console.debug('connecting ...')
     connecting.set(true)
-    socket = new WebSocket(process.env.GOE_WEBSOCKET_URL || 'ws://localhost:5500')
+    socket = new WebSocket(
+        process.env.GOE_WEBSOCKET_URL || 'ws://localhost:5500',
+    )
     socket.addEventListener('open', on_connected)
     socket.addEventListener('message', on_message_arrived)
     socket.addEventListener('close', on_disconnected)

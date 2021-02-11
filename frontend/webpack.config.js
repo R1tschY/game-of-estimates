@@ -20,8 +20,9 @@ module.exports = {
         alias: {
             svelte: path.resolve('node_modules', 'svelte'),
         },
-        extensions: ['.mjs', '.js', '.svelte', '.ts'],
+        extensions: ['.mjs', '.ts', '.svelte', '.js'],
         mainFields: ['svelte', 'browser', 'module', 'main'],
+        symlinks: false
     },
     output: {
         path: __dirname + '/public',
@@ -33,6 +34,11 @@ module.exports = {
     },
     module: {
         rules: [
+            {
+                test: /\.tsx?$/,
+                use: 'ts-loader',
+                exclude: /node_modules/,
+            },
             {
                 test: /\.svelte$/,
                 use: {
@@ -71,7 +77,7 @@ module.exports = {
             filename: '[name].css',
         }),
         new webpack.EnvironmentPlugin({
-            'NODE_ENV': 'development',
+            'NODE_ENV': mode,
             'GOE_WEBSOCKET_URL': 'ws://localhost:5500'
         })
     ],
