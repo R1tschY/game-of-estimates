@@ -1,5 +1,5 @@
-<script>
-    import { connected, connecting, player_id, room } from '../stores.js'
+<script lang="ts">
+    import { connected, connecting, player_id, room } from '../stores'
     import { decks } from '../consts'
     import Banner from '../components/Banner.svelte'
     import SelectWithButton from '../components/SelectWithButton.svelte'

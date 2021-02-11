@@ -95,8 +95,8 @@
     }
 </style>
 
-<script>
-    import { connected, player_id, room, vote } from '../stores.js'
+<script lang="ts">
+    import { connected, player_id, room, vote } from '../stores'
     import Banner from '../components/Banner.svelte'
     import CopyLink from '../components/CopyLink.svelte'
     import { decks, get_deck } from '../consts'

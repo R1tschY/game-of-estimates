@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
     import './main.sass'
 
     import { Router, Link, Route } from 'svelte-routing'

@@ -1,6 +1,8 @@
+
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const path = require('path')
 const webpack = require('webpack')
+const svelte_preprocess = require('svelte-preprocess')
 
 const mode = process.env.NODE_ENV || 'development'
 const prod = mode === 'production'
@@ -9,17 +11,16 @@ require('dotenv').config({
     path: path.resolve('..', '.env.' + mode),
 })
 
-const { scss } = require('svelte-preprocess')
 
 module.exports = {
     entry: {
-        bundle: ['./src/main.js'],
+        bundle: ['./src/main.ts'],
     },
     resolve: {
         alias: {
             svelte: path.resolve('node_modules', 'svelte'),
         },
-        extensions: ['.mjs', '.js', '.svelte'],
+        extensions: ['.mjs', '.js', '.svelte', '.ts'],
         mainFields: ['svelte', 'browser', 'module', 'main'],
     },
     output: {
@@ -39,7 +40,10 @@ module.exports = {
                     options: {
                         emitCss: true,
                         hotReload: !prod,
-                        preprocess: require('svelte-preprocess')([scss()]),
+                        preprocess: svelte_preprocess([
+                            svelte_preprocess.scss(),
+                            svelte_preprocess.typescript()
+                        ]),
                     },
                 },
             },

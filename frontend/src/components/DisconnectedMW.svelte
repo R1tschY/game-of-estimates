@@ -1,5 +1,5 @@
-<script>
-    import { connected, reconnectingIn } from '../stores.js'
+<script lang="ts">
+    import { connected, reconnectingIn } from '../stores'
 </script>
 
 

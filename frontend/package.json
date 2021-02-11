@@ -5,6 +5,7 @@
         "@babel/core": "^7.11.6",
         "@babel/preset-env": "^7.11.5",
         "@babel/register": "^7.11.5",
+        "@tsconfig/svelte": "^1.0.10",
         "babel-jest": "^26.3.0",
         "babel-loader": "^8.1.0",
         "babel-plugin-add-module-exports": "^1.0.4",
@@ -27,8 +28,10 @@
         "serve": "^11.3.2",
         "style-loader": "^1.2.1",
         "svelte": "^3.28.0",
+        "svelte-check": "^1.1.34",
         "svelte-loader": "2.13.6",
-        "svelte-preprocess": "^4.3.2",
+        "svelte-preprocess": "^4.6.8",
+        "typescript": "^4.1.5",
         "webpack": "^4.44.2",
         "webpack-cli": "^3.3.12",
         "webpack-dev-server": "^3.11.0"
@@ -37,6 +40,7 @@
         "build": "cross-env NODE_ENV=production webpack",
         "dev": "webpack-dev-server --content-base public",
         "test": "jest --coverage --runInBand",
+        "check": "svelte-check",
         "lint": "eslint -c .eslintrc --ext .svelte,.js src",
         "format": "eslint -c .eslintrc --fix --ext .svelte,.js --fix src",
         "format:prettier": "prettier --write src/**/{*.svelte,*.js}"
