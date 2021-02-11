@@ -96,18 +96,16 @@
 </style>
 
 <script lang="ts">
-    import { connected, player_id, room, vote } from '../stores'
+    import { connected, player_id, room, vote, voter } from '../stores'
     import Banner from '../components/Banner.svelte'
     import CopyLink from '../components/CopyLink.svelte'
-    import { decks, get_deck } from '../deck'
+    import { get_deck } from '../deck'
 
-    export let id = null
+    export let id: string | null = null
     if (id !== null && id !== $room.id) {
         console.log('init join')
         room.join(id)
     }
-
-    let voter = null
 
     function mapVotes() {
         let new_votes = []
@@ -121,14 +119,14 @@
         return new_votes
     }
 
-    function setVote(value) {
+    function setVote(value: string | null) {
         vote.update((v) => {
             return v !== value ? value : null
         })
     }
 
-    function updateVoter(value) {
-        vote.update((v) => {
+    function updateVoter(value: boolean) {
+        voter.update((v) => {
             return v !== value ? value : null
         })
     }
@@ -157,7 +155,7 @@
 
         <div class="field">
             <!-- User -->
-            <input id="voterField" type="checkbox" class="switch" bind:checked={voter}>
+            <input id="voterField" type="checkbox" class="switch" bind:checked={$voter}>
             <label for="voterField">Voter</label>
         </div>
     </div>
@@ -197,7 +195,7 @@
                     <li class="game-card-item">
                         <button
                             class="game-card game-card-normal selectable"
-                            on:click={setVote(card)}
+                            on:click={() => setVote(card)}
                             class:selected={$vote === card}>
                             <div class="card-inner">{card}</div>
                         </button>

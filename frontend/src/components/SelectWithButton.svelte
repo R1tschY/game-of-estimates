@@ -1,6 +1,11 @@
 <script lang="ts">
-    export let items;
-    export let value = "";
+    interface SelectItem {
+        id: string;
+        label: string;
+    }
+
+    export let items: SelectItem[];
+    export let value: string | undefined = undefined;
 </script>
 
 <div class="select is-fullwidth">

@@ -1,7 +1,7 @@
 <script lang="ts">
     import './main.sass'
 
-    import { Router, Link, Route } from 'svelte-routing'
+    import { Router, Route } from 'svelte-routing'
     import Home from './routes/Home.svelte'
     import Room from './routes/Room.svelte'
 

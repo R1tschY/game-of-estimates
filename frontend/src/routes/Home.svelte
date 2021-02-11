@@ -34,7 +34,7 @@
                             <button
                                 type="submit"
                                 class="button is-fullwidth is-primary"
-                                on:click={room.join(roomId)}>Join existing room</button>
+                                on:click={() => room.join(roomId)}>Join existing room</button>
                         </div>
                     </div>
                 </form>
@@ -56,7 +56,7 @@
                             <button
                                 type="button"
                                 class="button is-fullwidth is-warning"
-                                on:click={room.create(deckId)}>Create room</button>
+                                on:click={() => room.create(deckId)}>Create room</button>
                         </div>
                     </div>
                 </form>
@@ -75,5 +75,5 @@
             <div>Deck ID: {deckId}</div>
         </div>
     </section>
-    <DisconnectedMW active="{true}" />
+    <DisconnectedMW />
 </div>

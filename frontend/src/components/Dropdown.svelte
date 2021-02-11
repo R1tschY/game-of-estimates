@@ -1,13 +1,19 @@
 <script lang="ts">
-    export let items;
-    export let active;
+    interface DropdownItem {
+        id: string;
+        href: string;
+        label: string;
+    }
+
+    export let items: DropdownItem[];
+    export let active: string | undefined;
 
     let open = false;
 
     $: label = getActiveLabel(active)
 
-    function getActiveLabel(_active) {
-        let activeItem = items.find(i => i.id == _active)
+    function getActiveLabel(active_: string): string {
+        let activeItem = items.find(i => i.id == active_)
         return activeItem ? activeItem.label : ""
 	}
 
@@ -15,7 +21,7 @@
 		open = !open;
     }
     
-    function clickItem(item) {
+    function clickItem(item: DropdownItem) {
 		active = item.id
 	}
 </script>
@@ -33,7 +39,7 @@
     <div class="dropdown-menu" id="dropdown-menu" role="menu">
         <div class="dropdown-content">
             {#each items as item (item.id)}
-                <a href="{item.href}" class="dropdown-item" class:is-active="{item.id === active}" on:click={clickItem(item)}>
+                <a href="{item.href}" class="dropdown-item" class:is-active="{item.id === active}" on:click={() => clickItem(item)}>
                     {item.label}
                 </a>
             {/each}
