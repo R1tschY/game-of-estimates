@@ -1,4 +1,10 @@
-export const decks = [
+interface Deck {
+    id: string;
+    name: string;
+    cards: string[];
+}
+
+export const decks: Deck[] = [
     {
         id: "mod-fibonacci",
         name: "Modified Fibonacci",
@@ -21,7 +27,7 @@ export const decks = [
     },
 ]
 
-export function get_deck(id) {
+export function get_deck(id: string): Deck | undefined {
     for (var elem of decks) {
         if (elem.id == id) {
             return elem

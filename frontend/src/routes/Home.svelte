@@ -1,6 +1,6 @@
 <script lang="ts">
     import { connected, connecting, player_id, room } from '../stores'
-    import { decks } from '../consts'
+    import { decks } from '../deck'
     import Banner from '../components/Banner.svelte'
     import SelectWithButton from '../components/SelectWithButton.svelte'
     import DisconnectedMW from '../components/DisconnectedMW.svelte'

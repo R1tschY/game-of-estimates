@@ -99,7 +99,7 @@
     import { connected, player_id, room, vote } from '../stores'
     import Banner from '../components/Banner.svelte'
     import CopyLink from '../components/CopyLink.svelte'
-    import { decks, get_deck } from '../consts'
+    import { decks, get_deck } from '../deck'
 
     export let id = null
     if (id !== null && id !== $room.id) {
