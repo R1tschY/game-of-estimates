@@ -1,11 +1,8 @@
 import { Writable, writable } from 'svelte/store'
 import { navigate } from 'svelte-routing'
 
-let socket = null
-let reconnectTimer = null
-
 // consts
-const reconnectTimeout = 5000
+const reconnectTimeout: number = 5000
 
 // types
 
@@ -27,6 +24,9 @@ declare var process: {
 
 // state
 
+let socket: Optional<WebSocket> = null
+let reconnectTimer: Optional<number> = null
+
 export const connected: Writable<boolean> = writable(false)
 export const connecting: Writable<boolean> = writable(true)
 export const player_id: Writable<Optional<string>> = writable(null)
@@ -41,7 +41,7 @@ vote.subscribe((value) => {
     }
 })
 
-export const creating_room = writable(false)
+export const creating_room: Writable<boolean> = writable(false)
 
 // mutations
 
@@ -233,14 +233,14 @@ function startReconnectTimer() {
     reconnectTimer = setTimeout(connectWs, reconnectTimeout)
 }
 
-function on_connected(event) {
+function on_connected(event: Event) {
     console.log('connected', event)
     connected.set(true)
     connecting.set(false)
     clearReconnectTimer()
 }
 
-function on_disconnected(event) {
+function on_disconnected(event: CloseEvent) {
     console.log('disconnected', event)
     connecting.set(false)
     connected.set(false)
@@ -248,7 +248,7 @@ function on_disconnected(event) {
     startReconnectTimer()
 }
 
-function on_connection_error(event) {
+function on_connection_error(event: Event) {
     console.log('error', event)
     connected.set(false)
     connecting.set(false)
@@ -256,7 +256,7 @@ function on_connection_error(event) {
     startReconnectTimer()
 }
 
-function on_message_arrived(event) {
+function on_message_arrived(event: MessageEvent) {
     console.log('Got message', event)
     let data = JSON.parse(event.data)
     switch (data.type) {
