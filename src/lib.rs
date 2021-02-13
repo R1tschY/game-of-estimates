@@ -2,9 +2,10 @@
 macro_rules! test_for_message {
     ($rx:expr, $($pattern:tt)+) => {
         if loop {
-            match $rx.try_recv() {
-                Err(_) => break true,
-                Ok(x) => {
+            use futures_util::future::FutureExt;
+            match $rx.recv().now_or_never() {
+                None | Some(None) => break true,
+                Some(Some(x)) => {
                     match x {
                         $($pattern)+ => break false,
                         x => println!("Ignored non-matching message {:?}", x),
@@ -35,6 +36,6 @@ mod tests {
             .is_test(true)
             .filter(None, LevelFilter::Debug)
             .write_style(WriteStyle::Never)
-            .try_init();
+            .init();
     }
 }

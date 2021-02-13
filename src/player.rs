@@ -63,6 +63,7 @@ impl Player {
         rand::thread_rng()
             .sample_iter(&Alphanumeric)
             .take(16)
+            .map(|b| char::from(b))
             .collect::<String>()
     }
 
