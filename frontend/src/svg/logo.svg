@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 103.763 103.763" height="392.175" width="392.175">
+   <g transform="translate(-34.297 -31.184)">
+      <rect transform="rotate(-30)" width="63" height="88" x="1.6" y="71.026" ry="8.126" fill="#fff" stroke="#000"
+         stroke-width="2" />
+      <rect ry="8.126" y="58.54" x="30.243" height="88" width="63" transform="rotate(-15)" stroke="#000"
+         stroke-width="2" />
+      <rect width="63" height="88" x="54.7" y="39" ry="8.126" fill="#fff" stroke="#000" stroke-width="2" />
+      <path
+         d="M86.179 59.472c-6.212 0-11.256 5.045-11.256 11.256 0 4.425 2.554 8.254 6.272 10.09 1.119.552-.102 1.982-.924 1.055a11.227 11.227 0 00-8.424-3.796c-6.211 0-11.256 5.044-11.256 11.256 0 6.211 5.045 11.246 11.256 11.246 6.164 0 11.191-4.958 11.256-11.104.012-1.09 1.685-1.203 1.685.264 0 2.31-2.221 14.58-3.41 16.92 1.298-.328 3.461-.6 4.8-.6 1.34 0 3.503.272 4.801.6-1.189-2.34-3.41-14.61-3.41-16.92 0-1.467 1.673-1.354 1.685-.264.065 6.146 5.092 11.104 11.256 11.104 6.211 0 11.256-5.035 11.256-11.246 0-6.212-5.045-11.256-11.256-11.256a11.227 11.227 0 00-8.424 3.796c-.822.927-2.043-.503-.924-1.056a11.245 11.245 0 006.273-10.089c0-6.21-5.045-11.256-11.256-11.256z" />
+      <text font-size="17" font-weight="700" x="57.135" y="54.751" font-family="DejaVu Serif"
+         stroke-width=".265">A</text><text word-spacing="0" letter-spacing="0" font-size="17" font-weight="700"
+         y="-111.4" x="-115.1" transform="scale(-1)" font-family="DejaVu Serif" stroke-width=".265">A</text><text
+         font-size="12.7" font-weight="700" y="75.241" x="80.653" font-family="DejaVu Serif" fill="#fff">O</text><text
+         font-size="12.7" font-weight="700" y="94.121" x="66.335" font-family="DejaVu Serif" fill="#fff">G</text><text
+         font-size="12.7" font-weight="700" y="94.127" x="96.138" font-family="DejaVu Serif" fill="#fff">E</text></g>
+</svg>
