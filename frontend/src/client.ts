@@ -70,6 +70,8 @@ export class Client {
     _ws: WebSocket
 
     state: Writable<PlayerState>
+    playerId: Writable<Option<string>>
+    roomId: Writable<Option<string>>
 
     welcome: Signal<WelcomeMessageEvent> = new Signal()
     joined: Signal<JoinedEvent> = new Signal()
@@ -80,10 +82,13 @@ export class Client {
     rejected: Signal<RejectedEvent> = new Signal()
 
     constructor(wsService: WebSocketService) {
+        this.state = writable("connecting")
+        this.playerId = writable(null)
+        this.roomId = writable(null)
+
         wsService.ws_store.subscribe(($ws) => (this._ws = $ws))
         wsService.message.connect((evt) => this._onMessageArrived(evt))
         wsService.disconnected.connect((evt) => this._onDisconnected(evt))
-        this.state = writable("connecting")
     }
 
     updatePlayer(voter: boolean, name: Option<string>) {
@@ -113,7 +118,7 @@ export class Client {
         })
     }
 
-    set_name(name: string) {
+    setName(name: string) {
         this._send({
             type: 'SetName',
             name
@@ -122,6 +127,7 @@ export class Client {
 
     joinRoom(room: string) {
         this.state.set("joining")
+        this.roomId.set(room)
         this._send({
             type: 'JoinRoom',
             room
@@ -129,6 +135,7 @@ export class Client {
     }
 
     createRoom(deck: string) {
+        this.state.set("joining")
         this._send({
             type: 'CreateRoom',
             deck
@@ -143,6 +150,7 @@ export class Client {
 
     private _onDisconnected(evt: Event): void {
         this.state.set("connecting")
+        this.playerId.set(null)
     }
 
     private _onMessageArrived(event: any) {
@@ -150,12 +158,18 @@ export class Client {
         switch (event.type) {
             case 'Welcome':
                 this.state.set("outside")
-                this.welcome.emit(event as WelcomeMessageEvent)
+
+                const welcomeEvt = (event as WelcomeMessageEvent)
+                this.playerId.set(welcomeEvt.player_id)
+                this.welcome.emit(welcomeEvt)
                 break
     
             case 'Joined':
                 this.state.set("joined")
-                this.joined.emit(event as JoinedEvent)
+
+                const joinedEvt = (event as JoinedEvent)
+                this.roomId.set(joinedEvt.room)
+                this.joined.emit(joinedEvt)
                 break
     
             case 'PlayerJoined':
@@ -176,6 +190,7 @@ export class Client {
 
             case 'Rejected':
                 this.state.set("outside")
+                this.roomId.set(null)
                 this.rejected.emit(event as RejectedEvent)
                 break
     
@@ -268,3 +283,4 @@ export var client: Client = new Client(wsService)
 export var playerState: Readable<PlayerState> = client.state
 
 playerState.subscribe((value) => console.debug("Player state is now", value))
+wsService.message.connect((evt) => console.debug("MSG", JSON.stringify(evt)))

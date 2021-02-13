@@ -1,6 +1,6 @@
 import { derived, get, Readable, Writable, writable } from 'svelte/store'
 import { navigate } from 'svelte-routing'
-import { client, GameState, OwnPlayerState, PlayerInfo, wsService } from './client'
+import { client, GameState, OwnPlayerState, PlayerInfo, PlayerState, wsService } from './client'
 import type { Option } from './basetypes'
 import { writableLocalStorage as writableLocalStorage, derivedWritable as derivedWritable, derivedWritableProperty } from './store-utils'
 
@@ -8,7 +8,6 @@ import { writableLocalStorage as writableLocalStorage, derivedWritable as derive
 
 export const connected: Readable<boolean> = wsService.connected_store
 export const connecting: Readable<boolean> = wsService.connecting_store
-export const player_id: Readable<Option<string>> = writable(null)
 
 
 export interface PlayerSettings {
@@ -29,7 +28,7 @@ ownPlayerState.subscribe((value) => {
 
 export const debug: Readable<boolean> = derived(ownPlayerState, (value) => value.debug)
 
-export const voter: Writable<boolean> = writable(true)
+export const voter: Writable<boolean> = writable(get(ownPlayerState).voter)
 voter.subscribe((value) => {
     ownPlayerState.update((state) => {
         state.voter = value
@@ -43,7 +42,7 @@ voter.subscribe((value) => {
 //     function(value) { this.voter = value; }
 // )
 
-export const name: Writable<Option<string>> = writable(null)
+export const name: Writable<Option<string>> = writable(get(ownPlayerState).name)
 name.subscribe((value) => {
     ownPlayerState.update((state) => {
         state.name = value
@@ -53,99 +52,128 @@ name.subscribe((value) => {
 
 export const vote: Writable<Option<string>> = writable(null)
 vote.subscribe((value) => client.vote(value))
+client.stateChanged.connect(evt => {
+    const newVote = evt.game_state.votes[get(playerId)]
+
+    if (newVote === null) {
+        vote.set(null)
+    }
+})
+
+export const gameState: Readable<Option<GameState>> = (function createRoomState() {
+    const { subscribe, set, update } = writable(null)
+
+    client.joined.connect(evt => {
+        set(evt.state)
+    })
+
+    client.state.subscribe(value => {
+        if (value === "outside" || value === "connecting") {
+            set(null)
+        }
+    })
+
+    client.stateChanged.connect(evt => {
+        set(evt.game_state)
+    })
+
+    return {
+        subscribe
+    }
+})()
+
 
 export const creating_room: Writable<boolean> = writable(false)
+export const playerId: Readable<Option<string>> = client.playerId
+export const roomId: Readable<Option<string>> = client.roomId
 
 // mutations
 
 // actions
 
-interface RoomState {
-    id: Option<string>,
-    last_error: Option<string>,
-    players: PlayerInfo[],
-    state: Option<GameState>,
+export interface PlayerExtInfo {
+    id: string,
+    name: Option<string>,
+    voter: boolean,
+    vote: Option<string>
 }
 
-function initRoomState(): RoomState {
-    return {
-        id: null,
-        last_error: null,
-        players: [],
-        state: null,
+export const players: Readable<PlayerExtInfo[]> = (function createRoomState() {
+    const { subscribe, set, update } = writable([])
+
+    function findPlayer(state: PlayerExtInfo[], id: string): number {
+        return state.findIndex((player) => player.id === id)
     }
-}
-
-export const room: Readable<RoomState> = (function createRoomState() {
-    const { subscribe, set, update } = writable(initRoomState())
-
-    client.welcome.connect(evt => {
-        update((state) => {
-            if (state.id !== null) {
-                client.joinRoom(state.id)
-            }
-            return state
-        })
-    })
 
     client.joined.connect(evt => {
-        update((room) => {
-            if (room.id !== evt.room)
-                navigate('/room/' + evt.room)
-            return {
-                id: evt.room,
-                last_error: null,
-                players: evt.players,
-                state: evt.state,
-            }
-        })
+        const players = []
+        for (let player of evt.players) {
+            players.push({
+                id: player.id,
+                name: player.name,
+                voter: player.voter,
+                vote: evt.state.votes[player.id],
+            })
+        }
+        set(players)
     })
 
-    client.rejected.connect(evt => {
-        navigate('/')
-        update((room) => {
-            let state = initRoomState()
-            state.last_error = "room does not exist"
-            return state
-        })
+    client.state.subscribe(value => {
+        if (value === "outside" || value === "connecting") {
+            set([])
+        }
     })
 
     client.playerJoined.connect(evt => {
-        update((room) => {
-            room.players.push(evt.player)
-            if (evt.player.voter) {
-                room.state.votes[evt.player.id] = null
+        update((players) => {
+            const index = findPlayer(players, evt.player.id)
+            let info = {
+                id: evt.player.id,
+                name: evt.player.name,
+                voter: evt.player.voter,
+                vote: null,
             }
-            return room
+
+            if (index >= 0) {
+                players[index] = info
+            } else {
+                players.push(info)
+            }
+
+            return players
         })
     })
 
     client.playerChanged.connect(evt => {
-        update((room) => {
-            let index = room.players.findIndex((p) => p.id == evt.player.id)
-            if (index !== -1) {
-                room.players[index] = evt.player
+        update((players) => {
+            const index = findPlayer(players, evt.player.id)
+            if (index >= 0) {
+                players[index].name = evt.player.name
+                players[index].voter = evt.player.voter
             }
-            return room
+            return players
         })
     })
 
     client.playerLeft.connect(evt => {
-        update((room) => {
-            let pid = get(player_id)
-            let index = room.players.findIndex((p) => p.id == pid)
-            if (index !== -1) {
-                room.players.splice(index, 1)
+        update((players) => {
+            const index = findPlayer(players, evt.player_id)
+            if (index >= 0) {
+                players.splice(index, 1)
             }
-            delete room.state.votes[evt.player_id]
-            return room
+            return players
         })
     })
 
     client.stateChanged.connect(evt => {
-        update((room) => {
-            room.state = evt.game_state
-            return room
+        update((players) => {
+            for (const [id, vote] of Object.entries(evt.game_state.votes)) {
+                const index = findPlayer(players, id)
+                if (index >= 0) {
+                    players[index].vote = vote
+                }
+            }
+            return players
         })
     })
 
@@ -153,3 +181,16 @@ export const room: Readable<RoomState> = (function createRoomState() {
         subscribe
     }
 })()
+
+
+// navigation
+
+
+client.joined.connect(evt => {
+    console.log("navigate", get(roomId), evt.room)
+    navigate('/room/' + evt.room)
+})
+
+client.rejected.connect(evt => {
+    navigate('/')
+})

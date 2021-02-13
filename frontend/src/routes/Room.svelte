@@ -96,38 +96,28 @@
 </style>
 
 <script lang="ts">
-    import { connected, player_id, room, vote, voter, debug } from '../stores'
+    import { playerId, vote, voter, debug, players, gameState } from '../stores'
     import Banner from '../components/Banner.svelte'
     import CopyLink from '../components/CopyLink.svelte'
     import { get_deck as getDeck } from '../deck'
     import { client, playerState } from '../client'
+    import type { Option } from '../basetypes'
+    import { get } from 'svelte/store';
 
     export let id: string | null = null
 
 
-    $: cards = $room.state ? getDeck($room.state.deck).cards : []
-    $: votes = $room.state ? mapVotes() : []
-    $: open = $room.state && $room.state.open
+    $: cards = $gameState ? getDeck($gameState.deck).cards : []
+    $: open = $gameState && $gameState.open
 
     // TODO: disconnect on unmount
     client.welcome.connect(() => {
-        if (id !== null && id !== $room.id) {
+        const state = get(client.state)
+        if (id !== null && state !== "joining" && state !== "joined") {
             console.log('init join', id)
             client.joinRoom(id)
         }
     })
-
-    function mapVotes() {
-        let new_votes = []
-        let game_votes = $room.state.votes
-        $room.players.forEach((player) => {
-            let player_id = player.id
-            if (game_votes.hasOwnProperty(player_id)) {
-                new_votes.push({ id: player_id, vote: game_votes[player_id] })
-            }
-        })
-        return new_votes
-    }
 
     function setVote(value: string | null) {
         vote.update((v) => {
@@ -164,18 +154,20 @@
         <div class="container">
             <h2 class="title is-4">Estimates</h2>
             <ul class="card-row">
-                {#each votes as player_vote (player_vote.id)}
+                {#each $players as player (player.id)}
+                {#if player.voter}
                 <li class="game-card-item">
-                    <div class:backcover={!open} class:hidden={!player_vote.vote}>
+                    <div class:backcover={!open} class:hidden={!player.vote}>
                         <div class="game-card game-card-back">
                             <div class="card-inner">♠️</div>
                         </div>
                         <div class="game-card game-card-front">
-                            <div class="card-inner">{player_vote.vote ? player_vote.vote : '\xA0'}</div>
+                            <div class="card-inner">{player.vote ? player.vote : '\xA0'}</div>
                         </div>
                     </div>
                     <div class="game-card empty"></div>
                 </li>
+                {/if}
                 {/each}
             </ul>
             <div>
@@ -187,39 +179,36 @@
         </div>
     </section>
 
-    <section class="section">
-        <div class="container">
-            <h2 class="title is-4">Choose your estimate</h2>
-            <ul class="card-row">
-                {#each cards as card}
-                    <li class="game-card-item">
-                        <button
-                            class="game-card game-card-normal selectable"
-                            on:click={() => setVote(card)}
-                            class:selected={$vote === card}>
-                            <div class="card-inner">{card}</div>
-                        </button>
-                    </li>
-                {/each}
-            </ul>
-        </div>
-    </section>
+    {#if $voter}
+        <section class="section">
+            <div class="container">
+                <h2 class="title is-4">Choose your estimate</h2>
+                <ul class="card-row">
+                    {#each cards as card}
+                        <li class="game-card-item">
+                            <button
+                                class="game-card game-card-normal selectable"
+                                on:click={() => setVote(card)}
+                                class:selected={$vote === card}>
+                                <div class="card-inner">{card}</div>
+                            </button>
+                        </li>
+                    {/each}
+                </ul>
+            </div>
+        </section>
+    {/if}
 
     {#if $debug}
         <section class="section">
             <div class="container">
-                <div>Connected: {$connected}</div>
-                <div>Player ID: {$player_id}</div>
-                <div>ID: {id}</div>
-                <div>game ID: {$room.id}</div>
                 <div>player state: {$playerState}</div>
-                <div>game Error: {$room.last_error}</div>
-                <div>game state: {JSON.stringify($room.state)}</div>
-                <div>votes: {JSON.stringify(votes)}</div>
+                <div>Player ID: {$playerId}</div>
+                <div>ID: {id}</div>
                 <div>vote: {$vote}</div>
                 <div>voter: {$voter}</div>
                 <div>Open: {open}</div>
-                <div>game players: {JSON.stringify($room.players)}</div>
+                <div>players: {JSON.stringify($players)}</div>
             </div>
         </section>
     {/if}

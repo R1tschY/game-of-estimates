@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { connected, connecting, player_id, room } from '../stores'
+    import { connected, connecting, playerId } from '../stores'
     import { decks } from '../deck'
     import { client } from '../client'
     import Banner from '../components/Banner.svelte'
@@ -9,6 +9,9 @@
     let deckId = decks[0].id
     let roomId = ''
 
+    type Action = null | "join" | "create"
+    let action: Action = null
+
     let decks_dropdown = decks.map((deck) => {
         return {
             id: deck.id,
@@ -17,10 +20,12 @@
     })
 
     function createRoom() {
+        action = "create"
         client.createRoom(deckId)
     }
 
     function joinRoom() {
+        action = "join"
         client.joinRoom(roomId)
     }
 </script>
@@ -43,6 +48,7 @@
                             <button
                                 type="submit"
                                 class="button is-fullwidth is-primary"
+                                class:is-loading={action === "join"}
                                 on:click={joinRoom}>Join existing room</button>
                         </div>
                     </div>
@@ -65,6 +71,7 @@
                             <button
                                 type="button"
                                 class="button is-fullwidth is-warning"
+                                class:is-loading={action === "create"}
                                 on:click={createRoom}>Create room</button>
                         </div>
                     </div>
@@ -77,10 +84,7 @@
         <div class="container">
             <div>Connected: {$connected}</div>
             <div>Connecting: {$connecting}</div>
-            <div>Player ID: {$player_id}</div>
-            <div>Room ID: {$room.id}</div>
-            <div>Room State: {$room.status}</div>
-            <div>Room Error: {$room.last_error}</div>
+            <div>Player ID: {$playerId}</div>
             <div>Deck ID: {deckId}</div>
         </div>
     </section>
