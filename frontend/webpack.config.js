@@ -46,6 +46,7 @@ module.exports = {
                     options: {
                         emitCss: true,
                         hotReload: !prod,
+                        dev: !prod,
                         preprocess: svelte_preprocess([
                             svelte_preprocess.scss(),
                             svelte_preprocess.typescript()
