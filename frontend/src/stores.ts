@@ -1,48 +1,55 @@
 import { derived, get, Readable, Writable, writable } from 'svelte/store'
 import { navigate } from 'svelte-routing'
-import { client, GameState, OwnPlayerState, PlayerState, wsService } from './client'
+import { client, GameState, OwnPlayerState, PlayerInfo, wsService } from './client'
 import type { Option } from './basetypes'
+import { writableLocalStorage as writableLocalStorage, derivedWritable as derivedWritable, derivedWritableProperty } from './store-utils'
 
 // state
 
 export const connected: Readable<boolean> = wsService.connected_store
 export const connecting: Readable<boolean> = wsService.connecting_store
 export const player_id: Readable<Option<string>> = writable(null)
-export const voter: Writable<boolean> = writable(true)
-export const name: Writable<Option<string>> = writable(null)
 
-export const ownPlayerState: Writable<OwnPlayerState> = writable({
+
+export interface PlayerSettings {
+    name: Option<string>,
+    voter: boolean,
+    debug: boolean
+}
+
+export const ownPlayerState: Writable<PlayerSettings> = writableLocalStorage('goe-player-settings', {
+    name: null,
     voter: true,
-    name: null
+    debug: false
 })
 ownPlayerState.subscribe((value) => {
+    console.log("state changed", value)
     client.updatePlayer(value.voter, value.name)
 })
+
+export const debug: Readable<boolean> = derived(ownPlayerState, (value) => value.debug)
+
+export const voter: Writable<boolean> = writable(true)
 voter.subscribe((value) => {
-    ownPlayerState.update((player) => {
-        player.voter = value;
-        return player
-    })
-})
-name.subscribe((value) => {
-    ownPlayerState.update((player) => {
-        player.name = value;
-        return player
+    ownPlayerState.update((state) => {
+        state.voter = value
+        return state
     })
 })
 
-// function derived_writable<T, U>(store: Writable<U>, read: (value: U) => T, update: (old: U, value: T) => U): Writable<T> {
-//     let newStore = derived(store, read)
-//     return {
-//         subscribe: newStore.subscribe,
-//         set: function(value) {
-//             store.update((old) => update(old, value))
-//         },
-//         update: function(fn) {
-//             store.update((old) => update(old, fn(read(old))))
-//         }
-//     }
-// }
+// export const voter: Writable<boolean> = derivedWritableProperty(
+//     ownPlayerState,
+//     function() { return this.voter },
+//     function(value) { this.voter = value; }
+// )
+
+export const name: Writable<Option<string>> = writable(null)
+name.subscribe((value) => {
+    ownPlayerState.update((state) => {
+        state.name = value
+        return state
+    })
+})
 
 export const vote: Writable<Option<string>> = writable(null)
 vote.subscribe((value) => client.vote(value))
@@ -55,16 +62,14 @@ export const creating_room: Writable<boolean> = writable(false)
 
 interface RoomState {
     id: Option<string>,
-    status: 'outside' | 'joined',
     last_error: Option<string>,
-    players: PlayerState[],
+    players: PlayerInfo[],
     state: Option<GameState>,
 }
 
 function initRoomState(): RoomState {
     return {
         id: null,
-        status: 'outside',
         last_error: null,
         players: [],
         state: null,
@@ -89,7 +94,6 @@ export const room: Readable<RoomState> = (function createRoomState() {
                 navigate('/room/' + evt.room)
             return {
                 id: evt.room,
-                status: 'joined',
                 last_error: null,
                 players: evt.players,
                 state: evt.state,
@@ -103,26 +107,6 @@ export const room: Readable<RoomState> = (function createRoomState() {
             let state = initRoomState()
             state.last_error = "room does not exist"
             return state
-        })
-    })
-
-    wsService.disconnected.connect(() => {
-        update((room) => {
-            if (room.status !== 'outside') {
-                room.status = 'outside'
-                room.last_error = 'disconnected'
-            }
-            return room
-        })
-    })
-
-    wsService.error.connect(() => {
-        update((room) => {
-            if (room.status !== 'outside') {
-                room.status = 'outside'
-                room.last_error = 'error'
-            }
-            return room
         })
     })
 

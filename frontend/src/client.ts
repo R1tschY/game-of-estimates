@@ -1,4 +1,4 @@
-import { writable, Writable } from 'svelte/store'
+import { readable, Readable, writable, Writable } from 'svelte/store'
 import type { Option } from './basetypes'
 import { Signal } from './events'
 
@@ -26,15 +26,15 @@ export interface RejectedEvent { }
 export interface JoinedEvent {
     room: string;
     state: GameState;
-    players: PlayerState[];
+    players: PlayerInfo[];
 }
 
 export interface PlayerJoinedEvent {
-    player: PlayerState;
+    player: PlayerInfo;
 }
 
 export interface PlayerChangedEvent {
-    player: PlayerState;
+    player: PlayerInfo;
 }
 
 export interface PlayerLeftEvent {
@@ -45,7 +45,7 @@ export interface GameChangedEvent {
     game_state: GameState;
 }
 
-export interface PlayerState {
+export interface PlayerInfo {
     id: string,
     name: Option<string>,
     voter: boolean,
@@ -64,21 +64,26 @@ export interface GameState {
 
 export interface RejectedEvent { }
 
+export type PlayerState = "connecting" | "outside" | "joining" | "joined"
 
 export class Client {
-    ws: WebSocket
+    _ws: WebSocket
 
-    welcome: Signal<WelcomeMessageEvent> = new Signal();
-    joined: Signal<JoinedEvent> = new Signal();
-    playerJoined: Signal<PlayerJoinedEvent> = new Signal();
-    playerChanged: Signal<PlayerChangedEvent> = new Signal();
-    playerLeft: Signal<PlayerLeftEvent> = new Signal();
-    stateChanged: Signal<GameChangedEvent> = new Signal();
-    rejected: Signal<RejectedEvent> = new Signal();
+    state: Writable<PlayerState>
+
+    welcome: Signal<WelcomeMessageEvent> = new Signal()
+    joined: Signal<JoinedEvent> = new Signal()
+    playerJoined: Signal<PlayerJoinedEvent> = new Signal()
+    playerChanged: Signal<PlayerChangedEvent> = new Signal()
+    playerLeft: Signal<PlayerLeftEvent> = new Signal()
+    stateChanged: Signal<GameChangedEvent> = new Signal()
+    rejected: Signal<RejectedEvent> = new Signal()
 
     constructor(wsService: WebSocketService) {
-        wsService.ws_store.subscribe(($ws) => (this.ws = $ws))
-        wsService.message.connect((evt) => this.on_messageArrived(evt))
+        wsService.ws_store.subscribe(($ws) => (this._ws = $ws))
+        wsService.message.connect((evt) => this._onMessageArrived(evt))
+        wsService.disconnected.connect((evt) => this._onDisconnected(evt))
+        this.state = writable("connecting")
     }
 
     updatePlayer(voter: boolean, name: Option<string>) {
@@ -91,7 +96,7 @@ export class Client {
 
     vote(vote: Option<string>) {
         this._send({
-            type: 'SetVoter',
+            type: 'Vote',
             vote
         })
     }
@@ -116,6 +121,7 @@ export class Client {
     }
 
     joinRoom(room: string) {
+        this.state.set("joining")
         this._send({
             type: 'JoinRoom',
             room
@@ -130,19 +136,25 @@ export class Client {
     }
 
     _send(payload: any) {
-        if (this.ws) {
-            this.ws.send(JSON.stringify(payload))
+        if (this._ws) {
+            this._ws.send(JSON.stringify(payload))
         }
     }
 
-    on_messageArrived(event: any) {
+    private _onDisconnected(evt: Event): void {
+        this.state.set("connecting")
+    }
+
+    private _onMessageArrived(event: any) {
         console.debug('Got message', event)
         switch (event.type) {
             case 'Welcome':
+                this.state.set("outside")
                 this.welcome.emit(event as WelcomeMessageEvent)
                 break
     
             case 'Joined':
+                this.state.set("joined")
                 this.joined.emit(event as JoinedEvent)
                 break
     
@@ -163,6 +175,7 @@ export class Client {
                 break
 
             case 'Rejected':
+                this.state.set("outside")
                 this.rejected.emit(event as RejectedEvent)
                 break
     
@@ -252,3 +265,6 @@ export class WebSocketService {
 export var wsService: WebSocketService = new WebSocketService()
 
 export var client: Client = new Client(wsService)
+export var playerState: Readable<PlayerState> = client.state
+
+playerState.subscribe((value) => console.debug("Player state is now", value))

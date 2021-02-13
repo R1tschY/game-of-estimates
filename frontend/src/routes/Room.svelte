@@ -96,11 +96,11 @@
 </style>
 
 <script lang="ts">
-    import { connected, player_id, room, vote, voter } from '../stores'
+    import { connected, player_id, room, vote, voter, debug } from '../stores'
     import Banner from '../components/Banner.svelte'
     import CopyLink from '../components/CopyLink.svelte'
     import { get_deck as getDeck } from '../deck'
-    import { client } from '../client'
+    import { client, playerState } from '../client'
 
     export let id: string | null = null
 
@@ -205,20 +205,22 @@
         </div>
     </section>
 
-    <section class="section">
-        <div class="container">
-            <div>Connected: {$connected}</div>
-            <div>Player ID: {$player_id}</div>
-            <div>ID: {id}</div>
-            <div>game ID: {$room.id}</div>
-            <div>game State: {$room.status}</div>
-            <div>game Error: {$room.last_error}</div>
-            <div>game state: {JSON.stringify($room.state)}</div>
-            <div>votes: {JSON.stringify(votes)}</div>
-            <div>vote: {$vote}</div>
-            <div>voter: {$voter}</div>
-            <div>Open: {open}</div>
-            <div>game players: {JSON.stringify($room.players)}</div>
-        </div>
-    </section>
+    {#if $debug}
+        <section class="section">
+            <div class="container">
+                <div>Connected: {$connected}</div>
+                <div>Player ID: {$player_id}</div>
+                <div>ID: {id}</div>
+                <div>game ID: {$room.id}</div>
+                <div>player state: {$playerState}</div>
+                <div>game Error: {$room.last_error}</div>
+                <div>game state: {JSON.stringify($room.state)}</div>
+                <div>votes: {JSON.stringify(votes)}</div>
+                <div>vote: {$vote}</div>
+                <div>voter: {$voter}</div>
+                <div>Open: {open}</div>
+                <div>game players: {JSON.stringify($room.players)}</div>
+            </div>
+        </section>
+    {/if}
 </div>
