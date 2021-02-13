@@ -7,11 +7,11 @@ use serde::{Deserialize, Serialize};
 
 use uactor::blocking::{Actor, ActorContext, Addr, Context};
 
-use crate::player::PlayerAddr;
+use crate::player::{PlayerAddr, PlayerInformation};
 
 #[derive(Debug)]
 pub enum RoomMessage {
-    JoinRequest(String, PlayerAddr),
+    JoinRequest(PlayerAddr, PlayerInformation),
     PlayerLeft(String),
     PlayerVoted(String, Option<String>),
     UpdatePlayer {
@@ -61,28 +61,24 @@ pub enum GamePlayerMessage {
 struct GamePlayer {
     addr: PlayerAddr,
 
-    id: String,
-    voter: bool,
     vote: Option<String>,
-    name: Option<String>,
+    info: PlayerInformation,
 }
 
 impl GamePlayer {
-    pub fn new(id: &str, addr: PlayerAddr, voter: bool) -> Self {
+    pub fn new(addr: PlayerAddr, info: PlayerInformation) -> Self {
         Self {
-            id: id.to_string(),
             addr,
-            voter,
+            info,
             vote: None,
-            name: None,
         }
     }
 
     fn to_state(&self) -> PlayerState {
         PlayerState {
-            id: self.id.clone(),
-            name: self.name.clone(),
-            voter: self.voter,
+            id: self.info.id.clone(),
+            name: self.info.name.clone(),
+            voter: self.info.voter,
         }
     }
 }
@@ -95,11 +91,14 @@ pub struct Room {
 }
 
 impl Room {
-    pub fn new(id: &str, creator: (String, PlayerAddr), deck: String) -> Self {
+    pub fn new(id: &str, creator: (PlayerAddr, PlayerInformation), deck: String) -> Self {
         warn!("{}: Created room", id);
+
+        let player_id = creator.1.id.clone();
+        let game_player = GamePlayer::new(creator.0.clone(), creator.1);
+
         let mut players = HashMap::new();
-        let game_player = GamePlayer::new(&creator.0, creator.1, false);
-        players.insert(creator.0, game_player);
+        players.insert(player_id, game_player);
 
         Self {
             id: id.to_string(),
@@ -120,7 +119,7 @@ impl Room {
         if result.is_err() {
             error!(
                 "{}: Failed to send message to player {}",
-                self.id, player.id
+                self.id, player.info.id
             );
             // TODO: self.remove_player(player.)
         }
@@ -132,15 +131,21 @@ impl Room {
             if result.is_err() {
                 error!(
                     "{}: Failed to send message to player {}",
-                    self.id, player.id
+                    self.id, player.info.id
                 );
                 // TODO: self.remove_player(player.)
             }
         }
     }
 
-    async fn add_player(&mut self, player_id: String, player: PlayerAddr, ctx: &Context<Self>) {
-        let game_player = GamePlayer::new(&player_id, player.clone(), true);
+    async fn add_player(
+        &mut self,
+        player_addr: PlayerAddr,
+        player: PlayerInformation,
+        ctx: &Context<Self>,
+    ) {
+        let player_id = player.id.clone();
+        let game_player = GamePlayer::new(player_addr, player);
         let game_player_state = game_player.to_state();
         self.players.insert(player_id, game_player.clone());
 
@@ -172,7 +177,7 @@ impl Room {
 
     async fn set_vote(&mut self, player_id: &str, vote: Option<String>) {
         if let Some(mut player) = self.players.get_mut(player_id) {
-            if player.voter {
+            if player.info.voter {
                 player.vote = vote;
             } else {
                 warn!("{}: Non-voter {} voted", self.id, player_id);
@@ -190,10 +195,14 @@ impl Room {
         let all_voted = self
             .players
             .values()
-            .all(|player| player.vote.is_some() || !player.voter);
+            .all(|player| player.vote.is_some() || !player.info.voter);
         if all_voted {
             // at least 2 voter must exist to make sense
-            let voters = self.players.values().filter(|player| player.voter).count();
+            let voters = self
+                .players
+                .values()
+                .filter(|player| player.info.voter)
+                .count();
             if voters > 1 {
                 self.open = true;
             }
@@ -224,8 +233,8 @@ impl Room {
 
     async fn update_player(&mut self, id: &str, name: Option<String>, voter: bool) {
         if let Some(player) = self.players.get_mut(id) {
-            player.voter = voter;
-            player.name = name;
+            player.info.voter = voter;
+            player.info.name = name;
 
             let state = player.to_state();
             self.send_to_players(GamePlayerMessage::PlayerChanged(state))
@@ -242,7 +251,7 @@ impl Room {
             votes: self
                 .players
                 .values()
-                .filter(|p| p.voter)
+                .filter(|p| p.info.voter)
                 .map(|p| {
                     let vote = if self.open {
                         p.vote.clone()
@@ -250,7 +259,7 @@ impl Room {
                         p.vote.as_ref().map(|_vote| "�".to_string())
                     };
 
-                    (p.id.clone(), vote)
+                    (p.info.id.clone(), vote)
                 })
                 .collect(),
         }
@@ -266,8 +275,8 @@ impl Actor for Room {
 
     async fn on_message(&mut self, msg: Self::Message, ctx: &Context<Self>) {
         match msg {
-            RoomMessage::JoinRequest(player_id, player) => {
-                self.add_player(player_id, player, ctx).await
+            RoomMessage::JoinRequest(player_addr, player) => {
+                self.add_player(player_addr, player, ctx).await
             }
             RoomMessage::PlayerLeft(player) => self.remove_player(&player).await,
             RoomMessage::PlayerVoted(player_id, vote) => self.set_vote(&player_id, vote).await,

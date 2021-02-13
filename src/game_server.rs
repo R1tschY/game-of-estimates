@@ -4,20 +4,22 @@ use tokio::sync::mpsc;
 
 use uactor::blocking::{Actor, Context};
 
-use crate::player::PlayerAddr;
+use crate::player::{PlayerAddr, PlayerInformation};
 use crate::room::{GamePlayerMessage, RejectReason, Room, RoomAddr, RoomMessage};
 
 #[derive(Debug)]
 pub enum GameServerMessage {
     Join {
         room: String,
-        player_id: String,
-        player: PlayerAddr,
+
+        player_addr: PlayerAddr,
+        player: PlayerInformation,
     },
     Create {
-        player_id: String,
-        player: PlayerAddr,
         deck: String,
+
+        player_addr: PlayerAddr,
+        player: PlayerInformation,
     },
 }
 
@@ -59,33 +61,33 @@ impl Actor for GameServer {
         match msg {
             GameServerMessage::Join {
                 room,
-                player_id,
+                player_addr,
                 player,
             } => {
                 if let Some(room_addr) = self.rooms.get_mut(&room) {
                     let result = room_addr
-                        .send(RoomMessage::JoinRequest(player_id, player.clone()))
+                        .send(RoomMessage::JoinRequest(player_addr.clone(), player))
                         .await;
                     if let Err(_) = result {
-                        // room does not exist anymore
-                        Self::send_rejection(&player, RejectReason::RoomDoesNotExist).await;
+                        // room does not exist
+                        Self::send_rejection(&player_addr, RejectReason::RoomDoesNotExist).await;
                         self.rooms.remove(&room);
                     }
                 } else {
-                    Self::send_rejection(&player, RejectReason::RoomDoesNotExist).await;
+                    Self::send_rejection(&player_addr, RejectReason::RoomDoesNotExist).await;
                 }
             }
 
             GameServerMessage::Create {
-                player_id,
+                player_addr,
                 player,
                 deck,
             } => {
                 if let Some(room_id) = self.find_new_game_id() {
-                    let room = Room::new(&room_id, (player_id, player), deck);
+                    let room = Room::new(&room_id, (player_addr, player), deck);
                     self.rooms.insert(room_id, room.start());
                 } else {
-                    Self::send_rejection(&player, RejectReason::CreateGameError).await;
+                    Self::send_rejection(&player_addr, RejectReason::CreateGameError).await;
                 }
             }
         }

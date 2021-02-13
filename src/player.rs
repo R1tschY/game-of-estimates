@@ -22,11 +22,22 @@ pub struct Player {
     room_id: Option<String>,
     room: Option<RoomAddr>,
     game_server: GameServerAddr,
+
     remote: RemoteConnection,
     ping_interval: Interval,
+
+    name: Option<String>,
+    voter: bool,
 }
 
 pub type PlayerAddr = mpsc::Sender<GamePlayerMessage>;
+
+#[derive(Debug, Clone)]
+pub struct PlayerInformation {
+    pub id: String,
+    pub voter: bool,
+    pub name: Option<String>,
+}
 
 impl Player {
     pub fn new(remote: RemoteConnection, game_server: GameServerAddr) -> Self {
@@ -42,6 +53,9 @@ impl Player {
 
             remote,
             ping_interval: interval(Duration::from_secs(30)),
+
+            name: None,
+            voter: true,
         }
     }
 
@@ -86,7 +100,7 @@ impl Player {
     }
 
     async fn send_join_message(&mut self, msg: GameServerMessage) {
-        let result = self.game_server.send(msg).await; // TODO: Result
+        let result = self.game_server.send(msg).await;
         if let Err(_) = result {
             error!("{}: Join room does not exist", self.id);
             self.room = None;
@@ -105,9 +119,10 @@ impl Player {
                 info!("{}: Wants to create a room", self.id);
                 self.leave_old_room().await;
                 self.room_id = Some(TO_BE_CREATED.to_string()); // as marker
+                let information = self.get_player_information();
                 self.send_join_message(GameServerMessage::Create {
-                    player_id: self.id.clone(),
-                    player: self.addr(),
+                    player_addr: self.addr(),
+                    player: information,
                     deck,
                 })
                 .await;
@@ -121,10 +136,11 @@ impl Player {
 
                 self.leave_old_room().await;
                 self.room_id = Some(room.clone());
+                let player_information = self.get_player_information();
                 self.send_join_message(GameServerMessage::Join {
                     room,
-                    player_id: self.id.clone(),
-                    player: self.addr(),
+                    player_addr: self.addr(),
+                    player: player_information,
                 })
                 .await;
             }
@@ -134,13 +150,21 @@ impl Player {
                     .await;
             }
             RemoteMessage::UpdatePlayer { voter, name } => {
-                info!("{}: Set voter {:?}", self.id, &voter);
-                self.send_to_room(RoomMessage::UpdatePlayer {
-                    id: self.id.clone(),
-                    voter,
-                    name,
-                })
-                .await;
+                info!(
+                    "{}: Update player: voter={:?} name={:?}",
+                    self.id, &voter, &name
+                );
+                self.voter = voter;
+                self.name = name.clone();
+
+                if self.room.is_some() {
+                    self.send_to_room(RoomMessage::UpdatePlayer {
+                        id: self.id.clone(),
+                        voter,
+                        name,
+                    })
+                    .await;
+                }
             }
             RemoteMessage::ForceOpen => {
                 info!("{}: Force open", self.id);
@@ -158,6 +182,14 @@ impl Player {
             }
         }
         true
+    }
+
+    fn get_player_information(&mut self) -> PlayerInformation {
+        PlayerInformation {
+            id: self.id.clone(),
+            voter: self.voter,
+            name: self.name.clone(),
+        }
     }
 
     async fn send_to_remote(&mut self, msg: RemoteMessage) {
