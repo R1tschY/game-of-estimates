@@ -21,6 +21,7 @@ pub enum RoomMessage {
     },
     ForceOpen,
     Restart,
+    Close,
 }
 
 #[derive(Debug, PartialEq, Copy, Clone)]
@@ -273,7 +274,7 @@ impl Actor for Room {
     type Message = RoomMessage;
     type Context = Context<Self>;
 
-    async fn on_message(&mut self, msg: Self::Message, ctx: &Context<Self>) {
+    async fn on_message(&mut self, msg: Self::Message, ctx: &mut Context<Self>) {
         match msg {
             RoomMessage::JoinRequest(player_addr, player) => {
                 self.add_player(player_addr, player, ctx).await
@@ -285,10 +286,11 @@ impl Actor for Room {
             RoomMessage::UpdatePlayer { id, name, voter } => {
                 self.update_player(&id, name, voter).await
             }
+            RoomMessage::Close => ctx.force_quit(),
         }
     }
 
-    async fn setup(&mut self, ctx: &Context<Self>) {
+    async fn setup(&mut self, ctx: &mut Context<Self>) {
         let players_state: Vec<PlayerState> = self.players.values().map(|p| p.to_state()).collect();
         let game_state = self.to_state();
 
@@ -299,5 +301,120 @@ impl Actor for Room {
             players_state.clone(),
         ))
         .await;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use tokio::sync::mpsc;
+
+    use crate::game_server::GameServerMessage;
+    use crate::room::GamePlayerMessage::GameStateChanged;
+    use crate::room::RoomMessage::{JoinRequest, PlayerVoted, UpdatePlayer};
+
+    use super::*;
+
+    fn create_player(
+        id: &str,
+        voter: bool,
+    ) -> (
+        PlayerAddr,
+        mpsc::Receiver<GamePlayerMessage>,
+        PlayerInformation,
+    ) {
+        let (player_addr, rx) = mpsc::channel(16);
+        let info = PlayerInformation {
+            id: id.to_string(),
+            voter: true,
+            name: None,
+        };
+
+        (player_addr, rx, info)
+    }
+
+    fn create_room(addr: &mpsc::Sender<GamePlayerMessage>, info: PlayerInformation) -> Room {
+        Room::new("TEST", (addr.clone(), info), "DECK".to_string())
+    }
+
+    async fn send(addr: &mpsc::Sender<RoomMessage>, msg: RoomMessage) {
+        addr.send(msg).await.unwrap();
+    }
+
+    async fn send_vote(addr: &mpsc::Sender<RoomMessage>, player: &str, vote: Option<&str>) {
+        send(
+            &addr,
+            PlayerVoted(player.to_string(), vote.map(|v| v.to_string())),
+        )
+        .await;
+    }
+
+    async fn close(addr: &mpsc::Sender<RoomMessage>) {
+        send(&addr, RoomMessage::Close).await;
+        addr.closed().await;
+    }
+
+    #[tokio::test]
+    async fn check_open_when_all_voted() {
+        let (player_addr1, mut rx1, player_info1) = create_player("1", true);
+        let (player_addr2, _rx2, player_info2) = create_player("2", true);
+
+        let room = create_room(&player_addr1, player_info1);
+        let room_addr = room.start();
+        send(&room_addr, JoinRequest(player_addr2, player_info2)).await;
+
+        // ACT
+        send_vote(&room_addr, "1", Some("VOTE")).await;
+        send_vote(&room_addr, "2", Some("VOTE")).await;
+        close(&room_addr).await;
+
+        // ASSERT
+        test_for_message!(rx1, GameStateChanged(state) if state.open == true);
+    }
+
+    #[tokio::test]
+    async fn check_open_with_non_voter() {
+        let (player_addr1, mut rx1, player_info1) = create_player("1", true);
+        let (player_addr2, _rx2, player_info2) = create_player("2", false);
+
+        let room = create_room(&player_addr1, player_info1);
+        let room_addr = room.start();
+        send(&room_addr, JoinRequest(player_addr2, player_info2)).await;
+
+        // ACT
+        send_vote(&room_addr, "1", Some("VOTE")).await;
+        close(&room_addr).await;
+
+        // ASSERT
+        test_for_message!(rx1, GameStateChanged(state) if state.open == true);
+    }
+
+    #[tokio::test]
+    async fn check_open_after_player_became_non_voter() {
+        let (player_addr1, mut rx1, player_info1) = create_player("1", true);
+        let (player_addr2, _rx2, player_info2) = create_player("2", true);
+
+        let room = Room::new(
+            "TEST",
+            (player_addr1.clone(), player_info1),
+            "DECK".to_string(),
+        );
+        let room_addr = room.start();
+        send(&room_addr, JoinRequest(player_addr2, player_info2)).await;
+
+        // ACT
+        send_vote(&room_addr, "1", Some("VOTE")).await;
+        send(
+            &room_addr,
+            UpdatePlayer {
+                id: "2".to_string(),
+                voter: false,
+                name: None,
+            },
+        )
+        .await;
+        close(&room_addr).await;
+
+        // ASSERT
+        test_for_message!(rx1, GameStateChanged(state) if state.open == true);
     }
 }

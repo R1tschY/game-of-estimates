@@ -57,7 +57,7 @@ impl Actor for GameServer {
     type Message = GameServerMessage;
     type Context = Context<Self>;
 
-    async fn on_message(&mut self, msg: Self::Message, _ctx: &Context<Self>) {
+    async fn on_message(&mut self, msg: Self::Message, _ctx: &mut Context<Self>) {
         match msg {
             GameServerMessage::Join {
                 room,
