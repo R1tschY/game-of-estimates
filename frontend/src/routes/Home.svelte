@@ -1,6 +1,7 @@
 <script lang="ts">
     import { connected, connecting, player_id, room } from '../stores'
     import { decks } from '../deck'
+    import { client } from '../client'
     import Banner from '../components/Banner.svelte'
     import SelectWithButton from '../components/SelectWithButton.svelte'
     import DisconnectedMW from '../components/DisconnectedMW.svelte'
@@ -14,6 +15,14 @@
             label: deck.name + ' (' + deck.cards.slice(0, -2).join(', ') + ')',
         }
     })
+
+    function createRoom() {
+        client.createRoom(deckId)
+    }
+
+    function joinRoom() {
+        client.joinRoom(roomId)
+    }
 </script>
 
 <div>
@@ -34,7 +43,7 @@
                             <button
                                 type="submit"
                                 class="button is-fullwidth is-primary"
-                                on:click={() => room.join(roomId)}>Join existing room</button>
+                                on:click={joinRoom}>Join existing room</button>
                         </div>
                     </div>
                 </form>
@@ -56,7 +65,7 @@
                             <button
                                 type="button"
                                 class="button is-fullwidth is-warning"
-                                on:click={() => room.create(deckId)}>Create room</button>
+                                on:click={createRoom}>Create room</button>
                         </div>
                     </div>
                 </form>

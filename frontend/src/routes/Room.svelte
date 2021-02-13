@@ -2,7 +2,7 @@
     $card-width: 63mm * 0.25;
     $card-height: 88mm * 0.25;
 
-    $tt-gray:#63666a;
+    $tt-gray: #63666a;
     $tt-orange: #ed8b00;
     $tt-petrol: #208CA3;
 
@@ -99,13 +99,23 @@
     import { connected, player_id, room, vote, voter } from '../stores'
     import Banner from '../components/Banner.svelte'
     import CopyLink from '../components/CopyLink.svelte'
-    import { get_deck } from '../deck'
+    import { get_deck as getDeck } from '../deck'
+    import { client } from '../client'
 
     export let id: string | null = null
-    if (id !== null && id !== $room.id) {
-        console.log('init join')
-        room.join(id)
-    }
+
+
+    $: cards = $room.state ? getDeck($room.state.deck).cards : []
+    $: votes = $room.state ? mapVotes() : []
+    $: open = $room.state && $room.state.open
+
+    // TODO: disconnect on unmount
+    client.welcome.connect(() => {
+        if (id !== null && id !== $room.id) {
+            console.log('init join', id)
+            client.joinRoom(id)
+        }
+    })
 
     function mapVotes() {
         let new_votes = []
@@ -125,25 +135,15 @@
         })
     }
 
-    function updateVoter(value: boolean) {
-        voter.update((v) => {
-            return v !== value ? value : null
-        })
-    }
-
     function forceOpen() {
         if (!open) {
-            room.force_open()
+            client.forceOpen()
         }
     }
 
     function restart() {
-        room.restart()
+        client.restart()
     }
-
-    $: cards = $room.state ? get_deck($room.state.deck).cards : []
-    $: votes = $room.state ? mapVotes() : []
-    $: open = $room.state && $room.state.open
 </script>
 
 <div>
@@ -155,7 +155,7 @@
 
         <div class="field">
             <!-- User -->
-            <input id="voterField" type="checkbox" class="switch" bind:checked={$voter}>
+            <input id="voterField" type="checkbox" class="switch" on:change="" bind:checked={$voter}>
             <label for="voterField">Voter</label>
         </div>
     </div>
@@ -216,7 +216,7 @@
             <div>game state: {JSON.stringify($room.state)}</div>
             <div>votes: {JSON.stringify(votes)}</div>
             <div>vote: {$vote}</div>
-            <div>voter: {voter}</div>
+            <div>voter: {$voter}</div>
             <div>Open: {open}</div>
             <div>game players: {JSON.stringify($room.players)}</div>
         </div>
