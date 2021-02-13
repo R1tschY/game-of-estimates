@@ -77,7 +77,7 @@ async fn main() -> Result<(), String> {
 
     let addr = env::var("GOE_WEBSOCKET_ADDR").unwrap_or_else(|_| "127.0.0.1:5500".to_string());
 
-    let acceptor = if let Some(cert) = env::var("GOE_CERT_PKCS12").ok() {
+    let acceptor = if let Ok(cert) = env::var("GOE_CERT_PKCS12") {
         create_tls_acceptor(cert)?
     } else {
         StreamAcceptor::Plain
@@ -89,7 +89,7 @@ async fn main() -> Result<(), String> {
         .in_context("Failed to bind")?;
     info!("Listening on {}://{}", acceptor.scheme(), &addr);
 
-    let game_server = GameServer::new();
+    let game_server = GameServer::default();
     let game_server_addr = game_server.start();
 
     while let Ok((stream, _)) = listener.accept().await {

@@ -63,7 +63,7 @@ impl Player {
         rand::thread_rng()
             .sample_iter(&Alphanumeric)
             .take(16)
-            .map(|b| char::from(b))
+            .map(char::from)
             .collect::<String>()
     }
 
@@ -89,7 +89,7 @@ impl Player {
 
     async fn send_to_room(&mut self, msg: RoomMessage) {
         if let Some(ref room) = &self.room {
-            if let Err(_) = room.send(msg).await {
+            if room.send(msg).await.is_err() {
                 error!("{}: Room does not exist anymore", self.id);
                 self.room = None;
                 self.room_id = None;
@@ -101,8 +101,7 @@ impl Player {
     }
 
     async fn send_join_message(&mut self, msg: GameServerMessage) {
-        let result = self.game_server.send(msg).await;
-        if let Err(_) = result {
+        if self.game_server.send(msg).await.is_err() {
             error!("{}: Join room does not exist", self.id);
             self.room = None;
             self.room_id = None;

@@ -60,7 +60,7 @@ where
     A: Actor<Context = Self>,
     S: AsyncSystem,
 {
-    fn new(tx: Addr<A::Message>, rx: MailBox<A::Message>) -> A::Context {
+    fn new(tx: Addr<A::Message>, rx: MailBox<A::Message>) -> Self {
         Self {
             tx,
             rx,
@@ -68,7 +68,7 @@ where
         }
     }
 
-    async fn into_future(mut self: Self, mut actor: A) -> () {
+    async fn into_future(mut self, mut actor: A) {
         actor.setup(&self);
         while let Some(msg) = self.rx.recv().await {
             actor.on_message(msg, &self);

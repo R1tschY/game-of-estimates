@@ -30,12 +30,6 @@ pub struct GameServer {
 pub type GameServerAddr = mpsc::Sender<GameServerMessage>;
 
 impl GameServer {
-    pub fn new() -> Self {
-        Self {
-            rooms: HashMap::new(),
-        }
-    }
-
     pub fn find_new_game_id(&self) -> Option<String> {
         for digits in 6..20 {
             let id = Room::gen_id(digits);
@@ -49,6 +43,14 @@ impl GameServer {
 
     async fn send_rejection(player: &PlayerAddr, reason: RejectReason) {
         let _ = player.send(GamePlayerMessage::Rejected(reason)).await;
+    }
+}
+
+impl Default for GameServer {
+    fn default() -> Self {
+        Self {
+            rooms: HashMap::new(),
+        }
     }
 }
 
@@ -68,7 +70,7 @@ impl Actor for GameServer {
                     let result = room_addr
                         .send(RoomMessage::JoinRequest(player_addr.clone(), player))
                         .await;
-                    if let Err(_) = result {
+                    if result.is_err() {
                         // room does not exist
                         Self::send_rejection(&player_addr, RejectReason::RoomDoesNotExist).await;
                         self.rooms.remove(&room);
