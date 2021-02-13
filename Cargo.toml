@@ -20,6 +20,9 @@ quick-error = "^2.0.0"
 async-trait = "^0.1.40"
 uactor = { path = "components/uactor" }
 
+[dev-dependencies]
+ctor = "0.1.19"
+
 [workspace]
 members = [
     "components/uactor"
