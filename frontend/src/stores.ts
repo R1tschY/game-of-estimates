@@ -185,6 +185,10 @@ export const players: Readable<PlayerExtInfo[]> = (function createRoomState() {
 
 // navigation
 
+client.welcome.connect(evt => {
+    const state = get(ownPlayerState)
+    client.updatePlayer(state.voter, state.name)
+})
 
 client.joined.connect(evt => {
     console.log("navigate", get(roomId), evt.room)
