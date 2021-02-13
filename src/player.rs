@@ -133,6 +133,15 @@ impl Player {
                 self.send_to_room(RoomMessage::PlayerVoted(self.id.clone(), vote))
                     .await;
             }
+            RemoteMessage::UpdatePlayer { voter, name } => {
+                info!("{}: Set voter {:?}", self.id, &voter);
+                self.send_to_room(RoomMessage::UpdatePlayer {
+                    id: self.id.clone(),
+                    voter,
+                    name,
+                })
+                .await;
+            }
             RemoteMessage::ForceOpen => {
                 info!("{}: Force open", self.id);
                 self.send_to_room(RoomMessage::ForceOpen).await;

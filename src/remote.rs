@@ -14,9 +14,6 @@ use crate::room::{GameState, PlayerState};
 #[serde(tag = "type")]
 pub enum RemoteMessage {
     // upstream
-    SetVoter {
-        voter: bool,
-    },
     Vote {
         vote: Option<String>,
     },
@@ -35,6 +32,7 @@ pub enum RemoteMessage {
     CreateRoom {
         deck: String,
     },
+    // pseudo
     Ping(Duration),
     Close,
 

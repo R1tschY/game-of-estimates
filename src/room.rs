@@ -96,7 +96,7 @@ pub struct Room {
 
 impl Room {
     pub fn new(id: &str, creator: (String, PlayerAddr), deck: String) -> Self {
-        warn!("{}: new room", id);
+        warn!("{}: Created room", id);
         let mut players = HashMap::new();
         let game_player = GamePlayer::new(&creator.0, creator.1, false);
         players.insert(creator.0, game_player);
