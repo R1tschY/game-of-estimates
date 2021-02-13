@@ -23,10 +23,10 @@ pub trait Actor: Send + Sized + 'static {
 
     type Context: ActorContext<Self>; // FUTURE: = Context<Self>;
 
-    async fn on_message(&mut self, msg: Self::Message, ctx: &Self::Context);
+    async fn on_message(&mut self, msg: Self::Message, ctx: &mut Self::Context);
 
-    async fn setup(&mut self, _ctx: &Self::Context) {}
-    async fn tear_down(&mut self, _ctx: &Self::Context) {}
+    async fn setup(&mut self, _ctx: &mut Self::Context) {}
+    async fn tear_down(&mut self, _ctx: &mut Self::Context) {}
 
     fn start(self) -> Addr<Self::Message> {
         Self::Context::run(self)
@@ -37,11 +37,18 @@ pub trait Actor: Send + Sized + 'static {
 pub trait ActorContext<A: Actor>: std::marker::Sync + std::marker::Send + 'static {
     fn addr(&self) -> Addr<A::Message>;
 
+    /// Stop processing messages and exit actor
+    fn force_quit(&mut self);
+
+    /// Spawn coroutine
     fn spawn<F: Future>(f: F) -> JoinHandle<F::Output>
     where
         F: Future + Send + 'static,
         F::Output: Send + 'static;
 
+    /// Run this actor.
+    ///
+    /// Note: Please use `A::start` instead.
     fn run(actor: A) -> Addr<A::Message>;
 }
 
@@ -52,7 +59,7 @@ pub type Context<A> = BasicActorContext<A, TokioSystem>;
 /// Used to get address or spawn actors
 pub struct BasicActorContext<A: Actor, S: AsyncSystem> {
     tx: Addr<A::Message>,
-    rx: MailBox<A::Message>,
+    rx: Option<MailBox<A::Message>>,
     _async_system: PhantomData<S>,
 }
 
@@ -64,17 +71,19 @@ where
     fn new(tx: Addr<A::Message>, rx: MailBox<A::Message>) -> A::Context {
         Self {
             tx,
-            rx,
+            rx: Some(rx),
             _async_system: PhantomData,
         }
     }
 
     async fn into_future(mut self: Self, mut actor: A) -> () {
-        actor.setup(&self).await;
-        while let Some(msg) = self.rx.recv().await {
-            actor.on_message(msg, &self).await;
+        actor.setup(&mut self).await;
+        while let Some(rx) = self.rx.as_mut() {
+            if let Some(msg) = rx.recv().await {
+                actor.on_message(msg, &mut self).await;
+            }
         }
-        actor.tear_down(&self).await;
+        actor.tear_down(&mut self).await;
     }
 }
 
@@ -85,6 +94,10 @@ where
 {
     fn addr(&self) -> Addr<A::Message> {
         self.tx.clone()
+    }
+
+    fn force_quit(&mut self) {
+        self.rx = None;
     }
 
     fn spawn<F: Future>(f: F) -> JoinHandle<F::Output>
