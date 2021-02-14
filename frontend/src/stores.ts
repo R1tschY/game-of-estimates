@@ -22,7 +22,6 @@ export const ownPlayerState: Writable<PlayerSettings> = writableLocalStorage('go
     debug: false
 })
 ownPlayerState.subscribe((value) => {
-    console.log("state changed", value)
     client.updatePlayer(value.voter, value.name)
 })
 
@@ -185,6 +184,7 @@ export const players: Readable<PlayerExtInfo[]> = (function createRoomState() {
 })()
 
 
+
 // navigation
 
 client.welcome.connect(evt => {
@@ -193,10 +193,27 @@ client.welcome.connect(evt => {
 })
 
 client.joined.connect(evt => {
-    console.log("navigate", get(roomId), evt.room)
     navigate('/room/' + evt.room)
 })
 
 client.rejected.connect(evt => {
     navigate('/')
 })
+
+// sveltex
+
+export interface Actions {
+    changeName(name: string): void;
+}
+
+export interface Mutations {
+    setRemoteName(name: string): void;
+}
+
+function dispatch() {
+
+}
+
+function createStore(actions: Actions[], mutations: Mutations) {
+
+}

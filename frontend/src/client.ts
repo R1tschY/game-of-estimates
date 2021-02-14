@@ -286,6 +286,3 @@ export var wsService: WebSocketService = new WebSocketService()
 
 export var client: Client = new Client(wsService)
 export var playerState: Readable<PlayerState> = client.state
-
-playerState.subscribe((value) => console.debug("Player state is now", value))
-wsService.message.connect((evt) => console.debug("MSG", JSON.stringify(evt)))

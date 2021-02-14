@@ -96,20 +96,23 @@
 </style>
 
 <script lang="ts">
-    import { playerId, vote, voter, debug, players, gameState } from '../stores'
+    import { playerId, vote, voter, debug, players, gameState, name as nameStore } from '../stores'
     import Banner from '../components/Banner.svelte'
     import CopyLink from '../components/CopyLink.svelte'
     import { get_deck as getDeck } from '../deck'
     import { client, playerState } from '../client'
-    import type { Option } from '../basetypes'
     import { get } from 'svelte/store';
     import DisconnectedMW from '../components/DisconnectedMW.svelte'
+    import SingleTextInput from '../components/SingleTextInput.svelte'
+    import Switch from '../components/Switch.svelte'
 
     export let id: string | null = null
 
+    let name: string = get(nameStore)
 
     $: cards = $gameState ? getDeck($gameState.deck).cards : []
     $: open = $gameState && $gameState.open
+
 
     // TODO: disconnect on unmount
     client.welcome.connect(() => {
@@ -135,21 +138,44 @@
     function restart() {
         client.restart()
     }
+
+    function changeName(evt: CustomEvent) {
+        nameStore.set(name ? name : null)
+    }
 </script>
 
 <div>
     <Banner />
-    <div class="container">
-        <div class="field">
-            <CopyLink />
-        </div>
 
-        <div class="field">
-            <!-- User -->
-            <input id="voterField" type="checkbox" class="switch" on:change="" bind:checked={$voter}>
-            <label for="voterField">Voter</label>
+    <section class="section">
+        <div class="container">
+            <div class="columns">
+                <!-- Voter -->
+                <div class="column is-narrow">
+                    <Switch id="player-is-voter" bind:value={$voter} label="Voter" />
+                </div>
+
+                <div class="column"></div>
+
+                <!-- Name -->
+                <div class="column">
+                    <SingleTextInput 
+                        id="player-name"
+                        action="Change name"
+                        placeholder="Player name"
+                        bind:value={name}
+                        on:submit={changeName} />
+                </div>
+
+                <div class="column"></div>
+
+                <!-- Link -->
+                <div class="column is-narrow">
+                    <CopyLink value={document.location + ""} label="Copy room link" />
+                </div>
+            </div>
         </div>
-    </div>
+    </section>
 
     <section class="section">
         <div class="container">
@@ -172,9 +198,9 @@
                 {/each}
             </ul>
             <div>
-                <button class="button is-primary"on:click={restart}>Restart</button>
+                <button class="button"on:click={restart}>Restart</button>
                 <button
-                    class="button is-primary"
+                    class="button"
                     on:click={forceOpen}>Open</button>
             </div>
         </div>
