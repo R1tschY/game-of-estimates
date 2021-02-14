@@ -145,12 +145,10 @@ export class Client {
     }
 
     _send(payload: any) {
-        setTimeout(() => {
-            if (this._ws) {
-                this._ws.send(JSON.stringify(payload))
-            }
-        }, 1000);
-    }
+        if (this._ws) {
+            this._ws.send(JSON.stringify(payload))
+        }
+    } 
 
     private _onDisconnected(evt: Event): void {
         this.state.set("connecting")
