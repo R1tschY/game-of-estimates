@@ -1,10 +1,11 @@
 <script lang="ts">
-    import { connected, connecting, playerId } from '../stores'
+    import { connected, connecting, playerId, lastError, state, debug } from '../stores'
     import { decks } from '../deck'
     import { client } from '../client'
     import Banner from '../components/Banner.svelte'
     import SelectWithButton from '../components/SelectWithButton.svelte'
     import DisconnectedMW from '../components/DisconnectedMW.svelte'
+    import NProgress from "nprogress"
 
     let deckId = decks[0].id
     let roomId = ''
@@ -21,17 +22,39 @@
 
     function createRoom() {
         action = "create"
+        NProgress.start()
         client.createRoom(deckId)
     }
 
     function joinRoom() {
         action = "join"
+        NProgress.start()
         client.joinRoom(roomId)
     }
+
+    // TODO: disconnect
+    client.state.subscribe((state) => {
+        if (state !== "joining") {
+            action = null
+            NProgress.done()
+        }
+    })
 </script>
 
 <div>
     <Banner />
+
+    {#if $lastError}
+    <section class="section">
+        <div class="container">
+            <div class="notification is-danger">
+                <button class="delete"></button>
+                {$lastError}
+            </div>
+        </div>
+    </section>
+    {/if}
+
     <section class="section">
         <div class="container">
             <div class="columns is-centered">
@@ -46,7 +69,7 @@
                         </div>
                         <div class="control">
                             <button
-                                type="submit"
+                                type="button"
                                 class="button is-fullwidth is-primary"
                                 class:is-loading={action === "join"}
                                 on:click={joinRoom}>Join existing room</button>
@@ -80,13 +103,15 @@
         </div>
     </section>
 
-    <section class="section">
-        <div class="container">
-            <div>Connected: {$connected}</div>
-            <div>Connecting: {$connecting}</div>
-            <div>Player ID: {$playerId}</div>
-            <div>Deck ID: {deckId}</div>
-        </div>
-    </section>
+    {#if $debug}
+        <section class="section">
+            <div class="container">
+                <div>Connected: {$connected}</div>
+                <div>Connecting: {$connecting}</div>
+                <div>Player ID: {$playerId}</div>
+                <div>Deck ID: {deckId}</div>
+            </div>
+        </section>
+    {/if}
     <DisconnectedMW />
 </div>

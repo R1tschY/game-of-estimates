@@ -72,6 +72,7 @@ export class Client {
     state: Writable<PlayerState>
     playerId: Writable<Option<string>>
     roomId: Writable<Option<string>>
+    lastError: Writable<Option<string>>
 
     welcome: Signal<WelcomeMessageEvent> = new Signal()
     joined: Signal<JoinedEvent> = new Signal()
@@ -85,6 +86,7 @@ export class Client {
         this.state = writable("connecting")
         this.playerId = writable(null)
         this.roomId = writable(null)
+        this.lastError = writable(null)
 
         wsService.ws_store.subscribe(($ws) => (this._ws = $ws))
         wsService.message.connect((evt) => this._onMessageArrived(evt))
@@ -143,9 +145,11 @@ export class Client {
     }
 
     _send(payload: any) {
-        if (this._ws) {
-            this._ws.send(JSON.stringify(payload))
-        }
+        setTimeout(() => {
+            if (this._ws) {
+                this._ws.send(JSON.stringify(payload))
+            }
+        }, 1000);
     }
 
     private _onDisconnected(evt: Event): void {
@@ -191,6 +195,7 @@ export class Client {
             case 'Rejected':
                 this.state.set("outside")
                 this.roomId.set(null)
+                this.lastError.set("Room does not exist")
                 this.rejected.emit(event as RejectedEvent)
                 break
     
@@ -232,7 +237,7 @@ export class WebSocketService {
 
     startReconnectTimer() {
         this.clearReconnectTimer()
-        this.reconnectTimer = setTimeout(this.connect, reconnectTimeout)
+        this.reconnectTimer = setTimeout(() => this.connect(), reconnectTimeout)
     }
 
     on_connected(event: Event) {

@@ -39,7 +39,7 @@
     },
     "scripts": {
         "build": "cross-env NODE_ENV=production webpack",
-        "dev": "webpack-dev-server --content-base public",
+        "dev": "webpack serve --content-base public",
         "test": "jest --coverage --runInBand",
         "check": "svelte-check",
         "lint": "eslint -c .eslintrc --ext .svelte,.js src",
@@ -47,9 +47,9 @@
         "format:prettier": "prettier --write src/**/{*.svelte,*.js}"
     },
     "dependencies": {
-        "@creativebulma/bulma-tooltip": "^1.2.0",
         "bulma": "^0.9.2",
-        "bulma-divider": "^0.2.0",
+        "@creativebulma/bulma-divider": "^1.1.0",
+        "@creativebulma/bulma-tooltip": "^1.2.0",
         "bulma-switch": "^2.0.0",
         "nprogress": "^0.2.0",
         "svelte-routing": "^1.5.0"

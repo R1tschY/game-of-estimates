@@ -2,14 +2,12 @@
     import { connected } from '../stores'
 </script>
 
-
 <style>
 .reconnecting-content {
     width: 300px;
     padding: 20px;
 }
 </style>
-
 
 <div class="modal" class:is-active="{!$connected}">
     <div class="modal-background"></div>

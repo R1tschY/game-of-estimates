@@ -86,6 +86,8 @@ export const gameState: Readable<Option<GameState>> = (function createRoomState(
 export const creating_room: Writable<boolean> = writable(false)
 export const playerId: Readable<Option<string>> = client.playerId
 export const roomId: Readable<Option<string>> = client.roomId
+export const lastError: Readable<Option<string>> = client.lastError
+export const state: Readable<PlayerState> = client.state
 
 // mutations
 

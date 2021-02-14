@@ -103,6 +103,7 @@
     import { client, playerState } from '../client'
     import type { Option } from '../basetypes'
     import { get } from 'svelte/store';
+    import DisconnectedMW from '../components/DisconnectedMW.svelte'
 
     export let id: string | null = null
 
@@ -212,4 +213,6 @@
             </div>
         </section>
     {/if}
+
+    <DisconnectedMW />
 </div>
