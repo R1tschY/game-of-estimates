@@ -22,7 +22,7 @@
         text-align: center;
         display: inline-block;
         // line-height: 3em;
-        margin: 0 7px;
+        margin: 0rem 0.25rem 0.5rem 0.25rem;
         border: 1px solid $tt-gray;
         box-shadow: 0 0em 0.5em -0.125em rgba(10, 10, 10, 0.1);
         outline: 0;
@@ -90,7 +90,7 @@
     }
 
     .card-row {
-        height: $card-height;
+        height: calc(#{$card-height} + 4rem);
         margin: 10px 0;
     }
 </style>
@@ -180,29 +180,36 @@
     <section class="section">
         <div class="container">
             <h2 class="title is-4">Estimates</h2>
+            <div class="buttons">
+                <button
+                    class="button is-primary is-light"
+                    on:click={restart}>Restart</button>
+                <button
+                    class="button is-primary is-light"
+                    on:click={forceOpen}>Open</button>
+            </div>
             <ul class="card-row">
                 {#each $players as player (player.id)}
                 {#if player.voter}
                 <li class="game-card-item">
-                    <div class:backcover={!open} class:hidden={!player.vote}>
-                        <div class="game-card game-card-back">
-                            <div class="card-inner">♠️</div>
+                    <div>
+                        <div class:backcover={!open} class:hidden={!player.vote}>
+                            <div class="game-card game-card-back">
+                                <div class="card-inner">♠️</div>
+                            </div>
+                            <div class="game-card game-card-front">
+                                <div class="card-inner">{player.vote ? player.vote : '\xA0'}</div>
+                            </div>
                         </div>
-                        <div class="game-card game-card-front">
-                            <div class="card-inner">{player.vote ? player.vote : '\xA0'}</div>
-                        </div>
+                        <div class="game-card empty"></div>
                     </div>
-                    <div class="game-card empty"></div>
+                    <div style="text-align:center;">
+                        {player.name}
+                    </div>
                 </li>
                 {/if}
                 {/each}
             </ul>
-            <div>
-                <button class="button"on:click={restart}>Restart</button>
-                <button
-                    class="button"
-                    on:click={forceOpen}>Open</button>
-            </div>
         </div>
     </section>
 
