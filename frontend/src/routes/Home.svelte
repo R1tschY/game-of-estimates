@@ -2,7 +2,8 @@
     import { connected, connecting, playerId, lastError, state, debug } from '../stores'
     import { decks } from '../deck'
     import { client } from '../client'
-    import Banner from '../components/Banner.svelte'
+    import Header from '../components/Header.svelte'
+    import Footer from '../components/Footer.svelte'
     import SelectWithButton from '../components/SelectWithButton.svelte'
     import DisconnectedMW from '../components/DisconnectedMW.svelte'
     import NProgress from "nprogress"
@@ -42,7 +43,7 @@
 </script>
 
 <div>
-    <Banner />
+    <Header />
 
     {#if $lastError}
     <section class="section">
@@ -113,5 +114,7 @@
             </div>
         </section>
     {/if}
+
     <DisconnectedMW />
+    <Footer />
 </div>

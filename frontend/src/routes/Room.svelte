@@ -97,7 +97,7 @@
 
 <script lang="ts">
     import { playerId, vote, voter, debug, players, gameState, name as nameStore } from '../stores'
-    import Banner from '../components/Banner.svelte'
+    import Header from '../components/Header.svelte'
     import CopyLink from '../components/CopyLink.svelte'
     import { get_deck as getDeck } from '../deck'
     import { client, playerState } from '../client'
@@ -105,6 +105,7 @@
     import DisconnectedMW from '../components/DisconnectedMW.svelte'
     import SingleTextInput from '../components/SingleTextInput.svelte'
     import Switch from '../components/Switch.svelte'
+    import Footer from '../components/Footer.svelte'
 
     export let id: string | null = null
 
@@ -145,7 +146,7 @@
 </script>
 
 <div>
-    <Banner />
+    <Header />
 
     <section class="section">
         <div class="container">
@@ -248,4 +249,5 @@
     {/if}
 
     <DisconnectedMW />
+    <Footer />
 </div>
