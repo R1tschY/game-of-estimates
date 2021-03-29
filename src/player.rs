@@ -214,8 +214,8 @@ impl Player {
                             break;
                         }
                         Err(err) => {
-                            // TODO
-                            error!("{}: Message error: {}", self.id, err)
+                            error!("{}: Player connection error: {}", self.id, err);
+                            break;
                         }
                     }
                 },
