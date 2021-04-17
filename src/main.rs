@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use std::{env, fmt, fs};
 
-use log::{error, info};
+use log::{debug, error, info};
 use tokio::net::{TcpListener, TcpStream};
 use tokio_native_tls::native_tls::Identity;
 use tokio_native_tls::TlsAcceptor;
@@ -35,7 +35,7 @@ impl StreamAcceptor {
         let addr = stream
             .peer_addr()
             .in_context("Connected streams should have a peer address")?;
-        info!("Peer address: {}", addr);
+        debug!("Peer address: {}", addr);
 
         match self {
             StreamAcceptor::Plain => {
@@ -43,7 +43,7 @@ impl StreamAcceptor {
                     .await
                     .in_context("Error during the websocket handshake occurred")?;
 
-                info!("New WebSocket connection: {}", addr);
+                debug!("New WebSocket connection: {}", addr);
                 Ok(RemoteConnection::new(ws_stream))
             }
 
@@ -57,7 +57,7 @@ impl StreamAcceptor {
                     .await
                     .in_context("Error during the websocket handshake occurred")?;
 
-                info!("New WebSocket connection: {}", addr);
+                debug!("New WebSocket connection: {}", addr);
                 Ok(RemoteConnection::new_with_tls(ws_stream))
             }
         }

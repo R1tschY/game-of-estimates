@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use log::{error, warn};
+use log::{error, info, warn};
 use rand::distributions::Uniform;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
@@ -93,7 +93,7 @@ pub struct Room {
 
 impl Room {
     pub fn new(id: &str, creator: (PlayerAddr, PlayerInformation), deck: String) -> Self {
-        warn!("{}: Created room", id);
+        info!("{}: Created room", id);
 
         let player_id = creator.1.id.clone();
         let game_player = GamePlayer::new(creator.0.clone(), creator.1);
@@ -172,7 +172,7 @@ impl Room {
         self.update_state_and_send().await;
 
         if self.players.is_empty() {
-            warn!("{}: room is now empty", self.id);
+            info!("{}: room is now empty", self.id);
             // TODO: remove room in 1min
         }
     }

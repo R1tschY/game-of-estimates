@@ -1,6 +1,6 @@
 use std::mem::replace;
 
-use log::{error, info, warn};
+use log::{debug, error, warn};
 use rand::distributions::Alphanumeric;
 use rand::Rng;
 use tokio::sync::mpsc;
@@ -80,7 +80,7 @@ impl Player {
 
     async fn leave_old_room(&mut self) {
         if let Some(old_room_id) = &self.room_id {
-            info!("{}: Leaves already joined room {}", self.id, old_room_id);
+            debug!("{}: Leaves already joined room {}", self.id, old_room_id);
             if let Some(old_room) = replace(&mut self.room, None) {
                 self.leave_room(&old_room).await;
             }
@@ -90,7 +90,7 @@ impl Player {
     async fn send_to_room(&mut self, msg: RoomMessage) {
         if let Some(ref room) = &self.room {
             if room.send(msg).await.is_err() {
-                error!("{}: Room does not exist anymore", self.id);
+                warn!("{}: Room does not exist anymore", self.id);
                 self.room = None;
                 self.room_id = None;
                 self.send_to_remote(RemoteMessage::Rejected).await;
@@ -102,7 +102,7 @@ impl Player {
 
     async fn send_join_message(&mut self, msg: GameServerMessage) {
         if self.game_server.send(msg).await.is_err() {
-            error!("{}: Join room does not exist", self.id);
+            warn!("{}: Join room does not exist", self.id);
             self.room = None;
             self.room_id = None;
             self.send_to_remote(RemoteMessage::Rejected).await;
@@ -112,11 +112,11 @@ impl Player {
     async fn on_remote_message(&mut self, msg: RemoteMessage) -> bool {
         match msg {
             RemoteMessage::Close => {
-                info!("{}: Player disconnected friendly", self.id);
+                debug!("{}: Player disconnected friendly", self.id);
                 return false;
             }
             RemoteMessage::CreateRoom { deck } => {
-                info!("{}: Wants to create a room", self.id);
+                debug!("{}: Wants to create a room", self.id);
                 self.leave_old_room().await;
                 self.room_id = Some(TO_BE_CREATED.to_string()); // as marker
                 let information = self.get_player_information();
@@ -128,9 +128,9 @@ impl Player {
                 .await;
             }
             RemoteMessage::JoinRoom { room } => {
-                info!("{}: Wants to join {}", self.id, &room);
+                debug!("{}: Wants to join {}", self.id, &room);
                 if self.room_id.as_ref() == Some(&room) {
-                    info!("{}: Already joined {}", self.id, &room);
+                    warn!("{}: Already joined {}", self.id, &room);
                     return true;
                 }
 
@@ -145,12 +145,12 @@ impl Player {
                 .await;
             }
             RemoteMessage::Vote { vote } => {
-                info!("{}: Voted {:?}", self.id, &vote);
+                debug!("{}: Voted {:?}", self.id, &vote);
                 self.send_to_room(RoomMessage::PlayerVoted(self.id.clone(), vote))
                     .await;
             }
             RemoteMessage::UpdatePlayer { voter, name } => {
-                info!(
+                debug!(
                     "{}: Update player: voter={:?} name={:?}",
                     self.id, &voter, &name
                 );
@@ -167,18 +167,18 @@ impl Player {
                 }
             }
             RemoteMessage::ForceOpen => {
-                info!("{}: Force open", self.id);
+                debug!("{}: Force open", self.id);
                 self.send_to_room(RoomMessage::ForceOpen).await;
             }
             RemoteMessage::Restart => {
-                info!("{}: Restart", self.id);
+                debug!("{}: Restart", self.id);
                 self.send_to_room(RoomMessage::Restart).await;
             }
             RemoteMessage::Ping(duration) => {
-                info!("{}: Ping {}ms", self.id, duration.as_millis())
+                debug!("{}: Ping {}ms", self.id, duration.as_millis())
             }
             _ => {
-                info!("{}: Ignored `{:?}`", self.id, msg);
+                debug!("{}: Ignored `{:?}`", self.id, msg);
             }
         }
         true
@@ -243,7 +243,7 @@ impl Player {
                 if self.room_id.as_ref() == Some(&id)
                     || self.room_id.as_ref().map(|e| &e as &str) == Some(&TO_BE_CREATED)
                 {
-                    info!("{}: Joined {}", self.id, id);
+                    debug!("{}: Joined {}", self.id, id);
                     self.room = Some(room);
                     self.send_to_remote(RemoteMessage::Joined {
                         room: id,
@@ -252,7 +252,7 @@ impl Player {
                     })
                     .await;
                 } else {
-                    info!(
+                    debug!(
                         "{}: Reject welcome of room {}, got {:?}",
                         self.id, id, self.room_id
                     );
