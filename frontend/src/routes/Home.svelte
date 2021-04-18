@@ -65,7 +65,7 @@
                             <input
                                 class="input"
                                 type="text"
-                                placeholder="Game no."
+                                placeholder="Room no."
                                 bind:value={roomId} />
                         </div>
                         <div class="control">
