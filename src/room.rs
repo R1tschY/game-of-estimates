@@ -1,9 +1,11 @@
 use std::collections::HashMap;
+use std::fmt::Debug;
 
 use log::{error, info, warn};
 use rand::distributions::Uniform;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
+use tokio::time::{sleep, Duration};
 
 use uactor::blocking::{Actor, ActorContext, Addr, Context};
 
@@ -22,6 +24,9 @@ pub enum RoomMessage {
     ForceOpen,
     Restart,
     Close,
+
+    // internal
+    CloseWhenEmpty,
 }
 
 #[derive(Debug, PartialEq, Copy, Clone)]
@@ -89,6 +94,11 @@ pub struct Room {
     deck: String,
     players: HashMap<String, GamePlayer>,
     open: bool,
+}
+
+async fn delayed_message<T: Debug>(addr: Addr<T>, msg: T, duration: Duration) {
+    sleep(duration).await;
+    let _ = addr.send(msg).await;
 }
 
 impl Room {
@@ -163,7 +173,7 @@ impl Room {
             .await;
     }
 
-    async fn remove_player(&mut self, player_id: &str) {
+    async fn remove_player(&mut self, player_id: &str, ctx: &mut Context<Self>) {
         self.players.remove(player_id);
 
         // announce
@@ -173,7 +183,11 @@ impl Room {
 
         if self.players.is_empty() {
             info!("{}: room is now empty", self.id);
-            // TODO: remove room in 1min
+            <Self as Actor>::Context::spawn(delayed_message(
+                ctx.addr(),
+                RoomMessage::CloseWhenEmpty,
+                Duration::from_secs(60 * 5),
+            ));
         }
     }
 
@@ -294,14 +308,23 @@ impl Actor for Room {
             RoomMessage::JoinRequest(player_addr, player) => {
                 self.add_player(player_addr, player, ctx).await
             }
-            RoomMessage::PlayerLeft(player) => self.remove_player(&player).await,
+            RoomMessage::PlayerLeft(player) => self.remove_player(&player, ctx).await,
             RoomMessage::PlayerVoted(player_id, vote) => self.set_vote(&player_id, vote).await,
             RoomMessage::ForceOpen => self.force_open().await,
             RoomMessage::Restart => self.restart().await,
             RoomMessage::UpdatePlayer { id, name, voter } => {
                 self.update_player(&id, name, voter).await
             }
-            RoomMessage::Close => ctx.force_quit(),
+            RoomMessage::Close => {
+                info!("{}: Forced close", self.id);
+                ctx.force_quit()
+            }
+            RoomMessage::CloseWhenEmpty => {
+                if self.players.is_empty() {
+                    info!("{}: closed because it's empty", self.id);
+                    ctx.force_quit()
+                }
+            }
         }
     }
 
