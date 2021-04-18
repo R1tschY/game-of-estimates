@@ -78,7 +78,7 @@
                     </div>
                 </form>
             </div>
-            <div class="is-divider" data-content="OR" />
+            <div class="divider">OR</div>
             <div class="columns is-centered">
                 <form class="column is-half">
                     <div class="field">
