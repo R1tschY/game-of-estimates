@@ -20,7 +20,7 @@ Source code for https://game-of-estimates.richardliebscher.de/
 * Run `game-of-estimates` with enviroment variables:
   * `GOE_WEBSOCKET_ADDR`: address the service should listen to (for example: `0.0.0.0:5500`)
   
-### Frontend:
+### Frontend
 * Install NPM
 * Set enviroment variable `GOE_WEBSOCKET_URL` to Websocket url, where backend service is accessible
   * Through HTTPS proxy: `wss://server/path`
