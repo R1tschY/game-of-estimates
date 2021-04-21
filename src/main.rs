@@ -71,38 +71,6 @@ impl StreamAcceptor {
     }
 }
 
-#[tokio::main]
-async fn main() -> Result<(), String> {
-    env_logger::try_init().in_context("Failed to init logger")?;
-
-    let addr = env::var("GOE_WEBSOCKET_ADDR").unwrap_or_else(|_| "127.0.0.1:5500".to_string());
-
-    let acceptor = if let Ok(cert) = env::var("GOE_CERT_PKCS12") {
-        create_tls_acceptor(cert)?
-    } else {
-        StreamAcceptor::Plain
-    };
-
-    // Create the event loop and TCP listener we'll accept connections on.
-    let listener = TcpListener::bind(addr.clone())
-        .await
-        .in_context("Failed to bind")?;
-    info!("Listening on {}://{}", acceptor.scheme(), &addr);
-
-    let game_server = GameServer::default();
-    let game_server_addr = game_server.start();
-
-    while let Ok((stream, _)) = listener.accept().await {
-        tokio::spawn(run_player(
-            stream,
-            acceptor.clone(),
-            game_server_addr.clone(),
-        ));
-    }
-
-    Ok(())
-}
-
 fn create_tls_acceptor(cert_file: String) -> Result<StreamAcceptor, String> {
     let cert_content = fs::read(cert_file).in_context("Failed to read certificate")?;
     let identity = Identity::from_pkcs12(&cert_content, "").in_context("Invalid certificate")?;
@@ -112,14 +80,99 @@ fn create_tls_acceptor(cert_file: String) -> Result<StreamAcceptor, String> {
     Ok(StreamAcceptor::Tls(Arc::new(acceptor)))
 }
 
-async fn run_player(stream: TcpStream, acceptor: StreamAcceptor, game_server: GameServerAddr) {
-    let conn = match acceptor.accept(stream).await {
-        Ok(conn) => conn,
-        Err(err) => {
-            error!("Failed to accept connection: {}", err);
-            return;
-        }
-    };
+#[chassis::integration]
+mod integration {
+    use super::*;
 
-    Player::new(conn, game_server).run().await
+    struct Bindings;
+
+    impl Bindings {
+        #[singleton]
+        pub fn provide_game_server() -> GameServerAddr {
+            GameServer::default().start()
+        }
+
+        #[singleton]
+        pub fn provide_tcp_acceptor() -> StreamAcceptor {
+            if let Ok(cert) = env::var("GOE_CERT_PKCS12") {
+                create_tls_acceptor(cert).unwrap()
+            } else {
+                StreamAcceptor::Plain
+            }
+        }
+
+        #[singleton]
+        pub fn provide_listen_addr() -> ListenAddr {
+            ListenAddr(
+                env::var("GOE_WEBSOCKET_ADDR").unwrap_or_else(|_| "127.0.0.1:5500".to_string()),
+            )
+        }
+
+        pub fn provide_main(
+            addr: ListenAddr,
+            acceptor: StreamAcceptor,
+            game_server: GameServerAddr,
+        ) -> Main {
+            Main {
+                addr,
+                acceptor,
+                game_server,
+            }
+        }
+    }
+
+    pub trait Integrator {
+        fn provide_main(&self) -> Main;
+    }
+}
+
+#[derive(Clone)]
+struct ListenAddr(String);
+
+pub struct Main {
+    addr: ListenAddr,
+    acceptor: StreamAcceptor,
+    game_server: GameServerAddr,
+}
+
+impl Main {
+    pub async fn run(&self) -> Result<(), String> {
+        // Create the event loop and TCP listener we'll accept connections on.
+        let listener = TcpListener::bind(self.addr.0.clone())
+            .await
+            .in_context("Failed to bind")?;
+        info!("Listening on {}://{}", self.acceptor.scheme(), &self.addr.0);
+
+        while let Ok((stream, _)) = listener.accept().await {
+            tokio::spawn(Self::run_player(
+                stream,
+                self.acceptor.clone(),
+                self.game_server.clone(),
+            ));
+        }
+
+        Ok(())
+    }
+
+    async fn run_player(stream: TcpStream, acceptor: StreamAcceptor, game_server: GameServerAddr) {
+        let conn = match acceptor.accept(stream).await {
+            Ok(conn) => conn,
+            Err(err) => {
+                error!("Failed to accept connection: {}", err);
+                return;
+            }
+        };
+
+        Player::new(conn, game_server).run().await
+    }
+}
+
+#[tokio::main]
+async fn main() -> Result<(), String> {
+    use crate::integration::Integrator;
+
+    env_logger::try_init().in_context("Failed to init logger")?;
+
+    let integrator = integration::IntegratorImpl::new();
+    integrator.provide_main().run().await
 }

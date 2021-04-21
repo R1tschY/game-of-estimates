@@ -19,6 +19,7 @@ rand = "^0.8.3"
 quick-error = "^2.0.0"
 async-trait = "^0.1.42"
 uactor = { path = "components/uactor" }
+chassis = "^0.1.1"
 
 [dev-dependencies]
 ctor = "0.1.19"

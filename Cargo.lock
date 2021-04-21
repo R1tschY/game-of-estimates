@@ -83,6 +83,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
+name = "chassis"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9c2cb58a45df3430ef27d7ad618afaefcaa20ffa8f0eb73e10b69c72bf5b8cbf"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+ "version_check",
+]
+
+[[package]]
 name = "core-foundation"
 version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -222,6 +234,7 @@ name = "game-of-estimates"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "chassis",
  "ctor",
  "env_logger",
  "futures-util",
