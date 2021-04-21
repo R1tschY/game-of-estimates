@@ -3,6 +3,7 @@ use std::{env, fmt, fs};
 
 use log::{debug, error, info};
 use tokio::net::{TcpListener, TcpStream};
+use tokio::signal::unix::{signal, SignalKind};
 use tokio_native_tls::native_tls::Identity;
 use tokio_native_tls::TlsAcceptor;
 
@@ -169,10 +170,25 @@ impl Main {
 
 #[tokio::main]
 async fn main() -> Result<(), String> {
-    use crate::integration::Integrator;
-
     env_logger::try_init().in_context("Failed to init logger")?;
 
+    use crate::integration::Integrator;
     let integrator = integration::IntegratorImpl::new();
-    integrator.provide_main().run().await
+    let main = integrator.provide_main();
+
+    let mut sigterm = signal(SignalKind::terminate()).unwrap();
+    let mut sigint = signal(SignalKind::interrupt()).unwrap();
+
+    tokio::select! {
+        ret = main.run() => { ret },
+
+        _ = sigterm.recv() => {
+            info!("Received SIGTERM. Shutting down ...");
+            Ok(())
+        },
+        _ = sigint.recv() => {
+            info!("Received SIGINT. Shutting down ...");
+            Ok(())
+        },
+    }
 }
