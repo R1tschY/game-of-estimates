@@ -125,9 +125,11 @@
     })
 
     function setVote(value: string | null) {
-        vote.update((v) => {
-            return v !== value ? value : null
-        })
+        if (!open) {
+            vote.update((v) => {
+                return v !== value ? value : null
+            })
+        }
     }
 
     function forceOpen() {
@@ -186,7 +188,7 @@
                     class="button is-primary is-light"
                     on:click={restart}>Restart</button>
                 <button
-                    class="button is-primary is-light"
+                    class="button is-primary is-light" disabled={open}
                     on:click={forceOpen}>Open</button>
             </div>
             <ul class="card-row">
@@ -222,7 +224,7 @@
                     {#each cards as card}
                         <li class="game-card-item">
                             <button
-                                class="game-card game-card-normal selectable"
+                                class="game-card game-card-normal{!open ? ' selectable' : ''}"
                                 on:click={() => setVote(card)}
                                 class:selected={$vote === card}>
                                 <div class="card-inner">{card}</div>
