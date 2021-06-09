@@ -14,7 +14,7 @@
 </script>
 
 <div class="field has-addons">
-    <div class="control">
+    <div class="control is-expanded">
         <input class="input" type="text"
             id={id} 
             placeholder={placeholder}

@@ -61,7 +61,7 @@
             <div class="columns is-centered">
                 <form class="column is-half">
                     <div class="field has-addons">
-                        <div class="control">
+                        <div class="control is-expanded">
                             <input
                                 class="input"
                                 type="text"
@@ -94,7 +94,7 @@
                         <div class="control">
                             <button
                                 type="button"
-                                class="button is-fullwidth is-warning"
+                                class="button is-fullwidth is-primary"
                                 class:is-loading={action === "create"}
                                 on:click={createRoom}>Create room</button>
                         </div>
