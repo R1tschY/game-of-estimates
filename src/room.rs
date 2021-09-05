@@ -192,6 +192,14 @@ impl Room {
     }
 
     async fn set_vote(&mut self, player_id: &str, vote: Option<String>) {
+        if self.open {
+            warn!(
+                "{}: Discared vote of {} because cards are open",
+                self.id, player_id
+            );
+            return;
+        }
+
         if let Some(mut player) = self.players.get_mut(player_id) {
             if player.info.voter {
                 player.vote = vote;
@@ -344,10 +352,11 @@ impl Actor for Room {
 
 #[cfg(test)]
 mod tests {
+    use futures_util::StreamExt;
     use tokio::sync::mpsc;
 
     use crate::room::GamePlayerMessage::GameStateChanged;
-    use crate::room::RoomMessage::{JoinRequest, PlayerLeft, PlayerVoted, UpdatePlayer};
+    use crate::room::RoomMessage::*;
 
     use super::*;
 
@@ -383,6 +392,10 @@ mod tests {
 
         pub async fn kick_player(&mut self, id: &str) {
             self.send(PlayerLeft(id.to_string())).await;
+        }
+
+        pub async fn force_open(&self) {
+            self.send(ForceOpen).await;
         }
 
         pub async fn send_vote(&self, player: &str, vote: Option<&str>) {
@@ -480,5 +493,20 @@ mod tests {
 
         // ASSERT
         test_for_message!(rxs[0], GameStateChanged(state) if state.open == true);
+    }
+
+    #[tokio::test]
+    async fn check_no_voting_when_closed() {
+        let mut tester = RoomTester::new_room("r1", true);
+        tester.join_player("p1", true).await;
+
+        // ACT
+        tester.force_open().await;
+        tester.send_vote("p1", Some("VOTE")).await;
+        let mut rxs = tester.close().await;
+
+        // ASSERT
+        assert_no_message!(
+            rxs[0], GameStateChanged(ref state) if state.votes.get("p1").cloned().flatten().is_some());
     }
 }

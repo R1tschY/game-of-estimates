@@ -19,6 +19,28 @@ macro_rules! test_for_message {
     };
 }
 
+#[cfg(test)]
+macro_rules! assert_no_message {
+    ($rx:expr, $($pattern:tt)+) => {
+        let res = loop {
+            use futures_util::future::FutureExt;
+            match $rx.recv().now_or_never() {
+                None | Some(None) => break None,
+                Some(Some(x)) => {
+                    match x {
+                        $($pattern)+ => break Some(x),
+                        x => println!("Ignored non-matching message {:?}", x),
+                    }
+                }
+            }
+        };
+        if let Some(evt) = res {
+            panic!("assertion failed: message found that match `{}`: {:?}",
+                stringify!($($pattern)+), evt);
+        };
+    };
+}
+
 pub mod game_server;
 pub mod player;
 pub mod room;
