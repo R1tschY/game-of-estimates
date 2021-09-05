@@ -158,7 +158,7 @@
                     <Switch id="player-is-voter" bind:value={$voter} label="Voter" />
                 </div>
 
-                <div class="column"></div>
+                <div class="column is-1"></div>
 
                 <!-- Name -->
                 <div class="column">
@@ -170,10 +170,10 @@
                         on:submit={changeName} />
                 </div>
 
-                <div class="column"></div>
+                <div class="column is-1"></div>
 
                 <!-- Link -->
-                <div class="column is-narrow">
+                <div class="column">
                     <CopyLink value={document.location + ""} label="Copy room link" />
                 </div>
             </div>

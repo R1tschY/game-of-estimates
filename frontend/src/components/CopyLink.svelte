@@ -10,14 +10,8 @@
     }
 </script>
 
-<style lang="scss">
-    .copy-link-input {
-        width: 15rem;
-    }
-</style>
-
 <div class="field has-addons">
-    <div class="control">
+    <div class="control is-expanded">
         <input bind:this={input} class="input copy-link-input" type="text" readonly
             bind:value={value}>
     </div>
