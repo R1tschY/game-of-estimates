@@ -184,7 +184,7 @@ impl Player {
         true
     }
 
-    fn get_player_information(&mut self) -> PlayerInformation {
+    fn get_player_information(&self) -> PlayerInformation {
         PlayerInformation {
             id: self.id.clone(),
             voter: self.voter,
@@ -241,7 +241,7 @@ impl Player {
         match msg {
             GamePlayerMessage::Welcome(id, room, game_state, players) => {
                 if self.room_id.as_ref() == Some(&id)
-                    || self.room_id.as_ref().map(|e| &e as &str) == Some(&TO_BE_CREATED)
+                    || self.room_id.as_ref().map(|e| e as &str) == Some(TO_BE_CREATED)
                 {
                     debug!("{}: Joined {}", self.id, id);
                     self.room = Some(room);
