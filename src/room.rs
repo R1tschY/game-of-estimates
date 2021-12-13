@@ -352,7 +352,6 @@ impl Actor for Room {
 
 #[cfg(test)]
 mod tests {
-    use futures_util::StreamExt;
     use tokio::sync::mpsc;
 
     use crate::room::GamePlayerMessage::GameStateChanged;
