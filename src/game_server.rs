@@ -23,6 +23,7 @@ pub enum GameServerMessage {
     },
 }
 
+#[derive(Default)]
 pub struct GameServer {
     rooms: HashMap<String, RoomAddr>,
 }
@@ -43,14 +44,6 @@ impl GameServer {
 
     async fn send_rejection(player: &PlayerAddr, reason: RejectReason) {
         let _ = player.send(GamePlayerMessage::Rejected(reason)).await;
-    }
-}
-
-impl Default for GameServer {
-    fn default() -> Self {
-        Self {
-            rooms: HashMap::new(),
-        }
     }
 }
 
