@@ -1,10 +1,14 @@
 [package]
 name = "game-of-estimates"
 version = "0.1.0"
-authors = ["R1tschY <r1tschy@posteo.de>"]
+authors = ["Richard Liebscher <r1tschy@posteo.de>"]
+description = "Simple web planning poker game"
 edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+license = "MIT"
+rust-version = "1.56"
+repository = "https://github.com/R1tschY/game-of-estimates"
+categories = ["games"]
+publish = false
 
 [dependencies]
 tokio = { version = "^1.0", features = ["macros", "sync", "net", "rt-multi-thread", "time", "signal"] }
