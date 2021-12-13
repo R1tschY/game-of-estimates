@@ -1,3 +1,5 @@
+use std::convert::TryInto;
+
 use futures_util::{SinkExt, StreamExt};
 use quick_error::quick_error;
 use serde::{Deserialize, Serialize};
@@ -83,7 +85,7 @@ pub struct RemoteConnection {
     socket: WebSocket,
 
     last_ping_start: Instant,
-    last_ping_id: u8,
+    last_ping_id: u16,
 }
 
 enum WebSocket {
@@ -137,11 +139,11 @@ impl RemoteConnection {
 
     pub async fn ping(&mut self) -> ConnResult<()> {
         let now = Instant::now();
-        self.last_ping_id += 1;
+        self.last_ping_id = self.last_ping_id.overflowing_add(1).0;
         self.last_ping_start = now;
 
         self.socket
-            .send(Message::Ping(vec![self.last_ping_id]))
+            .send(Message::Ping(self.last_ping_id.to_le_bytes().to_vec()))
             .await
             .map_err(|err| err.into())
     }
@@ -153,7 +155,7 @@ impl RemoteConnection {
                     Message::Text(text) => return Ok(serde_json::from_str(&text)?),
                     Message::Close(_reason) => return Ok(RemoteMessage::Close),
                     Message::Pong(payload) => {
-                        if payload.len() == 1 && payload[0] == self.last_ping_id {
+                        if payload.try_into().map(u16::from_le_bytes) == Ok(self.last_ping_id) {
                             let duration =
                                 Instant::now().checked_duration_since(self.last_ping_start);
                             if let Some(duration) = duration {
