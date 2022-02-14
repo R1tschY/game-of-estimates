@@ -10,7 +10,7 @@ updates:
     schedule:
       interval: "weekly"
       day: "friday"
-      versioning-strategy: increase
+    versioning-strategy: increase
     commit-message:
       prefix: "NPM"
       
