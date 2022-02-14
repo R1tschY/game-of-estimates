@@ -6,7 +6,7 @@
 version: 2
 updates:
   - package-ecosystem: "npm"
-    directory: "/fronend"
+    directory: "/frontend"
     schedule:
       interval: "weekly"
       day: "friday"
