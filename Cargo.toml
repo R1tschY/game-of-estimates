@@ -26,7 +26,7 @@ uactor = { path = "components/uactor" }
 chassis = "^0.1.1"
 
 [dev-dependencies]
-ctor = "0.1.19"
+ctor = "0.1.21"
 
 [workspace]
 members = [
