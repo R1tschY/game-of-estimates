@@ -25,6 +25,11 @@ export const decks: Deck[] = [
         name: "Powers of 2",
         cards: ["0", "1", "2", "4", "8", "16", "32", "64", "?", "☕"],
     },
+    {
+        id: "sequential",
+        name: "Sequential",
+        cards: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "?", "☕"],
+    },
 ]
 
 export function get_deck(id: string): Deck | undefined {
