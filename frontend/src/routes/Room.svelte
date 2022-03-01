@@ -65,7 +65,7 @@
 
                 <!-- Name -->
                 <div class="column">
-                    <SingleTextInput 
+                    <SingleTextInput
                         id="player-name"
                         action="Change name"
                         placeholder="Player name"
@@ -98,8 +98,8 @@
             <ul class="card-row">
                 {#each $players as player (player.id)}
                 {#if player.voter}
-                <li class="game-card-item">
-                    <div>
+                <li class="game-card-box">
+                    <div class="game-card-item">
                         <div class:backcover={!open} class:hidden={!player.vote}>
                             <div class="game-card game-card-back">
                                 <div class="game-card-inner"><img class="game-card-symbol" src="/clubs.svg" alt="" /></div>
@@ -110,7 +110,7 @@
                         </div>
                         <div class="game-card empty"></div>
                     </div>
-                    <div style="text-align:center;">
+                    <div class="game-card-name">
                         {player.name}
                     </div>
                 </li>
@@ -129,6 +129,7 @@
                         <li class="game-card-item">
                             <button
                                 class="game-card game-card-normal selectable"
+                                type="button"
                                 on:click={() => setVote(card)}
                                 class:selected={$vote === card}
                                 class:selectable={!open}>
