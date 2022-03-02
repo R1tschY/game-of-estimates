@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf8"/>
+    <meta name="viewport" content="width=device-width"/>
+
+    <title>Game Of Estimates</title>
+
+    <!-- favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=00aJ2wj5ym">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=00aJ2wj5ym">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=00aJ2wj5ym">
+    <link rel="manifest" href="/site.webmanifest?v=00aJ2wj5ym">
+    <link rel="mask-icon" href="/safari-pinned-tab.svg?v=00aJ2wj5ym" color="#ed8b00">
+    <link rel="shortcut icon" href="/favicon.ico?v=00aJ2wj5ym">
+    <meta name="apple-mobile-web-app-title" content="Game of Estimates">
+    <meta name="application-name" content="Game of Estimates">
+    <meta name="msapplication-TileColor" content="#ed8b00">
+    <meta name="theme-color" content="#ed8b00">
+
+    <link rel="stylesheet" href="/bundle.css"/>
+</head>
+
+<body>
+<div>
+    <section class="hero head">
+        <div class="hero-body">
+            <div class="container">
+                <h1 class="title">Game Of Estimates</h1>
+                <h2 class="subtitle">Planning Poker</h2>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="container">
+            <div class="columns is-centered">
+                <form class="column is-half">
+                    <div class="field has-addons">
+                        <div class="control is-expanded">
+                            <input class="input" type="text" placeholder="Room no.">
+                        </div>
+                        <div class="control">
+                            <button type="button" class="button is-fullwidth is-primary">Join existing room</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="divider">OR</div>
+            <div class="columns is-centered">
+                <form class="column is-half">
+                    <div class="field">
+                        <label class="label" for="deck_field">Deck</label>
+                        <div class="control is-expanded" id="deck_field">
+                            <div class="select is-fullwidth">
+                                <select>
+                                {{#each decks}}
+                                    <option value="{{ value }}">{{ display }}</option>
+                                {{/each}}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="control">
+                            <div class="columns is-centered">
+                                <div class="column is-narrow">
+                                    <button type="button" class="button is-primary">Create room</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="content has-text-centered">
+            <p>
+                <strong>Game Of Estimates</strong> by <a href="https://github.com/R1tschY">Richard Liebscher</a>.
+            </p>
+            <p>
+                The source code is licensed under <a href="http://opensource.org/licenses/mit-license.php">MIT</a>.
+                <span class="icon-text">
+                    <span class="icon"><i class="fab fa-github"></i></span>
+                    <a href="https://github.com/R1tschY/game_of_estimates">Github</a>
+                </span>
+            </p>
+        </div>
+    </footer>
+</div>
+
+<script src="/bundle.js" async defer></script>
+</body>
+</html>

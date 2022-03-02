@@ -24,6 +24,8 @@ quick-error = "^2.0.1"
 async-trait = "^0.1.52"
 uactor = { path = "components/uactor" }
 chassis = "^0.1.1"
+warp = "0.3"
+handlebars = "4"
 
 [dev-dependencies]
 ctor = "0.1.21"
