@@ -28,7 +28,7 @@ warp = "0.3"
 handlebars = "4"
 
 [dev-dependencies]
-ctor = "0.1.21"
+ctor = "0.1.22"
 
 [workspace]
 members = [
