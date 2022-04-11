@@ -176,8 +176,10 @@ async fn main() -> Result<(), String> {
     let integrator = integration::IntegratorImpl::new();
     let main = integrator.provide_main();
 
-    let mut sigterm = signal(SignalKind::terminate()).unwrap();
-    let mut sigint = signal(SignalKind::interrupt()).unwrap();
+    let mut sigterm =
+        signal(SignalKind::terminate()).in_context("Failed to register SIGTERM handler")?;
+    let mut sigint =
+        signal(SignalKind::interrupt()).in_context("Failed to register SIGINT handler")?;
 
     tokio::select! {
         ret = main.run() => { ret },
