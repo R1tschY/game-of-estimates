@@ -36,25 +36,25 @@
     <section class="section">
         <div class="container">
             <div class="columns is-centered">
-                <form class="column is-half">
+                <form class="column is-half" action="/room/join" method="post" accept-charset="utf-8">
                     <div class="field has-addons">
                         <div class="control is-expanded">
-                            <input class="input" type="text" placeholder="Room no.">
+                            <input class="input" value="id" type="text" placeholder="Room no.">
                         </div>
                         <div class="control">
-                            <button type="button" class="button is-fullwidth is-primary">Join existing room</button>
+                            <button type="submit" class="button is-fullwidth is-primary">Join existing room</button>
                         </div>
                     </div>
                 </form>
             </div>
             <div class="divider">OR</div>
             <div class="columns is-centered">
-                <form class="column is-half">
+                <form class="column is-half" action="/room/create" method="post" accept-charset="utf-8">
                     <div class="field">
                         <label class="label" for="deck_field">Deck</label>
-                        <div class="control is-expanded" id="deck_field">
+                        <div class="control is-expanded">
                             <div class="select is-fullwidth">
-                                <select>
+                                <select id="deck_field" name="deck">
                                 {{#each decks}}
                                     <option value="{{ value }}">{{ display }}</option>
                                 {{/each}}
@@ -66,7 +66,7 @@
                         <div class="control">
                             <div class="columns is-centered">
                                 <div class="column is-narrow">
-                                    <button type="button" class="button is-primary">Create room</button>
+                                    <button type="submit" class="button is-primary">Create room</button>
                                 </div>
                             </div>
                         </div>
@@ -92,6 +92,6 @@
     </footer>
 </div>
 
-<script src="/bundle.js" async defer></script>
+<!--script src="/bundle.js" async defer></script-->
 </body>
 </html>

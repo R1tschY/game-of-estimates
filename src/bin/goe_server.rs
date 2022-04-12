@@ -1,10 +1,25 @@
-use std::fmt::{format, Debug};
+use std::fmt::Debug;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use handlebars::Handlebars;
-use serde::Serialize;
+use log::info;
+use serde::{Deserialize, Serialize};
+use warp::http::Uri;
 use warp::Filter;
+
+trait ErrorContextExt<T> {
+    fn in_context(self, context: &str) -> Result<T, String>;
+}
+
+impl<T, E: std::fmt::Debug> ErrorContextExt<T> for Result<T, E> {
+    fn in_context(self, context: &str) -> Result<T, String> {
+        match self {
+            Ok(ok) => Ok(ok),
+            Err(err) => Err(format!("{}: {:?}", context, err)),
+        }
+    }
+}
 
 struct WithTemplate<T: Serialize> {
     name: &'static str,
@@ -79,10 +94,20 @@ struct RoomData {
     room_id: String,
 }
 
+#[derive(Deserialize)]
+struct CreateRoomData {
+    deck: String,
+}
+
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn Debug>> {
-    let mut template_sys = TemplateSystem::from_env()?;
-    template_sys.register_template("base")?;
+async fn main() -> Result<(), String> {
+    env_logger::try_init().in_context("Failed to init logger")?;
+
+    let mut template_sys =
+        TemplateSystem::from_env().in_context("Failed to init template system")?;
+    template_sys
+        .register_template("base")
+        .in_context("Failed to register template")?;
 
     let template_sys = Arc::new(template_sys);
     let tsys = template_sys.clone();
@@ -109,7 +134,7 @@ async fn main() -> Result<(), Box<dyn Debug>> {
         ],
     }));
 
-    //GET /
+    // GET /
     let index = warp::path::end()
         .map(move || WithTemplate {
             name: "base",
@@ -117,24 +142,39 @@ async fn main() -> Result<(), Box<dyn Debug>> {
         })
         .map(handlebars);
 
-    //GET /room/{}
+    // GET /room/{}
     let tsys2 = tsys.clone();
     let room = warp::path("room")
         .and(warp::path::param())
+        .and(warp::path::end())
         .map(move |room_id: String| WithTemplate {
-            name: "base",
+            name: "room",
             value: RoomData { room_id },
         })
         .map(move |with_template| render(with_template, tsys2.clone()));
 
+    // POST /room/create
+    let create_room = warp::path("room")
+        .and(warp::path("create"))
+        .and(warp::path::end())
+        .and(warp::post())
+        .and(warp::body::content_length_limit(1024 * 32))
+        .and(warp::body::form())
+        .map(move |data: CreateRoomData| warp::redirect::see_other(Uri::from_static("/room/000")));
+
     // *.js/*.css
-    let bundle_js =
-        warp::path("bundle.js").and(warp::fs::file(tsys.template_dir().join("bundle.js")));
-    let bundle_css =
-        warp::path("bundle.css").and(warp::fs::file(tsys.template_dir().join("bundle.css")));
+    let bundle_js = warp::path("bundle.js")
+        .and(warp::path::end())
+        .and(warp::fs::file(tsys.template_dir().join("bundle.js")));
+    let bundle_css = warp::path("bundle.css")
+        .and(warp::path::end())
+        .and(warp::fs::file(tsys.template_dir().join("bundle.css")));
 
-    let route = warp::get().and(index.or(bundle_js).or(bundle_css).or(room));
+    let route = warp::get()
+        .and(index.or(bundle_js).or(bundle_css).or(room))
+        .or(create_room);
 
+    info!("HTTP server: http://{}:{}", "localhost", 3030);
     warp::serve(route).run(([127, 0, 0, 1], 3030)).await;
 
     Ok(())
