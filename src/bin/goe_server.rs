@@ -8,6 +8,9 @@ use serde::{Deserialize, Serialize};
 use warp::http::Uri;
 use warp::Filter;
 
+use game_of_estimates::game_server::{GameServer, GameServerMessage, ReturnEnvelope};
+use uactor::blocking::{Actor, Addr};
+
 trait ErrorContextExt<T> {
     fn in_context(self, context: &str) -> Result<T, String>;
 }
@@ -99,6 +102,42 @@ struct CreateRoomData {
     deck: String,
 }
 
+mod wrapx {
+    use warp::Filter;
+
+    pub fn with_data<T: Clone + Send>(
+        value: T,
+    ) -> impl Filter<Extract = (T,), Error = std::convert::Infallible> + Clone {
+        warp::any().map(move || value.clone())
+    }
+}
+
+async fn create_room(
+    data: CreateRoomData,
+    game_server: Addr<GameServerMessage>,
+) -> impl warp::Reply {
+    let (ret, revc) = ReturnEnvelope::channel();
+
+    if game_server
+        .send(GameServerMessage::ExternalCreate {
+            deck: data.deck,
+            ret,
+        })
+        .await
+        .is_err()
+    {
+        return warp::redirect::see_other(Uri::from_static("/service_unavailable"));
+    }
+
+    match revc.await {
+        Ok(Ok(room_id)) => {
+            warp::redirect::see_other(Uri::from_maybe_shared(format!("/room/{}", room_id)).unwrap())
+        }
+        Ok(Err(_err)) => warp::redirect::see_other(Uri::from_static("/error")),
+        Err(_err) => warp::redirect::see_other(Uri::from_static("/service_unavailable")),
+    }
+}
+
 #[tokio::main]
 async fn main() -> Result<(), String> {
     env_logger::try_init().in_context("Failed to init logger")?;
@@ -133,6 +172,7 @@ async fn main() -> Result<(), String> {
             },
         ],
     }));
+    let game_server = GameServer::default().start();
 
     // GET /
     let index = warp::path::end()
@@ -160,7 +200,8 @@ async fn main() -> Result<(), String> {
         .and(warp::post())
         .and(warp::body::content_length_limit(1024 * 32))
         .and(warp::body::form())
-        .map(move |data: CreateRoomData| warp::redirect::see_other(Uri::from_static("/room/000")));
+        .and(wrapx::with_data(game_server.clone()))
+        .then(create_room);
 
     // *.js/*.css
     let bundle_js = warp::path("bundle.js")

@@ -102,9 +102,12 @@ async fn delayed_message<T: Debug>(addr: Addr<T>, msg: T, duration: Duration) {
 }
 
 impl Room {
-    pub fn new(id: &str, creator: (PlayerAddr, PlayerInformation), deck: String) -> Self {
+    pub fn new_with_creator(
+        id: &str,
+        creator: (PlayerAddr, PlayerInformation),
+        deck: String,
+    ) -> Self {
         info!("{}: Created room", id);
-
         let player_id = creator.1.id.clone();
         let game_player = GamePlayer::new(creator.0.clone(), creator.1);
 
@@ -114,6 +117,16 @@ impl Room {
         Self {
             id: id.to_string(),
             players,
+            open: false,
+            deck,
+        }
+    }
+
+    pub fn new(id: &str, deck: String) -> Self {
+        info!("{}: Created room", id);
+        Self {
+            id: id.to_string(),
+            players: HashMap::new(),
             open: false,
             deck,
         }
@@ -367,7 +380,7 @@ mod tests {
     impl RoomTester {
         pub fn new_room(creator: &str, voter: bool) -> Self {
             let (player_addr, rx, player_info) = Self::create_player(creator, voter);
-            let room = Room::new(
+            let room = Room::new_with_creator(
                 "TEST-ROOM",
                 (player_addr.clone(), player_info),
                 "TEST-DECK".to_string(),

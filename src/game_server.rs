@@ -1,11 +1,39 @@
 use std::collections::HashMap;
+use std::fmt;
 
 use tokio::sync::mpsc;
+use tokio::sync::oneshot;
 
 use uactor::blocking::{Actor, Context};
 
 use crate::player::{PlayerAddr, PlayerInformation};
 use crate::room::{GamePlayerMessage, RejectReason, Room, RoomAddr, RoomMessage};
+
+/// Return envelope to send result of an operation back to sender
+pub struct ReturnEnvelope<T> {
+    channel: oneshot::Sender<T>,
+}
+
+impl<T> ReturnEnvelope<T> {
+    fn new(channel: oneshot::Sender<T>) -> Self {
+        Self { channel }
+    }
+
+    pub fn channel() -> (ReturnEnvelope<T>, oneshot::Receiver<T>) {
+        let (send, recv) = oneshot::channel();
+        (ReturnEnvelope::new(send), recv)
+    }
+
+    pub fn send(self, value: T) {
+        let _ = self.channel.send(value);
+    }
+}
+
+impl<T> fmt::Debug for ReturnEnvelope<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("ReturnEnvelope")
+    }
+}
 
 #[derive(Debug)]
 pub enum GameServerMessage {
@@ -20,6 +48,10 @@ pub enum GameServerMessage {
 
         player_addr: PlayerAddr,
         player: PlayerInformation,
+    },
+    ExternalCreate {
+        deck: String,
+        ret: ReturnEnvelope<Result<String, RejectReason>>,
     },
 }
 
@@ -79,11 +111,21 @@ impl Actor for GameServer {
                 deck,
             } => {
                 if let Some(room_id) = self.find_new_game_id() {
-                    let room = Room::new(&room_id, (player_addr, player), deck);
+                    let room = Room::new_with_creator(&room_id, (player_addr, player), deck);
                     self.rooms.insert(room_id, room.start());
                 } else {
                     Self::send_rejection(&player_addr, RejectReason::CreateGameError).await;
                 }
+            }
+
+            GameServerMessage::ExternalCreate { deck, ret } => {
+                ret.send(if let Some(room_id) = self.find_new_game_id() {
+                    let room = Room::new(&room_id, deck);
+                    self.rooms.insert(room_id.clone(), room.start());
+                    Ok(room_id)
+                } else {
+                    Err(RejectReason::CreateGameError)
+                });
             }
         }
     }
