@@ -22,6 +22,6 @@
         <div class="game-card empty" />
     </div>
     <div class="game-card-name">
-        {player.name}
+        {player.name || ""}
     </div>
 </li>
