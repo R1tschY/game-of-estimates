@@ -11,7 +11,7 @@ categories = ["games"]
 publish = false
 
 [dependencies]
-tokio = { version = "^1.17", features = ["macros", "sync", "net", "rt-multi-thread", "time", "signal"] }
+tokio = { version = "^1.18", features = ["macros", "sync", "net", "rt-multi-thread", "time", "signal"] }
 tokio-tungstenite = "^0.17.1"
 tokio-native-tls = "^0.3.0"
 env_logger = "^0.9.0"
