@@ -27,7 +27,7 @@
         "sass-loader": "^12.6.0",
         "serve": "^13.0.2",
         "style-loader": "^3.3.1",
-        "svelte": "^3.47.0",
+        "svelte": "^3.48.0",
         "svelte-check": "^2.7.0",
         "svelte-loader": "3.1.2",
         "svelte-preprocess": "^4.10.6",
