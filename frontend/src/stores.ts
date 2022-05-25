@@ -1,8 +1,10 @@
-import { derived, get, Readable, Writable, writable } from 'svelte/store'
+import { derived, get, writable } from 'svelte/store'
+import type { Readable, Writable } from 'svelte/store'
 import { navigate } from 'svelte-routing'
-import { client, GameState, OwnPlayerState, PlayerInfo, PlayerState, wsService } from './client'
+import { client, wsService } from './client'
+import type { GameState, PlayerState } from './client'
 import type { Option } from './basetypes'
-import { writableLocalStorage as writableLocalStorage, derivedWritable as derivedWritable, derivedWritableProperty } from './store-utils'
+import { writableLocalStorage as writableLocalStorage } from './store-utils'
 
 // state
 

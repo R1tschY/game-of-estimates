@@ -39,7 +39,7 @@
     },
     "scripts": {
         "build": "cross-env NODE_ENV=production webpack",
-        "dev": "webpack serve --content-base public",
+        "dev": "webpack serve",
         "test": "jest --coverage --runInBand",
         "check": "svelte-check",
         "lint": "eslint -c .eslintrc --ext .svelte,.js src",

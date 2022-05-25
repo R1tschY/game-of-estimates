@@ -1,4 +1,5 @@
-import { derived, get, Writable, writable } from "svelte/store";
+import { derived, get, writable } from "svelte/store";
+import type { Writable } from "svelte/store";
 
 // Local Storage
 

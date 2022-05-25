@@ -1,4 +1,5 @@
-import { readable, Readable, writable, Writable } from 'svelte/store'
+import { writable } from 'svelte/store'
+import type { Readable, Writable } from 'svelte/store'
 import type { Option } from './basetypes'
 import { Signal } from './events'
 
@@ -235,7 +236,7 @@ export class WebSocketService {
 
     startReconnectTimer() {
         this.clearReconnectTimer()
-        this.reconnectTimer = setTimeout(() => this.connect(), reconnectTimeout)
+        this.reconnectTimer = Number(setTimeout(() => this.connect(), reconnectTimeout))
     }
 
     on_connected(event: Event) {
