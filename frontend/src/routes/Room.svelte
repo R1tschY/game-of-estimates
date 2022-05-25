@@ -10,7 +10,7 @@
     } from '../stores'
     import Header from '../components/Header.svelte'
     import CopyLink from '../components/CopyLink.svelte'
-    import { get_deck as getDeck } from '../deck'
+    
     import { client, playerState } from '../client'
     import { get } from 'svelte/store'
     import DisconnectedMW from '../components/DisconnectedMW.svelte'
@@ -18,12 +18,12 @@
     import Switch from '../components/Switch.svelte'
     import Footer from '../components/Footer.svelte'
     import PlayerEstimate from '../components/PlayerEstimate.svelte'
+    import EstimatesControl from '../components/EstimatesControl.svelte'
 
     export let id: string | null = null
 
     let name: string = get(nameStore)
-
-    $: cards = $gameState ? getDeck($gameState.deck).cards : []
+    
     $: open = $gameState && $gameState.open
 
     // TODO: disconnect on unmount
@@ -34,14 +34,6 @@
             client.joinRoom(id)
         }
     })
-
-    function setVote(value: string | null) {
-        if (!open) {
-            vote.update((v) => {
-                return v !== value ? value : null
-            })
-        }
-    }
 
     function forceOpen() {
         if (!open) {
@@ -126,21 +118,7 @@
         <section class="section">
             <div class="container">
                 <h2 class="title is-4">Choose your estimate</h2>
-                <ul class="card-row">
-                    {#each cards as card}
-                        <li class="game-card-item">
-                            <button
-                                class="game-card game-card-normal"
-                                type="button"
-                                on:click={() => setVote(card)}
-                                class:selected={$vote === card}
-                                class:selectable={!open}
-                            >
-                                <div class="game-card-inner">{card}</div>
-                            </button>
-                        </li>
-                    {/each}
-                </ul>
+                <EstimatesControl />
             </div>
         </section>
     {/if}
