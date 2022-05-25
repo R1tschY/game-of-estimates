@@ -1,4 +1,3 @@
-
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const path = require('path')
 const webpack = require('webpack')
@@ -7,10 +6,9 @@ const svelte_preprocess = require('svelte-preprocess')
 const mode = process.env.NODE_ENV || 'development'
 const prod = mode === 'production'
 
-require('dotenv').config({ 
+require('dotenv').config({
     path: path.resolve('..', '.env.' + mode),
 })
-
 
 module.exports = {
     entry: {
@@ -22,7 +20,7 @@ module.exports = {
         },
         extensions: ['.mjs', '.ts', '.svelte', '.js'],
         mainFields: ['svelte', 'browser', 'module', 'main'],
-        symlinks: false
+        symlinks: false,
     },
     output: {
         path: __dirname + '/public',
@@ -40,18 +38,33 @@ module.exports = {
                 exclude: /node_modules/,
             },
             {
-                test: /\.svelte$/,
+                test: /\.(html|svelte)$/,
                 use: {
                     loader: 'svelte-loader',
                     options: {
-                        emitCss: true,
+                        compilerOptions: {
+                            dev: !prod,
+                        },
+                        emitCss: prod,
                         hotReload: !prod,
                         dev: !prod,
+                        hotOptions: {
+                            preserveLocalState: false,
+                            noPreserveStateKey: '@!hmr',
+                            noReload: false,
+                            optimistic: false,
+                        },
                         preprocess: svelte_preprocess([
                             svelte_preprocess.scss(),
-                            svelte_preprocess.typescript()
+                            svelte_preprocess.typescript(),
                         ]),
                     },
+                },
+            },
+            {
+                test: /node_modules\/svelte\/.*\.mjs$/,
+                resolve: {
+                    fullySpecified: false,
                 },
             },
             {
@@ -78,9 +91,9 @@ module.exports = {
             filename: '[name].css',
         }),
         new webpack.EnvironmentPlugin({
-            'NODE_ENV': mode,
-            'GOE_WEBSOCKET_URL': 'ws://localhost:5500'
-        })
+            NODE_ENV: mode,
+            GOE_WEBSOCKET_URL: 'ws://localhost:5500',
+        }),
     ],
     devtool: prod ? false : 'source-map',
 }
