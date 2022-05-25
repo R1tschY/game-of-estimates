@@ -10,7 +10,7 @@ $card-height: 88mm * 0.25
     text-align: center
     margin: 0.25rem 0.5rem 0.25rem
     border: 1px solid $tt-gray
-    box-shadow: 0 0em 0.5em -0.125em rgba(10, 10, 10, 0.1)
+    box-shadow: 0 0 0.5em -0.125em rgba(10, 10, 10, 0.1)
     outline: 0
     transition: transform 1s, margin-top 0.2s
     border-radius: 10px 0 10px 0
@@ -38,11 +38,15 @@ $card-height: 88mm * 0.25
 .game-card.selectable
     cursor: pointer
 
+.game-card.selectable:not(.selected):hover
+    margin-top: -0.1rem
+    box-shadow: 0 0 0.7em -0.125em rgba(10, 10, 10, 0.15)
 
 .game-card.selected
     background-color: white //#{adjust-color($primary, $lightness: 45%)}
     //color: white 
     margin-top: -0.5rem
+    box-shadow: 0 0 0.7em -0.125em rgba(10, 10, 10, 0.3)
 
 
 .game-card-item
@@ -94,14 +98,9 @@ $card-height: 88mm * 0.25
     flex-direction: column
     align-items: center
 
-.empty
-    border: 2px solid transparent
-    box-shadow: inset 0 0em 0.5em -0.125em rgba(10, 10, 10, 0.1)
+.game-card.placeholder
+    border: 1px solid #ddd
+    box-shadow: inset 0 0 14px 0 rgba(150, 150, 150, 0.2)
     z-index: -10
     position: relative
-
-.card-row
-    display: flex
-    flex-wrap: wrap
-    justify-content: center
 
