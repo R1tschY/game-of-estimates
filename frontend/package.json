@@ -7,7 +7,7 @@
         "@babel/preset-env": "^7.17.10",
         "@babel/register": "^7.17.7",
         "@tsconfig/svelte": "^3.0.0",
-        "babel-jest": "^28.0.3",
+        "babel-jest": "^28.1.1",
         "babel-loader": "^8.2.5",
         "babel-plugin-add-module-exports": "^1.0.4",
         "cross-env": "^7.0.3",
@@ -35,7 +35,7 @@
         "typescript": "^4.6.4",
         "webpack": "^5.72.0",
         "webpack-cli": "^4.9.2",
-        "webpack-dev-server": "^4.8.1"
+        "webpack-dev-server": "^4.9.1"
     },
     "scripts": {
         "build": "cross-env NODE_ENV=production webpack",
