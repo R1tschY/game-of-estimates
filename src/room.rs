@@ -5,7 +5,7 @@ use log::{error, info, warn};
 use rand::distributions::Uniform;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
-use tokio::time::{sleep, Duration};
+use tokio::time::{Duration, sleep};
 
 use uactor::blocking::{Actor, ActorContext, Addr, Context};
 
@@ -29,21 +29,21 @@ pub enum RoomMessage {
     CloseWhenEmpty,
 }
 
-#[derive(Debug, PartialEq, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone)]
 pub enum RejectReason {
     RoomDoesNotExist,
     CreateGameError,
     JoinGameError,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct GameState {
     deck: String,
     open: bool,
     votes: HashMap<String, Option<String>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PlayerState {
     id: String,
     name: Option<String>,
@@ -121,7 +121,7 @@ impl Room {
 
     pub fn gen_id(digits: u8) -> String {
         rand::thread_rng()
-            .sample(&Uniform::from(0..10u32.pow(digits as u32)))
+            .sample(Uniform::from(0..10u32.pow(digits as u32)))
             .to_string()
     }
 
@@ -403,7 +403,7 @@ mod tests {
         }
 
         pub async fn close(self) -> Vec<mpsc::Receiver<GamePlayerMessage>> {
-            self.send(RoomMessage::Close).await;
+            self.send(Close).await;
             self.room_addr.closed().await;
             self.players
         }
