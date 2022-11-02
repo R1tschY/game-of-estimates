@@ -1,17 +1,24 @@
 <script lang="ts">
-    import { connected, connecting, playerId, lastError, state, debug } from '../stores'
+    import {
+        connected,
+        connecting,
+        playerId,
+        lastError,
+        state,
+        debug,
+    } from '../stores'
     import { decks } from '../deck'
     import { client } from '../client'
     import Header from '../components/Header.svelte'
     import Footer from '../components/Footer.svelte'
     import SelectWithButton from '../components/SelectWithButton.svelte'
     import DisconnectedMW from '../components/DisconnectedMW.svelte'
-    import NProgress from "nprogress"
+    import NProgress from 'nprogress'
 
     let deckId = decks[0].id
     let roomId = ''
 
-    type Action = null | "join" | "create"
+    type Action = null | 'join' | 'create'
     let action: Action = null
 
     let decks_dropdown = decks.map((deck) => {
@@ -22,20 +29,20 @@
     })
 
     function createRoom() {
-        action = "create"
+        action = 'create'
         NProgress.start()
         client.createRoom(deckId)
     }
 
     function joinRoom() {
-        action = "join"
+        action = 'join'
         NProgress.start()
         client.joinRoom(roomId)
     }
 
     // TODO: disconnect
     client.state.subscribe((state) => {
-        if (state !== "joining") {
+        if (state !== 'joining') {
             action = null
             NProgress.done()
         }
@@ -45,15 +52,26 @@
 <div>
     <Header />
 
-    {#if $lastError}
     <section class="section">
         <div class="container">
-            <div class="notification is-danger">
-                <button class="delete"></button>
-                {$lastError}
-            </div>
+            <h1 class="title is-4">Plan your sprint with a little game</h1>
+            <p>
+                Game Of Estimates gives you the chance to do your <a href="https://en.wikipedia.org/wiki/Planning_poker">Planning Poker</a>
+                (also known as Scrum Poker) online and for free. Feel free to contribute, because it is
+                <a href="https://github.com/R1tschY/game-of-estimates">open source</a>!
+            </p>
         </div>
     </section>
+
+    {#if $lastError}
+        <section class="section">
+            <div class="container">
+                <div class="notification is-danger">
+                    <button class="delete" />
+                    {$lastError}
+                </div>
+            </div>
+        </section>
     {/if}
 
     <section class="section">
@@ -66,14 +84,16 @@
                                 class="input"
                                 type="text"
                                 placeholder="Room no."
-                                bind:value={roomId} />
+                                bind:value={roomId}
+                            />
                         </div>
                         <div class="control">
                             <button
                                 type="button"
                                 class="button is-fullwidth is-primary"
-                                class:is-loading={action === "join"}
-                                on:click={joinRoom}>Join existing room</button>
+                                class:is-loading={action === 'join'}
+                                on:click={joinRoom}>Join existing room</button
+                            >
                         </div>
                     </div>
                 </form>
@@ -86,7 +106,8 @@
                         <div class="control is-expanded" id="deck_field">
                             <SelectWithButton
                                 items={decks_dropdown}
-                                bind:value={deckId} />
+                                bind:value={deckId}
+                            />
                         </div>
                     </div>
 
@@ -97,8 +118,10 @@
                                     <button
                                         type="button"
                                         class="button is-primary"
-                                        class:is-loading={action === "create"}
-                                        on:click={createRoom}>Create room</button>
+                                        class:is-loading={action === 'create'}
+                                        on:click={createRoom}
+                                        >Create room</button
+                                    >
                                 </div>
                             </div>
                         </div>
