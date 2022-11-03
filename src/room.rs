@@ -5,7 +5,7 @@ use log::{error, info, warn};
 use rand::distributions::Uniform;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
-use tokio::time::{Duration, sleep};
+use tokio::time::{sleep, Duration};
 
 use uactor::blocking::{Actor, ActorContext, Addr, Context};
 
