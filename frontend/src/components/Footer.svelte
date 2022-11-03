@@ -1,5 +1,6 @@
 <script lang="ts">
   import GitHub from '../icons/GitHub.svelte'
+  import {getText} from "../i18n";
 </script>
 
 <style lang="scss">
@@ -12,10 +13,10 @@
 <footer class="footer">
   <div class="content has-text-centered">
     <p>
-      <strong>Game Of Estimates</strong> by <a href="https://github.com/R1tschY">Richard Liebscher</a>.
+      {@html getText("byAuthor").format("<strong>Game Of Estimates</strong>", "<a href=\"https://github.com/R1tschY\">Richard Liebscher</a>")}
     </p>
     <p>
-      The source code is licensed under <a href="http://opensource.org/licenses/mit-license.php">MIT</a>.
+      {@html getText("license").format("<a href=\"http://opensource.org/licenses/mit-license.php\">MIT</a>")}
       <div>
         <a href="https://github.com/R1tschY/game_of_estimates"><span><GitHub class="footer-icon"/></span></a>
       </div>
