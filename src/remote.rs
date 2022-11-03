@@ -12,7 +12,7 @@ use tokio_tungstenite::WebSocketStream;
 
 use crate::room::{GameState, PlayerState};
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 #[serde(tag = "type")]
 pub enum RemoteMessage {
     // upstream
