@@ -1,5 +1,5 @@
-import { writable } from 'svelte/store'
 import type { Readable, Writable } from 'svelte/store'
+import { writable } from 'svelte/store'
 import type { Option } from './basetypes'
 import { Signal } from './events'
 
@@ -19,53 +19,53 @@ declare var process: {
 // client
 
 export interface WelcomeMessageEvent {
-    player_id: string,
+    player_id: string
 }
 
-export interface RejectedEvent { }
+export interface RejectedEvent {}
 
 export interface JoinedEvent {
-    room: string;
-    state: GameState;
-    players: PlayerInfo[];
+    room: string
+    state: GameState
+    players: PlayerInfo[]
 }
 
 export interface PlayerJoinedEvent {
-    player: PlayerInfo;
+    player: PlayerInfo
 }
 
 export interface PlayerChangedEvent {
-    player: PlayerInfo;
+    player: PlayerInfo
 }
 
 export interface PlayerLeftEvent {
-    player_id: string;
+    player_id: string
 }
 
 export interface GameChangedEvent {
-    game_state: GameState;
+    game_state: GameState
 }
 
 export interface PlayerInfo {
-    id: string,
-    name: Option<string>,
-    voter: boolean,
+    id: string
+    name: Option<string>
+    voter: boolean
 }
 
 export interface OwnPlayerState {
-    name: Option<string>,
-    voter: boolean,
+    name: Option<string>
+    voter: boolean
 }
 
 export interface GameState {
-    deck: string,
-    open: boolean,
-    votes: Record<string, Option<String>>,
+    deck: string
+    open: boolean
+    votes: Record<string, Option<String>>
 }
 
-export interface RejectedEvent { }
+export interface RejectedEvent {}
 
-export type PlayerState = "connecting" | "outside" | "joining" | "joined"
+export type PlayerState = 'connecting' | 'outside' | 'joining' | 'joined'
 
 export class Client {
     _ws: WebSocket
@@ -84,7 +84,7 @@ export class Client {
     rejected: Signal<RejectedEvent> = new Signal()
 
     constructor(wsService: WebSocketService) {
-        this.state = writable("connecting")
+        this.state = writable('connecting')
         this.playerId = writable(null)
         this.roomId = writable(null)
         this.lastError = writable(null)
@@ -98,14 +98,14 @@ export class Client {
         this._send({
             type: 'UpdatePlayer',
             voter,
-            name
+            name,
         })
     }
 
     vote(vote: Option<string>) {
         this._send({
             type: 'Vote',
-            vote
+            vote,
         })
     }
 
@@ -124,24 +124,24 @@ export class Client {
     setName(name: string) {
         this._send({
             type: 'SetName',
-            name
+            name,
         })
     }
 
     joinRoom(room: string) {
-        this.state.set("joining")
+        this.state.set('joining')
         this.roomId.set(room)
         this._send({
             type: 'JoinRoom',
-            room
+            room,
         })
     }
 
     createRoom(deck: string) {
-        this.state.set("joining")
+        this.state.set('joining')
         this._send({
             type: 'CreateRoom',
-            deck
+            deck,
         })
     }
 
@@ -149,10 +149,10 @@ export class Client {
         if (this._ws) {
             this._ws.send(JSON.stringify(payload))
         }
-    } 
+    }
 
     private _onDisconnected(evt: Event): void {
-        this.state.set("connecting")
+        this.state.set('connecting')
         this.playerId.set(null)
     }
 
@@ -160,44 +160,44 @@ export class Client {
         console.debug('Got message', event)
         switch (event.type) {
             case 'Welcome':
-                this.state.set("outside")
+                this.state.set('outside')
 
-                const welcomeEvt = (event as WelcomeMessageEvent)
+                const welcomeEvt = event as WelcomeMessageEvent
                 this.playerId.set(welcomeEvt.player_id)
                 this.welcome.emit(welcomeEvt)
                 break
-    
-            case 'Joined':
-                this.state.set("joined")
 
-                const joinedEvt = (event as JoinedEvent)
+            case 'Joined':
+                this.state.set('joined')
+
+                const joinedEvt = event as JoinedEvent
                 this.roomId.set(joinedEvt.room)
                 this.joined.emit(joinedEvt)
                 break
-    
+
             case 'PlayerJoined':
                 this.playerJoined.emit(event as PlayerJoinedEvent)
                 break
-    
+
             case 'PlayerChanged':
                 this.playerChanged.emit(event as PlayerChangedEvent)
                 break
-    
+
             case 'PlayerLeft':
                 this.playerLeft.emit(event as PlayerLeftEvent)
                 break
-    
+
             case 'GameChanged':
                 this.stateChanged.emit(event as GameChangedEvent)
                 break
 
             case 'Rejected':
-                this.state.set("outside")
+                this.state.set('outside')
                 this.roomId.set(null)
-                this.lastError.set("Room does not exist")
+                this.lastError.set('Room does not exist')
                 this.rejected.emit(event as RejectedEvent)
                 break
-    
+
             default:
                 console.error('Unknown message', event)
                 break
@@ -213,10 +213,10 @@ export class WebSocketService {
     error_store: Writable<boolean>
     reconnectTimer: Option<number>
 
-    message: Signal<any> = new Signal();
-    connected: Signal<undefined> = new Signal();
-    disconnected: Signal<undefined> = new Signal();
-    error: Signal<undefined> = new Signal();
+    message: Signal<any> = new Signal()
+    connected: Signal<undefined> = new Signal()
+    disconnected: Signal<undefined> = new Signal()
+    error: Signal<undefined> = new Signal()
 
     constructor() {
         this.ws_store = writable(null)
@@ -236,7 +236,9 @@ export class WebSocketService {
 
     startReconnectTimer() {
         this.clearReconnectTimer()
-        this.reconnectTimer = Number(setTimeout(() => this.connect(), reconnectTimeout))
+        this.reconnectTimer = Number(
+            setTimeout(() => this.connect(), reconnectTimeout),
+        )
     }
 
     on_connected(event: Event) {
@@ -267,17 +269,25 @@ export class WebSocketService {
     }
 
     connect() {
-        let url = process.env.GOE_WEBSOCKET_URL || 'ws://localhost:5500'
+        let url = process.env.GOE_WEBSOCKET_URL || this.guessWsAddr()
         console.debug('connecting to ' + url + ' ...')
         this.connecting_store.set(true)
 
         this.ws = new WebSocket(url)
-        this.ws.addEventListener('open', evt => this.on_connected(evt))
+        this.ws.addEventListener('open', (evt) => this.on_connected(evt))
         this.ws.addEventListener('message', (evt) => {
             this.message.emit(JSON.parse(evt.data))
         })
-        this.ws.addEventListener('close', evt => this.on_disconnected(evt))
-        this.ws.addEventListener('error', evt => this.on_connection_error(evt))
+        this.ws.addEventListener('close', (evt) => this.on_disconnected(evt))
+        this.ws.addEventListener('error', (evt) =>
+            this.on_connection_error(evt),
+        )
+    }
+
+    private guessWsAddr(): string {
+        const loc = window.location
+        const protocol = loc.protocol === 'http:' ? 'ws:' : 'wss:'
+        return `${protocol}//${loc.host}/ws`
     }
 }
 

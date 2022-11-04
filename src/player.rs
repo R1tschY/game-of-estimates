@@ -62,7 +62,7 @@ impl Player {
     pub fn gen_id() -> String {
         rand::thread_rng()
             .sample_iter(&Alphanumeric)
-            .take(16)
+            .take(21)
             .map(char::from)
             .collect::<String>()
     }
@@ -71,18 +71,16 @@ impl Player {
         &self.id
     }
 
-    async fn leave_room(&self, room: &RoomAddr) {
+    async fn leave_room(self_id: String, room: RoomAddr) {
         // ignore result, because error means room does not exist, that we left
-        let _ = room
-            .send(RoomMessage::PlayerLeft(self.id.to_string()))
-            .await;
+        let _ = room.send(RoomMessage::PlayerLeft(self_id)).await;
     }
 
     async fn leave_old_room(&mut self) {
         if let Some(old_room_id) = &self.room_id {
             debug!("{}: Leaves already joined room {}", self.id, old_room_id);
             if let Some(old_room) = replace(&mut self.room, None) {
-                self.leave_room(&old_room).await;
+                Self::leave_room(self.id.to_string(), old_room).await;
             }
         }
     }
@@ -117,11 +115,12 @@ impl Player {
             }
             RemoteMessage::CreateRoom { deck } => {
                 debug!("{}: Wants to create a room", self.id);
+                let player_addr = self.addr();
                 self.leave_old_room().await;
                 self.room_id = Some(TO_BE_CREATED.to_string()); // as marker
                 let information = self.get_player_information();
                 self.send_join_message(GameServerMessage::Create {
-                    player_addr: self.addr(),
+                    player_addr,
                     player: information,
                     deck,
                 })
@@ -129,6 +128,7 @@ impl Player {
             }
             RemoteMessage::JoinRoom { room } => {
                 debug!("{}: Wants to join {}", self.id, &room);
+                let player_addr = self.addr();
                 if self.room_id.as_ref() == Some(&room) {
                     warn!("{}: Already joined {}", self.id, &room);
                     return true;
@@ -139,7 +139,7 @@ impl Player {
                 let player_information = self.get_player_information();
                 self.send_join_message(GameServerMessage::Join {
                     room,
-                    player_addr: self.addr(),
+                    player_addr,
                     player: player_information,
                 })
                 .await;
@@ -256,7 +256,7 @@ impl Player {
                         "{}: Reject welcome of room {}, got {:?}",
                         self.id, id, self.room_id
                     );
-                    self.leave_room(&room).await;
+                    Self::leave_room(self.id.to_string(), room).await;
                 }
             }
             GamePlayerMessage::Rejected(reason) => {
@@ -293,7 +293,7 @@ impl Player {
     async fn tear_down(&mut self) {
         if let Some(room) = self.room.as_mut() {
             let room = room.clone();
-            self.leave_room(&room).await;
+            Self::leave_room(self.id.to_string(), room).await;
         }
     }
 }

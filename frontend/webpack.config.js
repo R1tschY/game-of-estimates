@@ -92,7 +92,7 @@ module.exports = {
         }),
         new webpack.EnvironmentPlugin({
             NODE_ENV: mode,
-            GOE_WEBSOCKET_URL: 'ws://localhost:5500',
+            GOE_WEBSOCKET_URL: '',
         }),
     ],
     devtool: prod ? false : 'source-map',

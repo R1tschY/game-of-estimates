@@ -1,12 +1,15 @@
-use std::sync::Arc;
-use std::{env, fmt, fs};
+use std::convert::Infallible;
+use std::net::SocketAddr;
+#[cfg(feature = "tls")]
+use std::path::PathBuf;
+use std::{env, fmt};
 
-use log::{debug, error, info};
-use tokio::net::{TcpListener, TcpStream};
+use log::info;
 use tokio::signal::unix::{signal, SignalKind};
-use tokio_native_tls::native_tls::Identity;
-use tokio_native_tls::TlsAcceptor;
+use warp::ws::WebSocket;
+use warp::Filter;
 
+use game_of_estimates::assets;
 use game_of_estimates::game_server::{GameServer, GameServerAddr};
 use game_of_estimates::player::Player;
 use game_of_estimates::remote::RemoteConnection;
@@ -25,62 +28,6 @@ impl<T, E: fmt::Debug> ErrorContextExt<T> for Result<T, E> {
     }
 }
 
-#[derive(Clone)]
-enum StreamAcceptor {
-    Plain,
-    Tls(Arc<TlsAcceptor>),
-}
-
-impl StreamAcceptor {
-    pub async fn accept(&self, stream: TcpStream) -> Result<RemoteConnection, String> {
-        let addr = stream
-            .peer_addr()
-            .in_context("Connected streams should have a peer address")?;
-        debug!("Peer address: {}", addr);
-
-        match self {
-            StreamAcceptor::Plain => {
-                let ws_stream = tokio_tungstenite::accept_async(stream)
-                    .await
-                    .in_context("Error during the websocket handshake occurred")?;
-
-                debug!("New WebSocket connection: {}", addr);
-                Ok(RemoteConnection::new(ws_stream))
-            }
-
-            StreamAcceptor::Tls(tls_acceptor) => {
-                let tls_stream = tls_acceptor
-                    .accept(stream)
-                    .await
-                    .in_context("Failed to accept TLS connection")?;
-
-                let ws_stream = tokio_tungstenite::accept_async(tls_stream)
-                    .await
-                    .in_context("Error during the websocket handshake occurred")?;
-
-                debug!("New WebSocket connection: {}", addr);
-                Ok(RemoteConnection::new_with_tls(ws_stream))
-            }
-        }
-    }
-
-    pub fn scheme(&self) -> &'static str {
-        match self {
-            StreamAcceptor::Plain => "ws",
-            StreamAcceptor::Tls(_) => "wss",
-        }
-    }
-}
-
-fn create_tls_acceptor(cert_file: String) -> Result<StreamAcceptor, String> {
-    let cert_content = fs::read(cert_file).in_context("Failed to read certificate")?;
-    let identity = Identity::from_pkcs12(&cert_content, "").in_context("Invalid certificate")?;
-    let acceptor: TlsAcceptor = tokio_native_tls::native_tls::TlsAcceptor::new(identity)
-        .in_context("Failed to set certificate")?
-        .into();
-    Ok(StreamAcceptor::Tls(Arc::new(acceptor)))
-}
-
 #[chassis::integration]
 mod integration {
     use super::*;
@@ -94,29 +41,37 @@ mod integration {
         }
 
         #[singleton]
-        pub fn provide_tcp_acceptor() -> StreamAcceptor {
-            if let Ok(cert) = env::var("GOE_CERT_PKCS12") {
-                create_tls_acceptor(cert).unwrap()
+        pub fn provide_cert_paths() -> TlsCert {
+            #[cfg(feature = "tls")]
+            if let Some(cert_path) = env::var_os("GOE_PEM_PATH") {
+                if let Some(key_path) = env::var_os("GOE_KEY_PATH") {
+                    TlsCert::Pem {
+                        cert_path: cert_path.into(),
+                        key_path: key_path.into(),
+                    }
+                } else {
+                    TlsCert::Unencrypted
+                }
             } else {
-                StreamAcceptor::Plain
+                TlsCert::Unencrypted
             }
+            #[cfg(not(feature = "tls"))]
+            TlsCert::Unencrypted
         }
 
         #[singleton]
         pub fn provide_listen_addr() -> ListenAddr {
-            ListenAddr(
-                env::var("GOE_WEBSOCKET_ADDR").unwrap_or_else(|_| "127.0.0.1:5500".to_string()),
-            )
+            ListenAddr(env::var("GOE_LISTEN_ADDR").unwrap_or_else(|_| "127.0.0.1:5500".to_string()))
         }
 
         pub fn provide_main(
             addr: ListenAddr,
-            acceptor: StreamAcceptor,
+            tls_cert: TlsCert,
             game_server: GameServerAddr,
         ) -> Main {
             Main {
                 addr,
-                acceptor,
+                tls_cert,
                 game_server,
             }
         }
@@ -127,44 +82,68 @@ mod integration {
     }
 }
 
+pub fn data<T: Clone + Send>(value: T) -> impl Filter<Extract = (T,), Error = Infallible> + Clone {
+    warp::any().map(move || value.clone())
+}
+
 #[derive(Clone)]
 struct ListenAddr(String);
 
+#[derive(Clone)]
+enum TlsCert {
+    Unencrypted,
+    #[cfg(feature = "tls")]
+    Pem {
+        cert_path: PathBuf,
+        key_path: PathBuf,
+    },
+}
+
 pub struct Main {
     addr: ListenAddr,
-    acceptor: StreamAcceptor,
+    tls_cert: TlsCert,
     game_server: GameServerAddr,
 }
 
 impl Main {
     pub async fn run(&self) -> Result<(), String> {
-        // Create the event loop and TCP listener we'll accept connections on.
-        let listener = TcpListener::bind(self.addr.0.clone())
-            .await
-            .in_context("Failed to bind")?;
-        info!("Listening on {}://{}", self.acceptor.scheme(), &self.addr.0);
+        let addr: SocketAddr = self.addr.0.parse().expect("Invalid listen address");
 
-        while let Ok((stream, _)) = listener.accept().await {
-            tokio::spawn(Self::run_player(
-                stream,
-                self.acceptor.clone(),
-                self.game_server.clone(),
-            ));
+        let ws = warp::path("ws")
+            .and(warp::path::end())
+            .and(warp::ws())
+            .and(data(self.game_server.clone()))
+            .map(|ws: warp::ws::Ws, game_server: GameServerAddr| {
+                ws.on_upgrade(move |websocket| Main::run_player(websocket, game_server))
+            });
+
+        info!("Listening on {} ...", &self.addr.0);
+
+        let routes = ws.or(assets::assets());
+
+        match self.tls_cert.clone() {
+            TlsCert::Unencrypted => warp::serve(routes).run(addr).await,
+            #[cfg(feature = "tls")]
+            TlsCert::Pem {
+                cert_path,
+                key_path,
+            } => {
+                warp::serve(routes)
+                    .tls()
+                    .cert_path(cert_path)
+                    .key_path(key_path)
+                    .run(addr)
+                    .await;
+            }
         }
 
         Ok(())
     }
 
-    async fn run_player(stream: TcpStream, acceptor: StreamAcceptor, game_server: GameServerAddr) {
-        let conn = match acceptor.accept(stream).await {
-            Ok(conn) => conn,
-            Err(err) => {
-                error!("Failed to accept connection: {}", err);
-                return;
-            }
-        };
-
-        Player::new(conn, game_server).run().await
+    async fn run_player(ws: WebSocket, game_server: GameServerAddr) {
+        Player::new(RemoteConnection::new(ws), game_server)
+            .run()
+            .await
     }
 }
 

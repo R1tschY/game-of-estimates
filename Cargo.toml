@@ -10,10 +10,11 @@ repository = "https://github.com/R1tschY/game-of-estimates"
 categories = ["games"]
 publish = false
 
+[features]
+tls = ["warp/tls"]
+
 [dependencies]
 tokio = { version = "^1.19", features = ["macros", "sync", "net", "rt-multi-thread", "time", "signal"] }
-tokio-tungstenite = "^0.17.2"
-tokio-native-tls = "^0.3.0"
 env_logger = "^0.9.3"
 futures-util = "^0.3.25"
 log = "^0.4.17"
@@ -24,6 +25,9 @@ quick-error = "^2.0.1"
 async-trait = "^0.1.56"
 uactor = { path = "components/uactor" }
 chassis = "^0.1.1"
+include_dir = "0.7.3"
+warp = "^0.3.3"
+headers = "0.3.8"
 
 [dev-dependencies]
 ctor = "0.1.23"
