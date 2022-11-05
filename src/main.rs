@@ -10,6 +10,7 @@ use warp::ws::WebSocket;
 use warp::Filter;
 
 use game_of_estimates::assets;
+use game_of_estimates::assets::AssetCatalog;
 use game_of_estimates::game_server::{GameServer, GameServerAddr};
 use game_of_estimates::player::Player;
 use game_of_estimates::remote::RemoteConnection;
@@ -108,6 +109,7 @@ pub struct Main {
 impl Main {
     pub async fn run(&self) -> Result<(), String> {
         let addr: SocketAddr = self.addr.0.parse().expect("Invalid listen address");
+        let assets = Box::leak(Box::new(AssetCatalog::new()));
 
         let ws = warp::path("ws")
             .and(warp::path::end())
@@ -119,7 +121,7 @@ impl Main {
 
         info!("Listening on {} ...", &self.addr.0);
 
-        let routes = ws.or(assets::assets());
+        let routes = ws.or(assets::assets(assets));
 
         match self.tls_cert.clone() {
             TlsCert::Unencrypted => warp::serve(routes).run(addr).await,

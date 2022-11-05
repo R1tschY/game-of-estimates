@@ -15,8 +15,8 @@ tls = ["warp/tls"]
 
 [dependencies]
 tokio = { version = "^1.19", features = ["macros", "sync", "net", "rt-multi-thread", "time", "signal"] }
-env_logger = "^0.9.3"
-futures-util = "^0.3.25"
+env_logger = { version = "^0.9.3", default-features = false }
+futures-util = { version = "^0.3.25", default-features = false }
 log = "^0.4.17"
 serde = { version = "^1.0.147", features = ["derive"] }
 serde_json = "^1.0.87"
@@ -26,8 +26,12 @@ async-trait = "^0.1.56"
 uactor = { path = "components/uactor" }
 chassis = "^0.1.1"
 include_dir = "0.7.3"
-warp = "^0.3.3"
+warp = { version = "^0.3.3", default-features = false, features = ["websocket"] }
 headers = "0.3.8"
+sha1 = "0.10.5"
+mime_guess = "2.0.4"
+mime = "0.3.16"
+hex = "0.4.3"
 
 [dev-dependencies]
 ctor = "0.1.23"
@@ -36,3 +40,6 @@ ctor = "0.1.23"
 members = [
     "components/uactor"
 ]
+
+[profile.release]
+lto = "fat"
