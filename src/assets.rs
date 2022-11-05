@@ -7,7 +7,7 @@ use include_dir::{include_dir, Dir, DirEntry, File};
 use mime_guess::mime;
 use sha1::{Digest, Sha1};
 use warp::http::header::{CONTENT_TYPE, ETAG};
-use warp::http::HeaderValue;
+use warp::http::{HeaderValue, StatusCode};
 use warp::hyper::Body;
 use warp::reply::Response;
 use warp::{reject, Filter, Rejection, Reply};
@@ -115,15 +115,26 @@ impl Reply for &'static Asset {
 //     filter_fn_one(move |route| future::ready(Ok(route.headers().typed_get())))
 // }
 
+fn asset_reply(asset: &'static Asset, if_none_match: Option<&str>) -> Response {
+    if if_none_match == Some(&asset.sha1) {
+        let mut response = Response::new(Body::empty());
+        *response.status_mut() = StatusCode::NOT_MODIFIED;
+        return response;
+    }
+
+    asset.into_response()
+}
+
 fn asset_from_tail_path(
     tail: warp::path::Tail,
     assets: &'static AssetCatalog,
-) -> impl Future<Output = Result<&'static Asset, Rejection>> + Send {
+    if_none_match: Option<String>,
+) -> impl Future<Output = Result<Response, Rejection>> + Send {
     if let Some(asset) = assets.get(tail.as_str()) {
-        future::ok(asset)
+        future::ok(asset_reply(asset, if_none_match.as_ref().map(|x| &**x)))
     } else {
         if let Some(asset) = assets.get("index.html") {
-            future::ok(asset)
+            future::ok(asset_reply(asset, if_none_match.as_ref().map(|x| &**x)))
         } else {
             future::err(reject::not_found())
         }
@@ -132,12 +143,13 @@ fn asset_from_tail_path(
 
 pub fn assets(
     assets: &'static AssetCatalog,
-) -> impl Filter<Extract = (&'static Asset,), Error = Rejection> + Clone {
+) -> impl Filter<Extract = (Response,), Error = Rejection> + Clone {
     warp::get()
         .or(warp::head())
         .unify()
         .and(warp::path::tail())
         .and(warp::any().map(move || assets))
+        .and(warp::header::optional::<String>("If-None-Match"))
         // .and(conditionals())
         .and_then(asset_from_tail_path)
 }
