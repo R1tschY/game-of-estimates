@@ -10,7 +10,7 @@ jobs:
       - name: Checkout sources
         uses: actions/checkout@v2
 
-      - name: Setup nightly toolchain
+      - name: Setup Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
