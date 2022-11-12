@@ -30,6 +30,12 @@ pub struct AssetCatalog {
     assets: HashMap<&'static str, Asset>,
 }
 
+impl Default for AssetCatalog {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl AssetCatalog {
     pub fn new() -> Self {
         let mut assets: HashMap<&'static str, Asset> = HashMap::new();
@@ -131,13 +137,11 @@ fn asset_from_tail_path(
     if_none_match: Option<String>,
 ) -> impl Future<Output = Result<Response, Rejection>> + Send {
     if let Some(asset) = assets.get(tail.as_str()) {
-        future::ok(asset_reply(asset, if_none_match.as_ref().map(|x| &**x)))
+        future::ok(asset_reply(asset, if_none_match.as_deref()))
+    } else if let Some(asset) = assets.get("index.html") {
+        future::ok(asset_reply(asset, if_none_match.as_deref()))
     } else {
-        if let Some(asset) = assets.get("index.html") {
-            future::ok(asset_reply(asset, if_none_match.as_ref().map(|x| &**x)))
-        } else {
-            future::err(reject::not_found())
-        }
+        future::err(reject::not_found())
     }
 }
 
