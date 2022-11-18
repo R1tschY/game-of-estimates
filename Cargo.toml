@@ -34,7 +34,7 @@ mime = "0.3.16"
 hex = "0.4.3"
 
 [dev-dependencies]
-ctor = "0.1.23"
+ctor = "0.1.26"
 
 [workspace]
 members = [
