@@ -1,0 +1,6 @@
+**/build/
+**/deps/
+**/.fingerprint/
+**/incremental/
+**/.*
+frontend/node_modules
