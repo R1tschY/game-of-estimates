@@ -52,4 +52,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: R1tschY/game-of-estimates:unreleased
+          tags: r1tschy/game-of-estimates:unreleased
