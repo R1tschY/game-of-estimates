@@ -1,5 +1,11 @@
-.DS_Store
+# deps
 node_modules
-public/bundle.*
-package-lock.json
-yarn.lock
+
+# target
+dist
+dist-ssr
+
+# Editors
+.DS_Store
+.vscode
+.idea

@@ -12,7 +12,7 @@ use warp::hyper::Body;
 use warp::reply::Response;
 use warp::{reject, Filter, Rejection, Reply};
 
-static ASSETS_ROOT: Dir = include_dir!("$CARGO_MANIFEST_DIR/frontend/public");
+static ASSETS_ROOT: Dir = include_dir!("$CARGO_MANIFEST_DIR/frontend/dist");
 
 pub fn get_asset_content<S: AsRef<Path>>(path: S) -> Option<&'static [u8]> {
     ASSETS_ROOT.get_file(path).map(|f| f.contents())

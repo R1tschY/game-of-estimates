@@ -9,13 +9,6 @@ import { Signal } from './events'
 
 const reconnectTimeout: number = 5000
 
-declare var process: {
-    env: {
-        NODE_ENV: 'development' | 'production'
-        GOE_WEBSOCKET_URL: string
-    }
-}
-
 // client
 
 export interface WelcomeMessageEvent {
@@ -151,7 +144,7 @@ export class Client {
         }
     }
 
-    private _onDisconnected(evt: Event): void {
+    private _onDisconnected(_evt: Event): void {
         this.state.set('connecting')
         this.playerId.set(null)
     }
@@ -269,8 +262,8 @@ export class WebSocketService {
     }
 
     connect() {
-        let url = process.env.GOE_WEBSOCKET_URL || this.guessWsAddr()
-        console.debug('connecting to ' + url + ' ...')
+        let url = import.meta.env.GOE_WEBSOCKET_URL || this.guessWsAddr()
+        console.debug('connecting to ' + url + ' ...', url)
         this.connecting_store.set(true)
 
         this.ws = new WebSocket(url)
