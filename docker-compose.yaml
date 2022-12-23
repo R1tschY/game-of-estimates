@@ -1,0 +1,11 @@
+version: "3"
+
+services:
+  game-of-estimates:
+    build:
+      context: .
+    ports:
+      - "5500:5500"
+    environment:
+      GOE_LISTEN_ADDR: 0.0.0.0:5500
+      RUST_LOG: info
