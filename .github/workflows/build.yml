@@ -1,0 +1,103 @@
+name: Build + Test
+
+on: [push]
+
+jobs:
+  backend-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - name: Setup Rust toolchain
+        run: |
+          rustup toolchain install stable --profile minimal --no-self-update -c clippy -c rustfmt -t x86_64-unknown-linux-musl
+          rustup default stable
+        shell: bash
+
+      - name: "Set environment variables used by Rust toolchain"
+        run: |
+          echo CARGO_TERM_COLOR=always >> $GITHUB_ENV
+          echo CARGO_INCREMENTAL=0 >> $GITHUB_ENV
+          echo RUST_BACKTRACE=1 >> $GITHUB_ENV
+          
+          rustc --version --verbose
+        shell: bash
+
+      - name: Fmt
+        run: cargo fmt --all -- --check
+
+      - name: Clippy
+        run: cargo clippy
+
+      - name: Test
+        run: cargo test --release
+
+  frontend-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - name: Install deps
+        run: npm install
+        working-directory: frontend
+
+      - name: Lint
+        run: npm run lint
+        working-directory: frontend
+
+      - name: Prettier
+        run: npm run prettier
+        working-directory: frontend
+
+      - name: Svelte check
+        run: npm run check
+        working-directory: frontend
+
+  build:
+    runs-on: ubuntu-latest
+    needs:
+      - backend-check
+      - frontend-check
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - name: Build frontend
+        run: npm install && npm run build
+        working-directory: frontend
+
+      - name: Setup Rust toolchain
+        run: |
+          rustup toolchain install stable --profile minimal --no-self-update -t x86_64-unknown-linux-musl
+          rustup default stable
+        shell: bash
+
+      - name: "Set environment variables used by Rust toolchain"
+        run: |
+          echo CARGO_TERM_COLOR=always >> $GITHUB_ENV
+          echo CARGO_INCREMENTAL=0 >> $GITHUB_ENV
+          echo RUST_BACKTRACE=1 >> $GITHUB_ENV
+          
+          rustc --version --verbose
+        shell: bash
+
+      - name: Build backend
+        run: cargo build --release
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DH_USER }}
+          password: ${{ secrets.DH_PAT }}
+
+      - name: Build and push container image
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          push: true
+          tags: r1tschy/game-of-estimates:unreleased
