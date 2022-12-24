@@ -16,7 +16,7 @@
       {@html getText("byAuthor").format("<strong>Game Of Estimates</strong>", "<a href=\"https://github.com/R1tschY\">Richard Liebscher</a>")}
     </p>
     <p>
-      {@html getText("license").format("<a href=\"http://opensource.org/licenses/mit-license.php\">MIT</a>")}
+      {@html getText("license").format("<a href=\https:///opensource.org/licenses/mit-license.php\">MIT</a>")}
       <div>
         <a href="https://github.com/R1tschY/game_of_estimates"><span><GitHub class="footer-icon"/></span></a>
       </div>
