@@ -4,6 +4,7 @@
 
 $card-width: 63mm * 0.25
 $card-height: 88mm * 0.25
+$card-selected-offset: $card-height * 0.2
 
 .game-card
     width: $card-width
@@ -48,7 +49,7 @@ $card-height: 88mm * 0.25
 .game-card.selected
     background-color: white //#{adjust-color($primary, $lightness: 45%)}
     //color: white 
-    margin-top: -0.5rem
+    margin-top: -$card-selected-offset
     box-shadow: 0 0 0.7em -0.125em rgba(10, 10, 10, 0.3)
 
 
@@ -111,3 +112,17 @@ $card-height: 88mm * 0.25
     display: flex
     flex-wrap: wrap
     justify-content: center
+
+.hand
+    display: flex
+    justify-content: space-between
+    height: $card-height + $card-selected-offset
+    padding-left: $card-width / 4
+    padding-right: $card-width * 3 / 4
+
+.hand-entry
+    position: relative
+
+.hand-entry-inner
+    position: absolute
+    left: -8mm // TODO

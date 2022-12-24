@@ -14,23 +14,10 @@
     }
 </script>
 
-<style lang="sass">
-    .card-row
-        display: flex
-        justify-content: space-between
-
-    .card-row-entry
-        position: relative
-
-    .card-row-entry-inner
-        position: absolute
-        left: -8mm // TODO
-</style>
-
-<ul class="card-row">
+<ul class="hand">
     {#each cards as card}
-        <li class="card-row-entry">
-            <div class="game-card-item card-row-entry-inner">
+        <li class="hand-entry">
+            <div class="game-card-item hand-entry-inner">
                 <button
                     class="game-card game-card-normal"
                     type="button"
@@ -38,7 +25,7 @@
                     class:selected={$vote === card}
                     class:selectable={!open}
                 >
-                    <div class="game-card-inner">{card}</div>
+                    <span class="game-card-inner">{card}</span>
                 </button>
             </div>
         </li>
