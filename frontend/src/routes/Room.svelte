@@ -97,7 +97,7 @@
                     on:click={forceOpen}>{getText("open")}</button
                 >
             </div>
-            <ul class="card-row">
+            <ul class="game-board">
                 {#each $players as player (player.id)}
                     {#if player.voter}
                         <PlayerEstimate {player} {open} />
