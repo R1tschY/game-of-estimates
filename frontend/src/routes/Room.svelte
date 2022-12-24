@@ -17,7 +17,7 @@
 
     let name: string = get(nameStore)
 
-    $: open = $gameState && $gameState.open
+    $: open = $gameState?.open ?? false
 
     // TODO: disconnect on unmount
     client.welcome.connect(() => {
@@ -38,7 +38,7 @@
         client.restart()
     }
 
-    function changeName(evt: CustomEvent) {
+    function changeName(_evt: CustomEvent) {
         nameStore.set(name ? name : null)
     }
 </script>
@@ -110,7 +110,9 @@
     {#if $voter}
         <section class="section">
             <div class="container">
-                <div style="margin: 0 auto;">-- {getText("chooseYourEstimate")}--</div>
+                <div class="columns is-centered">
+                    <div class="column is-narrow">{getText("chooseYourEstimate")}</div>
+                </div>
                 <EstimatesControl />
             </div>
         </section>
