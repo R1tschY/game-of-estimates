@@ -2,6 +2,9 @@ name: Build + Test
 
 on: [push]
 
+permissions:
+  contents: write
+
 jobs:
   backend-check:
     runs-on: ubuntu-latest
@@ -91,6 +94,30 @@ jobs:
           rustc --version --verbose
         shell: bash
 
+      - name: "Set environment variables used by Rust toolchain"
+        run: |
+          echo CARGO_TERM_COLOR=always >> $GITHUB_ENV
+          echo CARGO_INCREMENTAL=0 >> $GITHUB_ENV
+          echo RUST_BACKTRACE=1 >> $GITHUB_ENV
+          
+          rustc --version --verbose
+        shell: bash
+
+      - name: "Set version"
+        id: version
+        run: |
+          REF="${{ github.ref }}"
+          if [[ "$REF" =~ ^refs/tags/v ]] ; then
+            version=${REF#refs/tags/v}
+            # checks
+            grep "version = \"$version\"" Cargo.toml
+            grep "\"version\": \"$version\"" frontend/package.json
+          else
+            version=unreleased
+          fi
+          echo "version=$version" >> $GITHUB_OUTPUT
+        shell: bash
+
       - uses: Swatinem/rust-cache@v2
 
       - name: Build backend
@@ -101,7 +128,7 @@ jobs:
           cp LICENSE.txt README.md target/x86_64-unknown-linux-musl/release
           
           tar -C target/x86_64-unknown-linux-musl/release \
-            -cvaf game-of-estimates-unreleased.tar.bz2 \
+            -cvaf game-of-estimates-${{ steps.version.outputs.version }}.tar.bz2 \
             game-of-estimates LICENSE.txt README.md
         shell: bash
 
@@ -109,7 +136,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: binary
-          path: game-of-estimates-unreleased.tar.bz2
+          path: game-of-estimates-${{ steps.version.outputs.version }}.tar.bz2
           if-no-files-found: error
 
       - name: Login to Docker Hub
@@ -123,4 +150,13 @@ jobs:
         with:
           context: .
           push: true
-          tags: r1tschy/game-of-estimates:unreleased
+          tags: r1tschy/game-of-estimates:${{ steps.version.outputs.version }}
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          name: Release ${{ steps.version.outputs.version }}
+          draft: true
+          fail_on_unmatched_files: true
+          files: game-of-estimates-${{ steps.version.outputs.version }}.tar.bz2
