@@ -1,5 +1,5 @@
 <script lang="ts">
-    import GitHub from '../svg/GitHub.svg'
+    import GitHub from '../svg/GitHub.svg?raw'
     import { getText } from '../i18n'
 </script>
 
@@ -13,13 +13,13 @@
         </p>
         <p>
             {@html getText('license').format(
-                '<a href=https:///opensource.org/licenses/mit-license.php">MIT</a>',
+                '<a href="https:///opensource.org/licenses/mit-license.php">MIT</a>',
             )}
         </p>
         <div>
-            <a href="https://github.com/R1tschY/game_of_estimates"
-                ><img class="footer-icon" src="{GitHub}" alt="GitHub" /></a
-            >
+            <a href="https://github.com/R1tschY/game_of_estimates" class="footer-icon">
+                {@html GitHub}
+            </a>
         </div>
     </div>
 </footer>
