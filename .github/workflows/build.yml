@@ -16,8 +16,6 @@ jobs:
           rustup default stable
         shell: bash
 
-      - uses: Swatinem/rust-cache@v2
-
       - name: "Set environment variables used by Rust toolchain"
         run: |
           echo CARGO_TERM_COLOR=always >> $GITHUB_ENV
@@ -26,6 +24,8 @@ jobs:
           
           rustc --version --verbose
         shell: bash
+
+      - uses: Swatinem/rust-cache@v2
 
       - name: Fake frontend build
         run: mkdir -p frontend/dist
@@ -82,8 +82,6 @@ jobs:
           rustup default stable
         shell: bash
 
-      - uses: Swatinem/rust-cache@v2
-
       - name: "Set environment variables used by Rust toolchain"
         run: |
           echo CARGO_TERM_COLOR=always >> $GITHUB_ENV
@@ -92,6 +90,8 @@ jobs:
           
           rustc --version --verbose
         shell: bash
+
+      - uses: Swatinem/rust-cache@v2
 
       - name: Build backend
         run: cargo build --release --target x86_64-unknown-linux-musl
