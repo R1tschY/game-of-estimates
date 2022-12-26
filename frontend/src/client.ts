@@ -94,7 +94,7 @@ export class Client {
 
         wsService.ws_store.subscribe(($ws) => (this._ws = $ws))
         wsService.message.connect((evt) => this._onMessageArrived(evt))
-        wsService.disconnected.connect((evt) => this._onDisconnected(evt))
+        wsService.disconnected.connect(() => this._onDisconnected())
     }
 
     updatePlayer(voter: boolean, name: Option<string>) {
@@ -148,7 +148,7 @@ export class Client {
         })
     }
 
-    _send(payload: BaseMessageEvent) {
+    _send(payload: object) {
         if (this._ws) {
             this._ws.send(JSON.stringify(payload))
         }

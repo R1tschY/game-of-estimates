@@ -1,5 +1,5 @@
 <script lang="ts">
-    import GitHub from '../icons/GitHub.svelte'
+    import GitHub from '../svg/GitHub.svg'
     import { getText } from '../i18n'
 </script>
 
@@ -18,7 +18,7 @@
         </p>
         <div>
             <a href="https://github.com/R1tschY/game_of_estimates"
-                ><span><GitHub class="footer-icon" /></span></a
+                ><img class="footer-icon" src="{GitHub}" alt="GitHub" /></a
             >
         </div>
     </div>

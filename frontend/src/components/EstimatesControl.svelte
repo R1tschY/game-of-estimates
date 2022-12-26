@@ -2,12 +2,12 @@
     import { vote, gameState } from '../stores'
     import { get_deck as getDeck } from '../deck'
 
-    // noinspection TypeScriptValidateTypes
+    let open: boolean
     $: open = $gameState ? $gameState.open : false
     $: cards = $gameState ? getDeck($gameState.deck).cards : []
 
     let touch_hover: string | null = null
-    let handNode
+    let handNode: HTMLElement
 
     function setVote(value: string | null) {
         if (!open) {
