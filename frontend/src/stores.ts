@@ -62,7 +62,7 @@ client.stateChanged.connect(evt => {
 })
 
 export const gameState: Readable<Option<GameState>> = (function createRoomState() {
-    const { subscribe, set, update } = writable(null)
+    const { subscribe, set } = writable(null)
 
     client.joined.connect(evt => {
         set(evt.state)
@@ -189,7 +189,7 @@ export const players: Readable<PlayerExtInfo[]> = (function createRoomState() {
 
 // navigation
 
-client.welcome.connect(evt => {
+client.welcome.connect(() => {
     const state = get(ownPlayerState)
     client.updatePlayer(state.voter, state.name)
 })
@@ -198,7 +198,7 @@ client.joined.connect(evt => {
     navigate('/room/' + evt.room)
 })
 
-client.rejected.connect(evt => {
+client.rejected.connect(() => {
     navigate('/')
 })
 
@@ -210,12 +210,4 @@ export interface Actions {
 
 export interface Mutations {
     setRemoteName(name: string): void;
-}
-
-function dispatch() {
-
-}
-
-function createStore(actions: Actions[], mutations: Mutations) {
-
 }

@@ -28,7 +28,7 @@ export class DefaultTranslator implements Translator {
     constructor(
         translationFiles: TranslationFiles,
         customPreferredLanguages?: ReadonlyArray<string>,
-        fallback: string = 'en',
+        fallback = 'en',
     ) {
         if (translationFiles[fallback] === undefined) {
             throw 'Fallback translation file is missing'
