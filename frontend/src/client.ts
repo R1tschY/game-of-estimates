@@ -7,35 +7,47 @@ import { Signal } from './events'
 
 // consts
 
-const reconnectTimeout: number = 5000
+const reconnectTimeout = 5000
 
 // client
 
-export interface WelcomeMessageEvent {
+export interface BaseMessageEvent {
+    type: string
+}
+
+export interface WelcomeMessageEvent extends BaseMessageEvent {
+    type: "Welcome"
     player_id: string
 }
 
-export interface RejectedEvent {}
+export interface RejectedEvent extends BaseMessageEvent {
+    type: "Rejected"
+}
 
-export interface JoinedEvent {
+export interface JoinedEvent extends BaseMessageEvent {
+    type: "Joined"
     room: string
     state: GameState
     players: PlayerInfo[]
 }
 
-export interface PlayerJoinedEvent {
+export interface PlayerJoinedEvent extends BaseMessageEvent {
+    type: "PlayerJoined"
     player: PlayerInfo
 }
 
-export interface PlayerChangedEvent {
+export interface PlayerChangedEvent extends BaseMessageEvent {
+    type: "PlayerChanged"
     player: PlayerInfo
 }
 
-export interface PlayerLeftEvent {
+export interface PlayerLeftEvent extends BaseMessageEvent {
+    type: "PlayerLeft"
     player_id: string
 }
 
-export interface GameChangedEvent {
+export interface GameChangedEvent extends BaseMessageEvent {
+    type: "GameChanged"
     game_state: GameState
 }
 
@@ -53,10 +65,8 @@ export interface OwnPlayerState {
 export interface GameState {
     deck: string
     open: boolean
-    votes: Record<string, Option<String>>
+    votes: Record<string, Option<string>>
 }
-
-export interface RejectedEvent {}
 
 export type PlayerState = 'connecting' | 'outside' | 'joining' | 'joined'
 
@@ -138,7 +148,7 @@ export class Client {
         })
     }
 
-    _send(payload: any) {
+    _send(payload: BaseMessageEvent) {
         if (this._ws) {
             this._ws.send(JSON.stringify(payload))
         }
@@ -149,7 +159,7 @@ export class Client {
         this.playerId.set(null)
     }
 
-    private _onMessageArrived(event: any) {
+    private _onMessageArrived(event: BaseMessageEvent) {
         console.debug('Got message', event)
         switch (event.type) {
             case 'Welcome':
@@ -206,7 +216,7 @@ export class WebSocketService {
     error_store: Writable<boolean>
     reconnectTimer: Option<number>
 
-    message: Signal<any> = new Signal()
+    message: Signal<BaseMessageEvent> = new Signal()
     connected: Signal<undefined> = new Signal()
     disconnected: Signal<undefined> = new Signal()
     error: Signal<undefined> = new Signal()
