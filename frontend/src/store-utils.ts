@@ -1,5 +1,5 @@
-import { derived, get, writable } from "svelte/store";
-import type { Writable } from "svelte/store";
+import { derived, get, writable } from 'svelte/store'
+import type { Writable } from 'svelte/store'
 
 // Local Storage
 
@@ -10,16 +10,16 @@ export function writableLocalStorage<T>(key: string, value: T): Writable<T> {
     }
 
     const store = writable(value)
-    const { subscribe, set } =  store
+    const { subscribe, set } = store
 
     return {
         subscribe,
-        
+
         set(newValue) {
             localStorage.setItem(key, JSON.stringify(newValue))
             set(value)
         },
-        
+
         update(fn) {
             const newValue = fn(get(store))
             localStorage.setItem(key, JSON.stringify(newValue))
@@ -30,7 +30,11 @@ export function writableLocalStorage<T>(key: string, value: T): Writable<T> {
 
 // Writable derived
 
-export function derivedWritable<T, U>(store: Writable<U>, read: (value: U) => T, update: (old: U, value: T) => U): Writable<T> {
+export function derivedWritable<T, U>(
+    store: Writable<U>,
+    read: (value: U) => T,
+    update: (old: U, value: T) => U,
+): Writable<T> {
     const newStore = derived(store, read)
     return {
         subscribe: newStore.subscribe,
@@ -39,11 +43,15 @@ export function derivedWritable<T, U>(store: Writable<U>, read: (value: U) => T,
         },
         update(fn) {
             store.update((old) => update(old, fn(read(old))))
-        }
+        },
     }
 }
 
-export function derivedWritableProperty<T, U>(store: Writable<U>, read: (this: U) => T, update: (this: U, value: T) => void): Writable<T> {
+export function derivedWritableProperty<T, U>(
+    store: Writable<U>,
+    read: (this: U) => T,
+    update: (this: U, value: T) => void,
+): Writable<T> {
     const newStore = derived(store, (value) => read.apply(value))
     return {
         subscribe: newStore.subscribe,
@@ -52,6 +60,6 @@ export function derivedWritableProperty<T, U>(store: Writable<U>, read: (this: U
         },
         update(fn) {
             store.update((old) => update.apply(old, [fn(read.apply(old))]))
-        }
+        },
     }
 }

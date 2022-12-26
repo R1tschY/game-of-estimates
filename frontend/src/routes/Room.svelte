@@ -1,17 +1,25 @@
 <script lang="ts">
-    import {debug, gameState, name as nameStore, playerId, players, vote, voter,} from '../stores'
+    import {
+        debug,
+        gameState,
+        name as nameStore,
+        playerId,
+        players,
+        vote,
+        voter,
+    } from '../stores'
     import Header from '../components/Header.svelte'
     import CopyLink from '../components/CopyLink.svelte'
 
-    import {client, playerState} from '../client'
-    import {get} from 'svelte/store'
+    import { client, playerState } from '../client'
+    import { get } from 'svelte/store'
     import DisconnectedMW from '../components/DisconnectedMW.svelte'
     import SingleTextInput from '../components/SingleTextInput.svelte'
     import Switch from '../components/Switch.svelte'
     import Footer from '../components/Footer.svelte'
     import PlayerEstimate from '../components/PlayerEstimate.svelte'
     import EstimatesControl from '../components/EstimatesControl.svelte'
-    import {getText} from "../i18n";
+    import { getText } from '../i18n'
 
     export let id: string | null = null
 
@@ -54,30 +62,30 @@
                     <Switch
                         id="player-is-voter"
                         bind:value={$voter}
-                        label={getText("voter")}
+                        label={getText('voter')}
                     />
                 </div>
 
-                <div class="column"></div>
+                <div class="column" />
 
                 <!-- Name -->
                 <div class="column">
                     <SingleTextInput
                         id="player-name"
-                        action={getText("changeName")}
+                        action={getText('changeName')}
                         placeholder="Player name"
                         bind:value={name}
                         on:submit={changeName}
                     />
                 </div>
 
-                <div class="column"></div>
+                <div class="column" />
 
                 <!-- Link -->
                 <div class="column is-narrow">
                     <CopyLink
                         value={document.location + ''}
-                        label={getText("copyRoomLink")}
+                        label={getText('copyRoomLink')}
                     />
                 </div>
             </div>
@@ -86,15 +94,15 @@
 
     <section class="section">
         <div class="container">
-            <h2 class="title is-4">{getText("estimates")}</h2>
+            <h2 class="title is-4">{getText('estimates')}</h2>
             <div class="buttons">
                 <button class="button is-primary is-light" on:click={restart}
-                    >{getText("restart")}</button
+                    >{getText('restart')}</button
                 >
                 <button
                     class="button is-primary is-light"
                     disabled={open}
-                    on:click={forceOpen}>{getText("open")}</button
+                    on:click={forceOpen}>{getText('open')}</button
                 >
             </div>
             <ul class="game-board">
@@ -111,7 +119,9 @@
         <section class="section">
             <div class="container">
                 <div class="columns is-centered">
-                    <div class="column is-narrow">{getText("chooseYourEstimate")}</div>
+                    <div class="column is-narrow">
+                        {getText('chooseYourEstimate')}
+                    </div>
                 </div>
                 <EstimatesControl />
             </div>

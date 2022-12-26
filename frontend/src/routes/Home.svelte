@@ -1,13 +1,19 @@
 <script lang="ts">
-    import {connected, connecting, debug, lastError, playerId,} from '../stores'
-    import {decks} from '../deck'
-    import {client} from '../client'
+    import {
+        connected,
+        connecting,
+        debug,
+        lastError,
+        playerId,
+    } from '../stores'
+    import { decks } from '../deck'
+    import { client } from '../client'
     import Header from '../components/Header.svelte'
     import Footer from '../components/Footer.svelte'
     import SelectWithButton from '../components/SelectWithButton.svelte'
     import DisconnectedMW from '../components/DisconnectedMW.svelte'
     import NProgress from 'nprogress'
-    import {getText} from "../i18n";
+    import { getText } from '../i18n'
 
     let deckId = decks[0].id
     let roomId = ''
@@ -48,8 +54,8 @@
 
     <section class="section">
         <div class="container">
-            <h1 class="title is-4">{getText("summary")}</h1>
-            <p>{@html getText("description")}</p>
+            <h1 class="title is-4">{getText('summary')}</h1>
+            <p>{@html getText('description')}</p>
         </div>
     </section>
 
@@ -57,7 +63,7 @@
         <section class="section">
             <div class="container">
                 <div class="notification is-danger">
-                    <button class="delete"></button>
+                    <button class="delete" />
                     {$lastError}
                 </div>
             </div>
@@ -82,17 +88,20 @@
                                 type="button"
                                 class="button is-fullwidth is-primary"
                                 class:is-loading={action === 'join'}
-                                on:click={joinRoom}>{getText("joinRoom")}</button
+                                on:click={joinRoom}
+                                >{getText('joinRoom')}</button
                             >
                         </div>
                     </div>
                 </form>
             </div>
-            <div class="divider">{getText("or")}</div>
+            <div class="divider">{getText('or')}</div>
             <div class="columns is-centered">
                 <form class="column is-half">
                     <div class="field">
-                        <label class="label" for="deck_field">{getText("deck")}</label>
+                        <label class="label" for="deck_field"
+                            >{getText('deck')}</label
+                        >
                         <div class="control is-expanded" id="deck_field">
                             <SelectWithButton
                                 items={decks_dropdown}
@@ -110,7 +119,7 @@
                                         class="button is-primary"
                                         class:is-loading={action === 'create'}
                                         on:click={createRoom}
-                                        >{getText("createRoom")}</button
+                                        >{getText('createRoom')}</button
                                     >
                                 </div>
                             </div>

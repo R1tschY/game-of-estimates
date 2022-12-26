@@ -1,2 +1,2 @@
-declare module 'svelte-routing';
-declare module 'nprogress';
+declare module 'svelte-routing'
+declare module 'nprogress'

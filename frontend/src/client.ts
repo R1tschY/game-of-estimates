@@ -16,38 +16,38 @@ export interface BaseMessageEvent {
 }
 
 export interface WelcomeMessageEvent extends BaseMessageEvent {
-    type: "Welcome"
+    type: 'Welcome'
     player_id: string
 }
 
 export interface RejectedEvent extends BaseMessageEvent {
-    type: "Rejected"
+    type: 'Rejected'
 }
 
 export interface JoinedEvent extends BaseMessageEvent {
-    type: "Joined"
+    type: 'Joined'
     room: string
     state: GameState
     players: PlayerInfo[]
 }
 
 export interface PlayerJoinedEvent extends BaseMessageEvent {
-    type: "PlayerJoined"
+    type: 'PlayerJoined'
     player: PlayerInfo
 }
 
 export interface PlayerChangedEvent extends BaseMessageEvent {
-    type: "PlayerChanged"
+    type: 'PlayerChanged'
     player: PlayerInfo
 }
 
 export interface PlayerLeftEvent extends BaseMessageEvent {
-    type: "PlayerLeft"
+    type: 'PlayerLeft'
     player_id: string
 }
 
 export interface GameChangedEvent extends BaseMessageEvent {
-    type: "GameChanged"
+    type: 'GameChanged'
     game_state: GameState
 }
 

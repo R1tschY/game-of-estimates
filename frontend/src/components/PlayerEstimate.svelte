@@ -10,7 +10,11 @@
         <div class:backcover={!open} class:hidden={!player.vote}>
             <div class="game-card game-card-back">
                 <div class="game-card-inner">
-                    <img class="game-card-symbol" src="/clubs.svg" alt="&spades;" />
+                    <img
+                        class="game-card-symbol"
+                        src="/clubs.svg"
+                        alt="&spades;"
+                    />
                 </div>
             </div>
             <div class="game-card game-card-front">
@@ -22,6 +26,6 @@
         <div class="game-card placeholder" />
     </div>
     <div class="game-card-name">
-        {player.name || ""}
+        {player.name || ''}
     </div>
 </li>

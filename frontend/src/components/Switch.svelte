@@ -6,9 +6,7 @@
 
 <div class="field">
     <p class="control">
-        <input type="checkbox" class="switch"
-            id={id}
-            bind:checked={value} />
+        <input type="checkbox" class="switch" {id} bind:checked={value} />
 
         <label for={id} class="label">{label}</label>
     </p>
