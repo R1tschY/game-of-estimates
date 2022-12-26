@@ -2,7 +2,8 @@
     import {vote, gameState} from '../stores'
     import {get_deck as getDeck} from '../deck'
 
-    $: open = $gameState ? $gameState.open : false
+    $: // noinspection TypeScriptValidateTypes
+        open = $gameState ? $gameState.open : false
     $: cards = $gameState ? getDeck($gameState.deck).cards : []
 
     let touch_hover: string | null = null;
