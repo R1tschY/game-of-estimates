@@ -25,6 +25,9 @@ jobs:
           rustc --version --verbose
         shell: bash
 
+      - name: Fake frontend build
+        run: mkdir -p frontend/dist
+
       - name: Fmt
         run: cargo fmt --all -- --check
 
