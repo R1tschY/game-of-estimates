@@ -162,21 +162,23 @@ export class Client {
     private _onMessageArrived(event: BaseMessageEvent) {
         console.debug('Got message', event)
         switch (event.type) {
-            case 'Welcome':
+            case 'Welcome': {
                 this.state.set('outside')
 
                 const welcomeEvt = event as WelcomeMessageEvent
                 this.playerId.set(welcomeEvt.player_id)
                 this.welcome.emit(welcomeEvt)
                 break
+            }
 
-            case 'Joined':
+            case 'Joined': {
                 this.state.set('joined')
 
                 const joinedEvt = event as JoinedEvent
                 this.roomId.set(joinedEvt.room)
                 this.joined.emit(joinedEvt)
                 break
+            }
 
             case 'PlayerJoined':
                 this.playerJoined.emit(event as PlayerJoinedEvent)
