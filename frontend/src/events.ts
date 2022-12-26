@@ -5,14 +5,14 @@ export class CustomEventTarget {
     listeners: Record<string, EventHandler[]>  = {};
 
     addEventListener(name: string, handler: EventHandler) {
-        if (this.listeners.hasOwnProperty(name))
+        if (Object.prototype.hasOwnProperty.call(this.listeners, name))
             this.listeners[name].push(handler)
         else
             this.listeners[name] = [handler]
     }
 
     removeEventListener(name: string, handler: EventHandler) {
-        if (!this.listeners.hasOwnProperty(name))
+        if (!Object.prototype.hasOwnProperty.call(this.listeners, name))
             return
 
         const index = this.listeners[name].indexOf(handler)
@@ -21,7 +21,7 @@ export class CustomEventTarget {
     }
 
     dispatchEvent(name: string, payload: any) {
-        if (!this.listeners.hasOwnProperty(name))
+        if (!Object.prototype.hasOwnProperty.call(this.listeners, name))
             return;
 
         const listeners = this.listeners[name]
