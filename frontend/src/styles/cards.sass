@@ -4,7 +4,7 @@
 
 $card-width: 63mm * 0.25
 $card-height: 88mm * 0.25
-$card-selected-offset: $card-height * 0.2
+$card-selected-offset: $card-height * 0.5
 
 .game-card
     width: $card-width
@@ -12,7 +12,7 @@ $card-selected-offset: $card-height * 0.2
     padding: 0
     font-size: 1.7em
     text-align: center
-    margin: 0.25rem 0.5rem 0.25rem
+    margin: 0.25rem 0.5rem 0.25rem 0.5rem
     border: 1px solid colors.$tt-gray
     box-shadow: 0 0 0.5em -0.125em rgba(10, 10, 10, 0.1)
     outline: 0
@@ -45,6 +45,21 @@ $card-selected-offset: $card-height * 0.2
 .game-card.selectable:not(.selected):hover
     margin-top: -0.1rem
     box-shadow: 0 0 0.7em -0.125em rgba(10, 10, 10, 0.15)
+
+.game-card.selectable.selected:hover
+    margin-top: -2rem
+    box-shadow: 0 0 0.7em -0.125em rgba(10, 10, 10, 0.15)
+
+.game-card.touch-hover
+    margin-top: -4rem
+    box-shadow: 0 0 0.7em -0.125em rgba(10, 10, 10, 0.15)
+
+.game-card.touch-hover.selected
+    margin-top: -1rem
+
+//.game-card.selectable:not(.selected):active
+//    background-color: red
+//    z-index: 3
 
 .game-card.selected
     background-color: white //#{adjust-color($primary, $lightness: 45%)}
@@ -117,8 +132,8 @@ $card-selected-offset: $card-height * 0.2
     display: flex
     justify-content: space-between
     height: $card-height + $card-selected-offset
-    padding-left: $card-width / 4
-    padding-right: $card-width * 3 / 4
+    padding-left: $card-width * 0.25
+    padding-right: $card-width * 0.75
 
 .hand-entry
     position: relative
