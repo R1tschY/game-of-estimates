@@ -16,6 +16,8 @@ jobs:
           rustup default stable
         shell: bash
 
+      - uses: Swatinem/rust-cache@v2
+
       - name: "Set environment variables used by Rust toolchain"
         run: |
           echo CARGO_TERM_COLOR=always >> $GITHUB_ENV
@@ -79,6 +81,8 @@ jobs:
           rustup toolchain install stable --profile minimal --no-self-update -t x86_64-unknown-linux-musl
           rustup default stable
         shell: bash
+
+      - uses: Swatinem/rust-cache@v2
 
       - name: "Set environment variables used by Rust toolchain"
         run: |
