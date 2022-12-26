@@ -1,8 +1,12 @@
 {
   "root": true,
+  "parserOptions": {
+    "ecmaVersion": 12,
+    "sourceType": "module"
+  },
   "env": {
-    "browser": true,
-    "es2021": true
+    "es6": true,
+    "browser": true
   },
   "extends": [
     "eslint:recommended",
@@ -11,11 +15,16 @@
   ],
   "parser": "@typescript-eslint/parser",
   "plugins": [
-    "@typescript-eslint"
+    "svelte3", "@typescript-eslint"
   ],
-  "parserOptions": {
-    "ecmaVersion": 12,
-    "sourceType": "module"
-  },
-  "rules": {}
+  "overrides": [
+    {
+      "files": ["*.svelte"],
+      "processor": "svelte3/svelte3"
+    }
+  ],
+  "rules": {},
+  "settings": {
+    "svelte3/typescript": true
+  }
 }

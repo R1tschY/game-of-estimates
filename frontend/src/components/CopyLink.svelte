@@ -1,6 +1,6 @@
 <script lang="ts">
-    export let value: string = ''
-    export let label: string = 'Copy'
+    export let value = ''
+    export let label = 'Copy'
 
     let input: HTMLInputElement
 
