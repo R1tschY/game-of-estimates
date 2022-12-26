@@ -110,7 +110,7 @@ export const players: Readable<PlayerExtInfo[]> = (function createRoomState() {
 
     client.joined.connect(evt => {
         const players = []
-        for (let player of evt.players) {
+        for (const player of evt.players) {
             players.push({
                 id: player.id,
                 name: player.name,
@@ -130,7 +130,7 @@ export const players: Readable<PlayerExtInfo[]> = (function createRoomState() {
     client.playerJoined.connect(evt => {
         update((players) => {
             const index = findPlayer(players, evt.player.id)
-            let info = {
+            const info = {
                 id: evt.player.id,
                 name: evt.player.name,
                 voter: evt.player.voter,

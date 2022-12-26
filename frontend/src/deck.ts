@@ -33,7 +33,7 @@ export const decks: Deck[] = [
 ]
 
 export function get_deck(id: string): Deck | undefined {
-    for (var elem of decks) {
+    for (const elem of decks) {
         if (elem.id == id) {
             return elem
         }

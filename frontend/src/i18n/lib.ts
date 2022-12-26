@@ -49,7 +49,7 @@ export class DefaultTranslator implements Translator {
     }
 
     getText(textId: string) {
-        let value = this.currentLanguage.strings[textId]
+        const value = this.currentLanguage.strings[textId]
         if (value !== undefined) {
             if (Array.isArray(value)) {
                 throw new Error('Expected non-plural text')
@@ -75,7 +75,7 @@ export class DefaultTranslator implements Translator {
 
     private getCurrentTranslation(): TranslationFile {
         for (const preferredLanguage of this.preferredLanguages) {
-            let file = this.translationFiles[preferredLanguage]
+            const file = this.translationFiles[preferredLanguage]
             if (file !== undefined) {
                 return file
             }

@@ -15,7 +15,7 @@ export class CustomEventTarget {
         if (!this.listeners.hasOwnProperty(name))
             return
 
-        var index = this.listeners[name].indexOf(handler)
+        const index = this.listeners[name].indexOf(handler)
         if (index != -1)
             this.listeners[name].splice(index, 1)
     }
@@ -24,9 +24,9 @@ export class CustomEventTarget {
         if (!this.listeners.hasOwnProperty(name))
             return;
 
-        var listeners = this.listeners[name]
-        var l = listeners.length
-        for (var i = 0; i < l; i++) {
+        const listeners = this.listeners[name]
+        const l = listeners.length
+        for (let i = 0; i < l; i++) {
             listeners[i](payload)
         }
     }
@@ -42,14 +42,15 @@ export class Signal<T> {
     }
 
     disconnect(handler: SignalHandler<T>) {
-        var index = this.listeners.indexOf(handler)
-        if (index != -1)
+        const index = this.listeners.indexOf(handler)
+        if (index != -1) {
             this.listeners.splice(index, 1)
+        }
     }
 
     emit(payload: T) {
-        var l = this.listeners.length
-        for (var i = 0; i < l; i++) {
+        const l = this.listeners.length
+        for (let i = 0; i < l; i++) {
             this.listeners[i](payload)
         }
     }

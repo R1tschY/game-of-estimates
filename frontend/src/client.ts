@@ -154,7 +154,7 @@ export class Client {
         }
     }
 
-    private _onDisconnected(_evt: Event): void {
+    private _onDisconnected(): void {
         this.state.set('connecting')
         this.playerId.set(null)
     }
@@ -272,7 +272,7 @@ export class WebSocketService {
     }
 
     connect() {
-        let url = import.meta.env.GOE_WEBSOCKET_URL || this.guessWsAddr()
+        const url = import.meta.env.GOE_WEBSOCKET_URL || this.guessWsAddr()
         console.debug('connecting to ' + url + ' ...', url)
         this.connecting_store.set(true)
 
@@ -294,7 +294,7 @@ export class WebSocketService {
     }
 }
 
-export var wsService: WebSocketService = new WebSocketService()
+export const wsService: WebSocketService = new WebSocketService()
 
-export var client: Client = new Client(wsService)
-export var playerState: Readable<PlayerState> = client.state
+export const client: Client = new Client(wsService)
+export const playerState: Readable<PlayerState> = client.state
