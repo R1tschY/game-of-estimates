@@ -25,6 +25,7 @@
 
     let name: string = get(nameStore)
 
+    let open: boolean;
     $: open = $gameState?.open ?? false
 
     // TODO: disconnect on unmount
@@ -46,7 +47,7 @@
         client.restart()
     }
 
-    function changeName(_evt: CustomEvent) {
+    function changeName() {
         nameStore.set(name ? name : null)
     }
 </script>
@@ -66,7 +67,7 @@
                     />
                 </div>
 
-                <div class="column" />
+                <div class="column"></div>
 
                 <!-- Name -->
                 <div class="column">
@@ -79,7 +80,7 @@
                     />
                 </div>
 
-                <div class="column" />
+                <div class="column"></div>
 
                 <!-- Link -->
                 <div class="column is-narrow">

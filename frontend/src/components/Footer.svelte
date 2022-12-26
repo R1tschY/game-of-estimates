@@ -17,7 +17,10 @@
             )}
         </p>
         <div>
-            <a href="https://github.com/R1tschY/game_of_estimates" class="footer-icon">
+            <a
+                href="https://github.com/R1tschY/game_of_estimates"
+                class="footer-icon"
+            >
                 {@html GitHub}
             </a>
         </div>
