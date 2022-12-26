@@ -12,7 +12,6 @@
     import Footer from '../components/Footer.svelte'
     import SelectWithButton from '../components/SelectWithButton.svelte'
     import DisconnectedMW from '../components/DisconnectedMW.svelte'
-    import NProgress from 'nprogress'
     import { getText } from '../i18n'
 
     let deckId = decks[0].id
@@ -30,13 +29,11 @@
 
     function createRoom() {
         action = 'create'
-        NProgress.start()
         client.createRoom(deckId)
     }
 
     function joinRoom() {
         action = 'join'
-        NProgress.start()
         client.joinRoom(roomId)
     }
 
@@ -44,7 +41,6 @@
     client.state.subscribe((state) => {
         if (state !== 'joining') {
             action = null
-            NProgress.done()
         }
     })
 </script>
