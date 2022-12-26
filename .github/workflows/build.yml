@@ -96,6 +96,21 @@ jobs:
       - name: Build backend
         run: cargo build --release --target x86_64-unknown-linux-musl
 
+      - name: Package binary
+        run: |
+          cp LICENSE.txt README.md target/x86_64-unknown-linux-musl/release
+          
+          tar -C target/x86_64-unknown-linux-musl/release \
+            -cvaf game-of-estimates-unreleased.tar.bz2 \
+            game-of-estimates LICENSE.txt README.md
+        shell: bash
+
+      - name: Upload binary package
+        uses: actions/upload-artifact@v3
+        with:
+          name: binary
+          path: target/x86_64-unknown-linux-musl/game-of-estimates-unreleased.tar.bz2
+
       - name: Login to Docker Hub
         uses: docker/login-action@v2
         with:
