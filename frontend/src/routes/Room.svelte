@@ -25,7 +25,7 @@
 
     let name: string = get(nameStore)
 
-    let open: boolean;
+    let open: boolean
     $: open = $gameState?.open ?? false
 
     // TODO: disconnect on unmount
@@ -67,7 +67,7 @@
                     />
                 </div>
 
-                <div class="column"></div>
+                <div class="column" />
 
                 <!-- Name -->
                 <div class="column">
@@ -80,7 +80,7 @@
                     />
                 </div>
 
-                <div class="column"></div>
+                <div class="column" />
 
                 <!-- Link -->
                 <div class="column is-narrow">
