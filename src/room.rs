@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 
 use log::{error, info, warn};
-use rand::distributions::Uniform;
+use rand::distributions::{Alphanumeric, Uniform};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use tokio::time::{sleep, Duration};
@@ -119,10 +119,12 @@ impl Room {
         }
     }
 
-    pub fn gen_id(digits: u8) -> String {
+    pub fn gen_id(characters: u8) -> String {
         rand::thread_rng()
-            .sample(Uniform::from(0..10u32.pow(digits as u32)))
-            .to_string()
+            .sample_iter(&Alphanumeric)
+            .take(characters as usize)
+            .map(char::from)
+            .collect::<String>()
     }
 
     async fn send_to_player(&mut self, player: &GamePlayer, msg: GamePlayerMessage) {

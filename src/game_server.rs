@@ -31,17 +31,6 @@ pub struct GameServer {
 pub type GameServerAddr = mpsc::Sender<GameServerMessage>;
 
 impl GameServer {
-    pub fn find_new_game_id(&self) -> Option<String> {
-        for digits in 6..20 {
-            let id = Room::gen_id(digits);
-            if !self.rooms.contains_key(&id) {
-                return Some(id);
-            }
-        }
-
-        None
-    }
-
     async fn send_rejection(player: &PlayerAddr, reason: RejectReason) {
         let _ = player.send(GamePlayerMessage::Rejected(reason)).await;
     }
@@ -78,12 +67,9 @@ impl Actor for GameServer {
                 player,
                 deck,
             } => {
-                if let Some(room_id) = self.find_new_game_id() {
-                    let room = Room::new(&room_id, (player_addr, player), deck);
-                    self.rooms.insert(room_id, room.start());
-                } else {
-                    Self::send_rejection(&player_addr, RejectReason::CreateGameError).await;
-                }
+                let room_id = Room::gen_id(20);
+                let room = Room::new(&room_id, (player_addr, player), deck);
+                self.rooms.insert(room_id, room.start());
             }
         }
     }
