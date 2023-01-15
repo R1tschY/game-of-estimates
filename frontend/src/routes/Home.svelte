@@ -1,20 +1,14 @@
 <script lang="ts">
-    import {
-        connected,
-        connecting,
-        debug,
-        lastError,
-        playerId,
-    } from '../stores'
-    import { decks } from '../deck'
-    import { client } from '../client'
-    import Header from '../components/Header.svelte'
-    import Footer from '../components/Footer.svelte'
-    import SelectWithButton from '../components/SelectWithButton.svelte'
-    import DisconnectedMW from '../components/DisconnectedMW.svelte'
-    import { getText } from '../i18n'
+  import {connected, connecting, debug, lastError, playerId,} from '../stores'
+  import {decks} from '../deck'
+  import {client} from '../client'
+  import Header from '../components/Header.svelte'
+  import Footer from '../components/Footer.svelte'
+  import SelectWithButton from '../components/SelectWithButton.svelte'
+  import DisconnectedMW from '../components/DisconnectedMW.svelte'
+  import {getText} from '../i18n'
 
-    let deckId = decks[0].id
+  let deckId = decks[0].id
     let roomId = ''
 
     type Action = null | 'join' | 'create'
@@ -69,31 +63,7 @@
     <section class="section">
         <div class="container">
             <div class="columns is-centered">
-                <form class="column is-half">
-                    <div class="field has-addons">
-                        <div class="control is-expanded">
-                            <input
-                                class="input"
-                                type="text"
-                                placeholder="Room no."
-                                bind:value={roomId}
-                            />
-                        </div>
-                        <div class="control">
-                            <button
-                                type="button"
-                                class="button is-fullwidth is-primary"
-                                class:is-loading={action === 'join'}
-                                on:click={joinRoom}
-                                >{getText('joinRoom')}</button
-                            >
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="divider">{getText('or')}</div>
-            <div class="columns is-centered">
-                <form class="column is-half">
+                <form class="create-room-form column is-half">
                     <div class="field">
                         <label class="label" for="deck_field"
                             >{getText('deck')}</label

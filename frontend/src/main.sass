@@ -2,6 +2,7 @@
 
 @forward 'styles/cards'
 @forward 'styles/bulma'
+@use "bulma/sass/utilities/_all.sass" as bulma-utils
 
 .footer-icon > svg
     width: 32px
@@ -14,3 +15,8 @@
     background-color: white
     padding: 2rem
     border-radius: 6px
+
+.create-room-form
+    border: solid 1px bulma-utils.$border
+    border-radius: bulma-utils.$radius
+    padding: bulma-utils.$block-spacing
