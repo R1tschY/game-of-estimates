@@ -5,6 +5,11 @@ on: [push]
 permissions:
   contents: write
 
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  RUST_BACKTRACE: 1
+
 jobs:
   backend-check:
     runs-on: ubuntu-latest
@@ -19,13 +24,8 @@ jobs:
           rustup default stable
         shell: bash
 
-      - name: "Set environment variables used by Rust toolchain"
-        run: |
-          echo CARGO_TERM_COLOR=always >> $GITHUB_ENV
-          echo CARGO_INCREMENTAL=0 >> $GITHUB_ENV
-          echo RUST_BACKTRACE=1 >> $GITHUB_ENV
-          
-          rustc --version --verbose
+      - name: "Print Rust toolchain version"
+        run: rustc --version --verbose
         shell: bash
 
       - uses: Swatinem/rust-cache@v2
@@ -85,22 +85,8 @@ jobs:
           rustup default stable
         shell: bash
 
-      - name: "Set environment variables used by Rust toolchain"
-        run: |
-          echo CARGO_TERM_COLOR=always >> $GITHUB_ENV
-          echo CARGO_INCREMENTAL=0 >> $GITHUB_ENV
-          echo RUST_BACKTRACE=1 >> $GITHUB_ENV
-          
-          rustc --version --verbose
-        shell: bash
-
-      - name: "Set environment variables used by Rust toolchain"
-        run: |
-          echo CARGO_TERM_COLOR=always >> $GITHUB_ENV
-          echo CARGO_INCREMENTAL=0 >> $GITHUB_ENV
-          echo RUST_BACKTRACE=1 >> $GITHUB_ENV
-          
-          rustc --version --verbose
+      - name: "Print Rust toolchain version"
+        run: rustc --version --verbose
         shell: bash
 
       - name: "Set version"
