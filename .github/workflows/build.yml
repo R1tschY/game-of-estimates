@@ -9,6 +9,7 @@ env:
   CARGO_TERM_COLOR: always
   CARGO_INCREMENTAL: 0
   RUST_BACKTRACE: 1
+  CARGO_BUILD_TARGET: x86_64-unknown-linux-musl
 
 jobs:
   backend-check:
@@ -20,7 +21,7 @@ jobs:
 
       - name: Setup Rust toolchain
         run: |
-          rustup toolchain install stable --profile minimal --no-self-update -c clippy -c rustfmt -t x86_64-unknown-linux-musl
+          rustup toolchain install stable --profile minimal --no-self-update -c clippy -c rustfmt -t $CARGO_BUILD_TARGET
           rustup default stable
         shell: bash
 
@@ -81,7 +82,7 @@ jobs:
 
       - name: Setup Rust toolchain
         run: |
-          rustup toolchain install stable --profile minimal --no-self-update -t x86_64-unknown-linux-musl
+          rustup toolchain install stable --profile minimal --no-self-update -t $CARGO_BUILD_TARGET
           rustup default stable
         shell: bash
 
@@ -108,14 +109,14 @@ jobs:
       - uses: Swatinem/rust-cache@v2
 
       - name: Build backend
-        run: cargo build --release --target x86_64-unknown-linux-musl
+        run: cargo build --release --target $CARGO_BUILD_TARGET
 
       - name: Package binary
         run: |
           cp LICENSE.txt README.md target/x86_64-unknown-linux-musl/release
           
           tar -C target/x86_64-unknown-linux-musl/release \
-            -cvaf game-of-estimates-${{ steps.version.outputs.version }}.tar.bz2 \
+            -cvaf game-of-estimates_${{ steps.version.outputs.version }}_$CARGO_BUILD_TARGET.tar.bz2 \
             game-of-estimates LICENSE.txt README.md
         shell: bash
 
@@ -123,7 +124,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: binary
-          path: game-of-estimates-${{ steps.version.outputs.version }}.tar.bz2
+          path: game-of-estimates_${{ steps.version.outputs.version }}_$CARGO_BUILD_TARGET.tar.bz2
           if-no-files-found: error
 
       - name: Login to Docker Hub
@@ -148,4 +149,4 @@ jobs:
           name: Release ${{ steps.version.outputs.version }}
           draft: true
           fail_on_unmatched_files: true
-          files: game-of-estimates-${{ steps.version.outputs.version }}.tar.bz2
+          files: game-of-estimates_${{ steps.version.outputs.version }}_$CARGO_BUILD_TARGET.tar.bz2
