@@ -124,7 +124,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: binary
-          path: game-of-estimates_${{ steps.version.outputs.version }}_$CARGO_BUILD_TARGET.tar.bz2
+          path: game-of-estimates_${{ steps.version.outputs.version }}_${{ env.CARGO_BUILD_TARGET }}.tar.bz2
           if-no-files-found: error
 
       - name: Login to Docker Hub
@@ -149,4 +149,4 @@ jobs:
           name: Release ${{ steps.version.outputs.version }}
           draft: true
           fail_on_unmatched_files: true
-          files: game-of-estimates_${{ steps.version.outputs.version }}_$CARGO_BUILD_TARGET.tar.bz2
+          files: game-of-estimates_${{ steps.version.outputs.version }}_${{ env.CARGO_BUILD_TARGET }}.tar.bz2
