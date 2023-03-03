@@ -14,7 +14,7 @@ publish = false
 tls = ["warp/tls"]
 
 [dependencies]
-tokio = { version = "^1.25", features = ["macros", "sync", "net", "rt-multi-thread", "time", "signal"] }
+tokio = { version = "^1.26", features = ["macros", "sync", "net", "rt-multi-thread", "time", "signal"] }
 env_logger = { version = "^0.10.0", default-features = false }
 futures-util = { version = "^0.3.26", default-features = false }
 log = "^0.4.17"
