@@ -22,7 +22,7 @@ serde = { version = "^1.0.152", features = ["derive"] }
 serde_json = "^1.0.89"
 rand = "^0.8.5"
 quick-error = "^2.0.1"
-async-trait = "^0.1.64"
+async-trait = "^0.1.66"
 uactor = { path = "components/uactor" }
 chassis = "^0.1.1"
 include_dir = "0.7.3"
