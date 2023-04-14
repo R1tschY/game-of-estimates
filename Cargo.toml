@@ -26,7 +26,7 @@ async-trait = "^0.1.68"
 uactor = { path = "components/uactor" }
 chassis = "^0.1.1"
 include_dir = "0.7.3"
-warp = { version = "^0.3.3", default-features = false, features = ["websocket"] }
+warp = { version = "^0.3.4", default-features = false, features = ["websocket"] }
 headers = "0.3.8"
 sha1 = "0.10.5"
 mime_guess = "2.0.4"
