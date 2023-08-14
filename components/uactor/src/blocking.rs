@@ -4,10 +4,8 @@ use std::future::Future;
 use std::marker::PhantomData;
 
 use tokio::sync::mpsc;
-use tokio::task::JoinHandle;
 
 use crate::core::AsyncSystem;
-use crate::tokio::TokioSystem;
 
 /// address of actor
 pub type Addr<T> = mpsc::Sender<T>;
@@ -35,13 +33,15 @@ pub trait Actor: Send + Sized + 'static {
 
 /// Actor context
 pub trait ActorContext<A: Actor>: std::marker::Sync + std::marker::Send + 'static {
+    type System: AsyncSystem;
+
     fn addr(&self) -> Addr<A::Message>;
 
     /// Stop processing messages and exit actor
     fn force_quit(&mut self);
 
     /// Spawn coroutine
-    fn spawn<F: Future>(f: F) -> JoinHandle<F::Output>
+    fn spawn<F: Future>(f: F) -> <Self::System as AsyncSystem>::JoinHandle<F::Output>
     where
         F: Future + Send + 'static,
         F::Output: Send + 'static;
@@ -51,8 +51,6 @@ pub trait ActorContext<A: Actor>: std::marker::Sync + std::marker::Send + 'stati
     /// Note: Please use `A::start` instead.
     fn run(actor: A) -> Addr<A::Message>;
 }
-
-pub type Context<A> = BasicActorContext<A, TokioSystem>;
 
 /// Actor context
 ///
@@ -92,6 +90,8 @@ where
     A: Actor<Context = Self>,
     S: AsyncSystem,
 {
+    type System = S;
+
     fn addr(&self) -> Addr<A::Message> {
         self.tx.clone()
     }
@@ -100,7 +100,7 @@ where
         self.rx = None;
     }
 
-    fn spawn<F: Future>(f: F) -> JoinHandle<F::Output>
+    fn spawn<F: Future>(f: F) -> S::JoinHandle<F::Output>
     where
         F: Future + Send + 'static,
         F::Output: Send + 'static,

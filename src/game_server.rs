@@ -2,7 +2,8 @@ use std::collections::HashMap;
 
 use tokio::sync::mpsc;
 
-use uactor::blocking::{Actor, Context};
+use uactor::blocking::Actor;
+use uactor::tokio::blocking::Context;
 
 use crate::player::{PlayerAddr, PlayerInformation};
 use crate::room::{GamePlayerMessage, RejectReason, Room, RoomAddr, RoomMessage};

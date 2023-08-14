@@ -4,7 +4,6 @@ use std::future::Future;
 use std::marker::PhantomData;
 
 use tokio::sync::mpsc;
-use tokio::task::JoinHandle;
 
 use crate::core::AsyncSystem;
 use crate::tokio::TokioSystem;
@@ -34,9 +33,11 @@ pub trait Actor: Send + Sized + 'static {
 
 /// Actor context
 pub trait ActorContext<A: Actor>: std::marker::Sync + std::marker::Send + 'static {
+    type System: AsyncSystem;
+
     fn addr(&self) -> Addr<A::Message>;
 
-    fn spawn<F: Future>(f: F) -> JoinHandle<F::Output>
+    fn spawn<F: Future>(f: F) -> <Self::System as AsyncSystem>::JoinHandle<F::Output>
     where
         F: Future + Send + 'static,
         F::Output: Send + 'static;
@@ -82,11 +83,13 @@ where
     A: Actor<Context = Self>,
     S: AsyncSystem,
 {
+    type System = S;
+
     fn addr(&self) -> Addr<A::Message> {
         self.tx.clone()
     }
 
-    fn spawn<F: Future>(f: F) -> JoinHandle<F::Output>
+    fn spawn<F: Future>(f: F) -> S::JoinHandle<F::Output>
     where
         F: Future + Send + 'static,
         F::Output: Send + 'static,
