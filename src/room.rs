@@ -203,7 +203,7 @@ impl Room {
             return;
         }
 
-        if let Some(mut player) = self.players.get_mut(player_id) {
+        if let Some(player) = self.players.get_mut(player_id) {
             if player.info.voter {
                 player.vote = vote;
             } else {

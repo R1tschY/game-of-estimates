@@ -1,5 +1,3 @@
-use std::mem::replace;
-
 use log::{debug, error, warn};
 use rand::distributions::Alphanumeric;
 use rand::Rng;
@@ -79,7 +77,7 @@ impl Player {
     async fn leave_old_room(&mut self) {
         if let Some(old_room_id) = &self.room_id {
             debug!("{}: Leaves already joined room {}", self.id, old_room_id);
-            if let Some(old_room) = replace(&mut self.room, None) {
+            if let Some(old_room) = self.room.take() {
                 Self::leave_room(self.id.to_string(), old_room).await;
             }
         }
