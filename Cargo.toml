@@ -24,7 +24,7 @@ rand = "^0.8.5"
 quick-error = "^2.0.1"
 async-trait = "^0.1.68"
 uactor = { path = "components/uactor" }
-chassis = "^0.1.1"
+chassis = { git = "https://github.com/R1tschY/chassis.git" }
 include_dir = "0.7.3"
 warp = { version = "^0.3.5", default-features = false, features = ["websocket"] }
 headers = "0.3.8"

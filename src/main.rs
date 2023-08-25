@@ -29,58 +29,52 @@ impl<T, E: fmt::Debug> ErrorContextExt<T> for Result<T, E> {
     }
 }
 
-#[chassis::integration]
-mod integration {
-    use super::*;
+#[derive(Default)]
+struct Bindings;
 
-    struct Bindings;
+#[chassis::module]
+impl Bindings {
+    #[chassis(singleton)]
+    pub fn provide_game_server() -> GameServerAddr {
+        GameServer::default().start()
+    }
 
-    impl Bindings {
-        #[singleton]
-        pub fn provide_game_server() -> GameServerAddr {
-            GameServer::default().start()
-        }
-
-        #[singleton]
-        pub fn provide_cert_paths() -> TlsCert {
-            #[cfg(feature = "tls")]
-            if let Some(cert_path) = env::var_os("GOE_PEM_PATH") {
-                if let Some(key_path) = env::var_os("GOE_KEY_PATH") {
-                    TlsCert::Pem {
-                        cert_path: cert_path.into(),
-                        key_path: key_path.into(),
-                    }
-                } else {
-                    TlsCert::Unencrypted
+    #[chassis(singleton)]
+    pub fn provide_cert_paths() -> TlsCert {
+        #[cfg(feature = "tls")]
+        if let Some(cert_path) = env::var_os("GOE_PEM_PATH") {
+            if let Some(key_path) = env::var_os("GOE_KEY_PATH") {
+                TlsCert::Pem {
+                    cert_path: cert_path.into(),
+                    key_path: key_path.into(),
                 }
             } else {
                 TlsCert::Unencrypted
             }
-            #[cfg(not(feature = "tls"))]
+        } else {
             TlsCert::Unencrypted
         }
-
-        #[singleton]
-        pub fn provide_listen_addr() -> ListenAddr {
-            ListenAddr(env::var("GOE_LISTEN_ADDR").unwrap_or_else(|_| "127.0.0.1:5500".to_string()))
-        }
-
-        pub fn provide_main(
-            addr: ListenAddr,
-            tls_cert: TlsCert,
-            game_server: GameServerAddr,
-        ) -> Main {
-            Main {
-                addr,
-                tls_cert,
-                game_server,
-            }
-        }
+        #[cfg(not(feature = "tls"))]
+        TlsCert::Unencrypted
     }
 
-    pub trait Integrator {
-        fn provide_main(&self) -> Main;
+    #[chassis(singleton)]
+    pub fn provide_listen_addr() -> ListenAddr {
+        ListenAddr(env::var("GOE_LISTEN_ADDR").unwrap_or_else(|_| "127.0.0.1:5500".to_string()))
     }
+
+    pub fn provide_main(addr: ListenAddr, tls_cert: TlsCert, game_server: GameServerAddr) -> Main {
+        Main {
+            addr,
+            tls_cert,
+            game_server,
+        }
+    }
+}
+
+#[chassis::factory(modules = [Bindings])]
+pub trait Integrator {
+    fn provide_main(&self) -> Main;
 }
 
 pub fn data<T: Clone + Send>(value: T) -> impl Filter<Extract = (T,), Error = Infallible> + Clone {
@@ -153,8 +147,7 @@ impl Main {
 async fn main() -> Result<(), String> {
     env_logger::try_init().in_context("Failed to init logger")?;
 
-    use crate::integration::Integrator;
-    let integrator = integration::IntegratorImpl::new();
+    let integrator = <dyn Integrator>::new().unwrap();
     let main = integrator.provide_main();
 
     let mut sigterm =
