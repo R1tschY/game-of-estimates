@@ -59,10 +59,10 @@ name.subscribe((value) => {
 export const vote: Writable<Option<string>> = writable(null)
 vote.subscribe((value) => client.vote(value))
 client.stateChanged.connect((evt) => {
-    const player = get(playerId);
+    const player = get(playerId)
     if (!player) {
-        console.error("Received state change, but received no player id yet")
-        return;
+        console.error('Received state change, but received no player id yet')
+        return
     }
     const newVote = evt.game_state.votes[player]
 
@@ -111,89 +111,90 @@ export interface PlayerExtInfo {
     vote: Option<string>
 }
 
-export const players: Readable<Array<PlayerExtInfo>> = (function createRoomState() {
-    const { subscribe, set, update } = writable<Array<PlayerExtInfo>>([])
+export const players: Readable<Array<PlayerExtInfo>> =
+    (function createRoomState() {
+        const { subscribe, set, update } = writable<Array<PlayerExtInfo>>([])
 
-    function findPlayer(state: Array<PlayerExtInfo>, id: string): number {
-        return state.findIndex((player) => player.id === id)
-    }
-
-    client.joined.connect((evt) => {
-        const players: Array<PlayerExtInfo> = []
-        for (const player of evt.players) {
-            players.push({
-                id: player.id,
-                name: player.name,
-                voter: player.voter,
-                vote: evt.state.votes[player.id],
-            })
+        function findPlayer(state: Array<PlayerExtInfo>, id: string): number {
+            return state.findIndex((player) => player.id === id)
         }
-        set(players)
-    })
 
-    client.state.subscribe((value) => {
-        if (value === 'outside' || value === 'connecting') {
-            set([])
-        }
-    })
-
-    client.playerJoined.connect((evt) => {
-        update((players) => {
-            const index = findPlayer(players, evt.player.id)
-            const info = {
-                id: evt.player.id,
-                name: evt.player.name,
-                voter: evt.player.voter,
-                vote: null,
+        client.joined.connect((evt) => {
+            const players: Array<PlayerExtInfo> = []
+            for (const player of evt.players) {
+                players.push({
+                    id: player.id,
+                    name: player.name,
+                    voter: player.voter,
+                    vote: evt.state.votes[player.id],
+                })
             }
-
-            if (index >= 0) {
-                players[index] = info
-            } else {
-                players.push(info)
-            }
-
-            return players
+            set(players)
         })
-    })
 
-    client.playerChanged.connect((evt) => {
-        update((players) => {
-            const index = findPlayer(players, evt.player.id)
-            if (index >= 0) {
-                players[index].name = evt.player.name
-                players[index].voter = evt.player.voter
+        client.state.subscribe((value) => {
+            if (value === 'outside' || value === 'connecting') {
+                set([])
             }
-            return players
         })
-    })
 
-    client.playerLeft.connect((evt) => {
-        update((players) => {
-            const index = findPlayer(players, evt.player_id)
-            if (index >= 0) {
-                players.splice(index, 1)
-            }
-            return players
-        })
-    })
-
-    client.stateChanged.connect((evt) => {
-        update((players) => {
-            for (const [id, vote] of Object.entries(evt.game_state.votes)) {
-                const index = findPlayer(players, id)
-                if (index >= 0) {
-                    players[index].vote = vote
+        client.playerJoined.connect((evt) => {
+            update((players) => {
+                const index = findPlayer(players, evt.player.id)
+                const info = {
+                    id: evt.player.id,
+                    name: evt.player.name,
+                    voter: evt.player.voter,
+                    vote: null,
                 }
-            }
-            return players
-        })
-    })
 
-    return {
-        subscribe,
-    }
-})()
+                if (index >= 0) {
+                    players[index] = info
+                } else {
+                    players.push(info)
+                }
+
+                return players
+            })
+        })
+
+        client.playerChanged.connect((evt) => {
+            update((players) => {
+                const index = findPlayer(players, evt.player.id)
+                if (index >= 0) {
+                    players[index].name = evt.player.name
+                    players[index].voter = evt.player.voter
+                }
+                return players
+            })
+        })
+
+        client.playerLeft.connect((evt) => {
+            update((players) => {
+                const index = findPlayer(players, evt.player_id)
+                if (index >= 0) {
+                    players.splice(index, 1)
+                }
+                return players
+            })
+        })
+
+        client.stateChanged.connect((evt) => {
+            update((players) => {
+                for (const [id, vote] of Object.entries(evt.game_state.votes)) {
+                    const index = findPlayer(players, id)
+                    if (index >= 0) {
+                        players[index].vote = vote
+                    }
+                }
+                return players
+            })
+        })
+
+        return {
+            subscribe,
+        }
+    })()
 
 // navigation
 
