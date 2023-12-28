@@ -71,7 +71,7 @@ export interface GameState {
 export type PlayerState = 'connecting' | 'outside' | 'joining' | 'joined'
 
 export class Client {
-    _ws: WebSocket
+    _ws!: Option<WebSocket>
 
     state: Writable<PlayerState>
     playerId: Writable<Option<string>>
@@ -211,7 +211,7 @@ export class Client {
 }
 
 export class WebSocketService {
-    ws: Option<WebSocket>
+    ws!: Option<WebSocket>
     ws_store: Writable<Option<WebSocket>>
     connecting_store: Writable<boolean>
     connected_store: Writable<boolean>
