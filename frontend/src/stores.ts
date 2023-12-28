@@ -59,7 +59,12 @@ name.subscribe((value) => {
 export const vote: Writable<Option<string>> = writable(null)
 vote.subscribe((value) => client.vote(value))
 client.stateChanged.connect((evt) => {
-    const newVote = evt.game_state.votes[get(playerId)]
+    const player = get(playerId);
+    if (!player) {
+        console.error("Received state change, but received no player id yet")
+        return;
+    }
+    const newVote = evt.game_state.votes[player]
 
     if (newVote === null) {
         vote.set(null)
@@ -68,7 +73,7 @@ client.stateChanged.connect((evt) => {
 
 export const gameState: Readable<Option<GameState>> =
     (function createRoomState() {
-        const { subscribe, set } = writable(null)
+        const { subscribe, set } = writable<Option<GameState>>(null)
 
         client.joined.connect((evt) => {
             set(evt.state)
@@ -106,15 +111,15 @@ export interface PlayerExtInfo {
     vote: Option<string>
 }
 
-export const players: Readable<PlayerExtInfo[]> = (function createRoomState() {
-    const { subscribe, set, update } = writable([])
+export const players: Readable<Array<PlayerExtInfo>> = (function createRoomState() {
+    const { subscribe, set, update } = writable<Array<PlayerExtInfo>>([])
 
-    function findPlayer(state: PlayerExtInfo[], id: string): number {
+    function findPlayer(state: Array<PlayerExtInfo>, id: string): number {
         return state.findIndex((player) => player.id === id)
     }
 
     client.joined.connect((evt) => {
-        const players = []
+        const players: Array<PlayerExtInfo> = []
         for (const player of evt.players) {
             players.push({
                 id: player.id,

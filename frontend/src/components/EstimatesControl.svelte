@@ -4,7 +4,7 @@
 
     let open: boolean
     $: open = $gameState ? $gameState.open : false
-    $: cards = $gameState ? getDeck($gameState.deck).cards : []
+    $: cards = ($gameState ? getDeck($gameState.deck)?.cards : null) ?? []
 
     let touch_hover: string | null = null
     let handNode: HTMLElement
@@ -19,7 +19,7 @@
 
     function touchHover(evt: TouchEvent) {
         if (evt.touches.length === 1) {
-            const touch = evt.touches.item(0)
+            const touch = evt.touches[0]
             const cardsValue = cards
             const rect = handNode.getBoundingClientRect()
 

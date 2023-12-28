@@ -10,11 +10,11 @@
 
     let open = false
 
-    $: label = getActiveLabel(active)
+    $: label = active ? getActiveLabel(active) : ''
 
     function getActiveLabel(active_: string): string {
         let activeItem = items.find((i) => i.id == active_)
-        return activeItem ? activeItem.label : ''
+        return activeItem?.label ?? ''
     }
 
     function handleOpen() {
@@ -26,12 +26,13 @@
     }
 </script>
 
-<div class="dropdown" on:click={handleOpen} class:is-active={open}>
+<div class="dropdown" class:is-active={open}>
     <div class="dropdown-trigger">
         <button
             class="button is-fullwidth"
             aria-haspopup="true"
             aria-controls="dropdown-menu"
+            on:click={handleOpen}
         >
             <span>{label}</span>
             <span class="icon is-small">

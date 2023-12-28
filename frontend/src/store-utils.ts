@@ -46,20 +46,3 @@ export function derivedWritable<T, U>(
         },
     }
 }
-
-export function derivedWritableProperty<T, U>(
-    store: Writable<U>,
-    read: (this: U) => T,
-    update: (this: U, value: T) => void,
-): Writable<T> {
-    const newStore = derived(store, (value) => read.apply(value))
-    return {
-        subscribe: newStore.subscribe,
-        set(value) {
-            store.update((old) => update.apply(old, [value]))
-        },
-        update(fn) {
-            store.update((old) => update.apply(old, [fn(read.apply(old))]))
-        },
-    }
-}
