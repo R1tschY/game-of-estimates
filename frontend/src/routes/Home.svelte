@@ -15,7 +15,6 @@
     import { getText } from '../i18n'
 
     let deckId = decks[0].id
-    let roomId = ''
 
     type Action = null | 'join' | 'create'
     let action: Action = null
@@ -30,11 +29,6 @@
     function createRoom() {
         action = 'create'
         client.createRoom(deckId)
-    }
-
-    function joinRoom() {
-        action = 'join'
-        client.joinRoom(roomId)
     }
 
     // TODO: disconnect

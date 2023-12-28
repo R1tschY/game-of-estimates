@@ -4,5 +4,6 @@ module.exports = {
     tabWidth: 4,
     trailingComma: 'all',
     pluginSearchDirs: ['src'],
-    plugins: ['./node_modules/prettier-plugin-svelte'],
+    plugins: ['prettier-plugin-svelte'],
+    overrides: [{ files: "*.svelte", options: { parser: "svelte" } }]
 }

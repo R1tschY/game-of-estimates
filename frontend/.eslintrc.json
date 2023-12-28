@@ -11,16 +11,18 @@
   "extends": [
     "eslint:recommended",
     "prettier",
-    "plugin:@typescript-eslint/recommended"
+    "plugin:@typescript-eslint/recommended",
+    "plugin:svelte/prettier"
   ],
   "parser": "@typescript-eslint/parser",
-  "plugins": [
-    "svelte3", "@typescript-eslint"
-  ],
+  "plugins": [ ],
   "overrides": [
     {
       "files": ["*.svelte"],
-      "processor": "svelte3/svelte3"
+      "parser": "svelte-eslint-parser",
+      "parserOptions": {
+        "parser": "@typescript-eslint/parser"
+      }
     }
   ],
   "rules": {},
