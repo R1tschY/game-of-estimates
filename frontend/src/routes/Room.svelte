@@ -23,7 +23,7 @@
 
     export let id: string | null = null
 
-    let name: string = get(nameStore)
+    let name: string = get(nameStore) ?? ""
 
     let open: boolean
     $: open = $gameState?.open ?? false
