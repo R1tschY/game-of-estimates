@@ -24,3 +24,9 @@ updates:
     commit-message:
       prefix: "Cargo"
     open-pull-requests-limit: 0
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    target-branch: "master"
+    schedule:
+      interval: "monthly"
