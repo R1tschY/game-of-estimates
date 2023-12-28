@@ -13,11 +13,14 @@ updates:
     versioning-strategy: increase
     commit-message:
       prefix: "NPM"
-      
+    open-pull-requests-limit: 0
+
   - package-ecosystem: "cargo"
     directory: "/"
     schedule:
       interval: "weekly"
       day: "friday"
+    versioning-strategy: increase
     commit-message:
       prefix: "Cargo"
+    open-pull-requests-limit: 0
