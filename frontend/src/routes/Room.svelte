@@ -6,10 +6,9 @@
         playerId,
         players,
         vote,
-        voter,
+        observer,
     } from '../stores'
     import Header from '../components/Header.svelte'
-    import CopyLink from '../components/CopyLink.svelte'
 
     import { client, playerState } from '../client'
     import { get } from 'svelte/store'
@@ -56,25 +55,14 @@
     <Header />
 
     <section class="section">
-        <div class="container">
+        <div class="container player-section">
             <div class="columns">
-                <!-- Voter -->
-                <div class="column is-narrow">
-                    <Switch
-                        id="player-is-voter"
-                        bind:value={$voter}
-                        label={getText('voter')}
-                    />
-                </div>
-
-                <div class="column" />
-
                 <!-- Name -->
-                <div class="column">
+                <div class="column player-name-control">
                     <SingleTextInput
                         id="player-name"
-                        action={getText('changeName')}
-                        placeholder="Player name"
+                        action="✓"
+                        placeholder={getText('playerNamePlaceholder')}
                         bind:value={name}
                         on:submit={changeName}
                     />
@@ -82,11 +70,13 @@
 
                 <div class="column" />
 
-                <!-- Link -->
+                <!-- Voter -->
                 <div class="column is-narrow">
-                    <CopyLink
-                        value={document.location + ''}
-                        label={getText('copyRoomLink')}
+                    <Switch
+                        id="player-is-voter"
+                        class="player-name-control"
+                        bind:value={$observer}
+                        label={getText('observer')}
                     />
                 </div>
             </div>
@@ -116,7 +106,7 @@
         </div>
     </section>
 
-    {#if $voter}
+    {#if !$observer}
         <section class="section">
             <div class="container">
                 <div class="columns is-centered">
@@ -136,7 +126,7 @@
                 <div>Player ID: {$playerId}</div>
                 <div>ID: {id}</div>
                 <div>vote: {$vote}</div>
-                <div>voter: {$voter}</div>
+                <div>voter: {!$observer}</div>
                 <div>Open: {open}</div>
                 <div>players: {JSON.stringify($players)}</div>
             </div>

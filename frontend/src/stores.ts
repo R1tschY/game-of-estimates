@@ -34,10 +34,10 @@ export const debug: Readable<boolean> = derived(
     (value) => value.debug,
 )
 
-export const voter: Writable<boolean> = writable(get(ownPlayerState).voter)
-voter.subscribe((value) => {
+export const observer: Writable<boolean> = writable(!get(ownPlayerState).voter)
+observer.subscribe((value) => {
     ownPlayerState.update((state) => {
-        state.voter = value
+        state.voter = !value
         return state
     })
 })

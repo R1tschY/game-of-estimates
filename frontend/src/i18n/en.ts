@@ -8,7 +8,7 @@ const TRANSLATIONS: TranslationFile = {
     strings: {
         createRoom: 'Create room',
         deck: 'Deck',
-        voter: 'Voter',
+        observer: 'Observer',
         estimates: 'Estimates',
         restart: 'Restart',
         open: 'Open',

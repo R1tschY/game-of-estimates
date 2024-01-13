@@ -9,6 +9,7 @@ const TRANSLATIONS: TranslationFile = {
         createRoom: 'Erstelle Raum',
         deck: 'Deck',
         voter: 'Wähler',
+        observer: 'Beobachter',
         estimates: 'Schätzungen',
         restart: 'Neustart',
         open: 'Öffnen',
