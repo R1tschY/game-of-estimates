@@ -15,20 +15,24 @@
     import { getText } from '../i18n'
 
     let deckId = decks[0].id
+    let customDeck = ''
 
     type Action = null | 'join' | 'create'
     let action: Action = null
 
-    let decks_dropdown = decks.map((deck) => {
-        return {
-            id: deck.id,
-            label: deck.name + ' (' + deck.cards.slice(0, -2).join(', ') + ')',
-        }
-    })
+    let decks_dropdown = decks
+        .map((deck) => {
+            return {
+                id: deck.id,
+                label:
+                    deck.name + ' (' + deck.cards.slice(0, -2).join(', ') + ')',
+            }
+        })
+        .concat([{ id: 'custom', label: getText('customDeck') }])
 
     function createRoom() {
         action = 'create'
-        client.createRoom(deckId)
+        client.createRoom(deckId === 'custom' ? 'custom:' + customDeck : deckId)
     }
 
     // TODO: disconnect
@@ -75,6 +79,25 @@
                             />
                         </div>
                     </div>
+                    {#if deckId === 'custom'}
+                        <div class="field">
+                            <label class="label" for="deck_field"
+                                >{getText('customDeckField')}</label
+                            >
+                            <div class="control">
+                                <input
+                                    type="text"
+                                    placeholder={getText(
+                                        'customDeckPlaceholder',
+                                    )}
+                                    class="input is-expanded"
+                                    id="custom_deck_field"
+                                    bind:value={customDeck}
+                                />
+                            </div>
+                            <p class="help">{getText('customDeckHelp')}</p>
+                        </div>
+                    {/if}
 
                     <div class="field">
                         <div class="control">

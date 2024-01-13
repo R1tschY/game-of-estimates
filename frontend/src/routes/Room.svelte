@@ -84,7 +84,7 @@
     </section>
 
     <section class="section">
-        <div class="container">
+        <div class="container estimates-section">
             <h2 class="title is-4">{getText('estimates')}</h2>
             <div class="buttons">
                 <button class="button is-primary is-light" on:click={restart}

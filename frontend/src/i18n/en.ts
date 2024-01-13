@@ -12,6 +12,7 @@ const TRANSLATIONS: TranslationFile = {
         estimates: 'Estimates',
         restart: 'Restart',
         open: 'Open',
+        playerNamePlaceholder: 'Without name',
         copyRoomLink: 'Copy room link',
         changeName: 'Change name',
         chooseYourEstimate: 'Choose your estimate',

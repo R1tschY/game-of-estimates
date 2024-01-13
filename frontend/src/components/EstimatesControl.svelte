@@ -1,6 +1,6 @@
 <script lang="ts">
     import { vote, gameState } from '../stores'
-    import { get_deck as getDeck } from '../deck'
+    import { getDeck } from '../deck'
 
     let open: boolean
     $: open = $gameState ? $gameState.open : false
