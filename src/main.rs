@@ -72,7 +72,7 @@ impl Bindings {
     }
 }
 
-#[chassis::factory(modules = [Bindings])]
+#[chassis::injector(modules = [Bindings])]
 pub trait Integrator {
     fn provide_main(&self) -> Main;
 }
