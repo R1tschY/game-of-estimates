@@ -32,6 +32,8 @@ sha1 = "0.10.5"
 mime_guess = "2.0.4"
 mime = "0.3.16"
 hex = "0.4.3"
+uuid = { version = "1.7.0", features = ["v7"] }
+base64 = "0.21.7"
 
 [dev-dependencies]
 ctor = "0.2.0"

@@ -1,11 +1,12 @@
 use std::collections::HashMap;
 use std::fmt::Debug;
 
+use base64::engine::general_purpose::URL_SAFE_NO_PAD;
+use base64::Engine;
 use log::{error, info, warn};
-use rand::distributions::Alphanumeric;
-use rand::Rng;
 use serde::{Deserialize, Serialize};
 use tokio::time::{sleep, Duration};
+use uuid::Uuid;
 
 use uactor::blocking::{Actor, ActorContext, Addr};
 use uactor::tokio::blocking::Context;
@@ -120,12 +121,8 @@ impl Room {
         }
     }
 
-    pub fn gen_id(characters: u8) -> String {
-        rand::thread_rng()
-            .sample_iter(&Alphanumeric)
-            .take(characters as usize)
-            .map(char::from)
-            .collect::<String>()
+    pub fn gen_id() -> String {
+        URL_SAFE_NO_PAD.encode(Uuid::now_v7().as_bytes())
     }
 
     async fn send_to_player(&mut self, player: &GamePlayer, msg: GamePlayerMessage) {

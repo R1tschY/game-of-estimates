@@ -68,7 +68,7 @@ impl Actor for GameServer {
                 player,
                 deck,
             } => {
-                let room_id = Room::gen_id(20);
+                let room_id = Room::gen_id();
                 let room = Room::new(&room_id, (player_addr, player), deck);
                 self.rooms.insert(room_id, room.start());
             }
