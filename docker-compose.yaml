@@ -1,11 +1,26 @@
 version: "3"
 
 services:
-  game-of-estimates:
-    build:
-      context: .
+  db:
+    image: postgres
     ports:
-      - "5500:5500"
+      - "5432:5432"
     environment:
-      GOE_LISTEN_ADDR: 0.0.0.0:5500
-      RUST_LOG: info
+      POSTGRES_USER: developer
+      POSTGRES_PASSWORD: developer
+      POSTGRES_DB: goe
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - "db:/var/lib/postgresql/data"
+#  game-of-estimates:
+#    build:
+#      context: .
+#    ports:
+#      - "5500:5500"
+#    environment:
+#      GOE_LISTEN_ADDR: 0.0.0.0:5500
+#      RUST_LOG: info
+
+
+volumes:
+  db:

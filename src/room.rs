@@ -98,6 +98,12 @@ pub struct Room {
     open: bool,
 }
 
+pub enum RoomEvent {
+    Created { id: String, deck: Vec<String> },
+    PlayerJoined { player_id: String },
+    PlayerLeaved { player_id: String },
+}
+
 async fn delayed_message<T: Debug>(addr: Addr<T>, msg: T, duration: Duration) {
     sleep(duration).await;
     let _ = addr.send(msg).await;

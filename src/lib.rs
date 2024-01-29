@@ -46,6 +46,9 @@ pub mod game_server;
 pub mod player;
 pub mod room;
 
+pub mod adapters;
+pub mod ports;
+
 pub mod remote;
 
 #[cfg(test)]
