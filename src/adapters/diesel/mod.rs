@@ -1,15 +1,16 @@
-use std::sync::Mutex;
-
-use diesel::connection::DefaultLoadingMode;
 use diesel::prelude::*;
-use diesel::{Connection, PgConnection};
+use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
+use diesel_async::pooled_connection::deadpool::Pool;
+use diesel_async::pooled_connection::AsyncDieselConnectionManager;
+use diesel_async::AsyncPgConnection;
+use diesel_async::RunQueryDsl;
 use diesel_json::Json;
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use serde::{Deserialize, Serialize};
 
 use schema::rooms_events;
 
-use crate::ports::RoomRepository;
+use crate::ports::{DbResult, RoomRepository};
 use crate::room::RoomEvent;
 
 mod schema;
@@ -57,51 +58,55 @@ impl From<DbRoomEvent> for RoomEvent {
 
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
 
-pub fn establish_connection() -> PgConnection {
+pub async fn create_pool() -> DbResult<Pool<AsyncPgConnection>> {
     let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    let mut connection = PgConnection::establish(&database_url)
-        .unwrap_or_else(|_| panic!("Error connecting to {}", database_url));
-    connection
+
+    AsyncConnectionWrapper::<AsyncPgConnection>::establish(&database_url)?
         .run_pending_migrations(MIGRATIONS)
         .expect("migrations should run successfully");
-    connection
+
+    let config = AsyncDieselConnectionManager::<AsyncPgConnection>::new(database_url);
+    let pool = Pool::builder(config).build()?;
+    Ok(pool)
 }
 
 pub struct DieselRoomRepository {
-    conn: Mutex<PgConnection>,
+    pool: Pool<AsyncPgConnection>,
 }
 
 impl DieselRoomRepository {
-    pub fn new(conn: Mutex<PgConnection>) -> Self {
-        Self { conn }
+    pub fn new(pool: Pool<AsyncPgConnection>) -> Self {
+        Self { pool }
     }
 }
 
+#[async_trait::async_trait]
 impl RoomRepository for DieselRoomRepository {
-    fn append_room_event(&self, room_id: &str, event: RoomEvent) {
+    async fn append_room_event(&self, room_id: &str, event: RoomEvent) -> DbResult<()> {
         let event = NewRoomEvent {
             room_id,
             event_data: Json(event.into()),
         };
 
-        let mut conn = self.conn.lock().unwrap();
+        let mut conn = self.pool.get().await?;
         diesel::insert_into(rooms_events::table)
             .values(&event)
             .execute(&mut *conn)
-            .expect("New room event not saved");
+            .await?;
+        Ok(())
     }
 
-    fn get_room_events(&self, id: &str) -> Vec<RoomEvent> {
+    async fn get_room_events(&self, id: &str) -> DbResult<Vec<RoomEvent>> {
         use schema::rooms_events::dsl::*;
 
-        let mut conn = self.conn.lock().unwrap();
-        rooms_events
+        let mut conn = self.pool.get().await?;
+        Ok(rooms_events
             .filter(room_id.eq(id))
             .select(SingleRoomEvent::as_select())
-            .load_iter::<SingleRoomEvent, DefaultLoadingMode>(&mut *conn)
-            .expect("Select failed")
-            .map(|evt| evt.map(|evt| evt.event_data.0.into()))
-            .collect::<QueryResult<Vec<RoomEvent>>>()
-            .expect("Select failed")
+            .load::<SingleRoomEvent>(&mut *conn)
+            .await?
+            .into_iter()
+            .map(|evt| evt.event_data.0.into())
+            .collect::<Vec<RoomEvent>>())
     }
 }

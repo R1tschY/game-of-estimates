@@ -34,10 +34,12 @@ mime = "0.3.16"
 hex = "0.4.3"
 uuid = { version = "1.7.0", features = ["v7"] }
 base64 = "0.21.7"
+anyhow = "1.0"
 
-diesel = { version = "2.1.0", features = ["postgres", "serde_json"] }
+diesel = { version = "2.1.0", features = ["serde_json", "uuid"] }
 diesel_migrations = "2.1.0"
 diesel_json = "0.2"
+diesel-async = { version = "0.4.1", features = ["postgres", "deadpool", "async-connection-wrapper"] }
 
 [dev-dependencies]
 ctor = "0.2.0"
