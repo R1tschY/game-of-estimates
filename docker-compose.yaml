@@ -4,7 +4,7 @@ services:
   db:
     image: postgres
     ports:
-      - "5432:5432"
+      - "5888:5432"
     environment:
       POSTGRES_USER: developer
       POSTGRES_PASSWORD: developer
