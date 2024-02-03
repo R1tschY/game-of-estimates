@@ -6,6 +6,7 @@ use uactor::blocking::Actor;
 use uactor::tokio::blocking::Context;
 
 use crate::player::{PlayerAddr, PlayerInformation};
+use crate::ports::RoomRepositoryRef;
 use crate::room::{GamePlayerMessage, RejectReason, Room, RoomAddr, RoomMessage};
 
 #[derive(Debug)]
@@ -24,14 +25,21 @@ pub enum GameServerMessage {
     },
 }
 
-#[derive(Default)]
 pub struct GameServer {
     rooms: HashMap<String, RoomAddr>,
+    room_repo: RoomRepositoryRef,
 }
 
 pub type GameServerAddr = mpsc::Sender<GameServerMessage>;
 
 impl GameServer {
+    pub fn new(room_repo: RoomRepositoryRef) -> Self {
+        Self {
+            rooms: Default::default(),
+            room_repo,
+        }
+    }
+
     async fn send_rejection(player: &PlayerAddr, reason: RejectReason) {
         let _ = player.send(GamePlayerMessage::Rejected(reason)).await;
     }

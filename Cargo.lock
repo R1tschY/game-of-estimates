@@ -508,6 +508,7 @@ dependencies = [
  "base64",
  "chassis",
  "ctor",
+ "dotenvy",
  "env_logger",
  "futures-util",
  "headers",

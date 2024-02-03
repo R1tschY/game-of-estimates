@@ -9,10 +9,12 @@ use tokio::signal::unix::{signal, SignalKind};
 use warp::ws::WebSocket;
 use warp::Filter;
 
+use game_of_estimates::adapters::sqlx::SqlxModule;
 use game_of_estimates::assets;
 use game_of_estimates::assets::AssetCatalog;
 use game_of_estimates::game_server::{GameServer, GameServerAddr};
 use game_of_estimates::player::Player;
+use game_of_estimates::ports::{DatabaseMigratorRef, DatabaseUrl, RoomRepositoryRef};
 use game_of_estimates::remote::RemoteConnection;
 use uactor::blocking::Actor;
 
@@ -30,13 +32,17 @@ impl<T, E: fmt::Debug> ErrorContextExt<T> for Result<T, E> {
 }
 
 #[derive(Default)]
-struct Bindings;
+struct MainModule;
 
 #[chassis::module]
-impl Bindings {
+impl MainModule {
+    pub fn provide_database_url() -> DatabaseUrl {
+        DatabaseUrl(std::env::var("DATABASE_URL").expect("DATABASE_URL should be set"))
+    }
+
     #[chassis(singleton)]
-    pub fn provide_game_server() -> GameServerAddr {
-        GameServer::default().start()
+    pub fn provide_game_server(room_repo: RoomRepositoryRef) -> GameServerAddr {
+        GameServer::new(room_repo).start()
     }
 
     #[chassis(singleton)]
@@ -72,9 +78,10 @@ impl Bindings {
     }
 }
 
-#[chassis::injector(modules = [Bindings])]
+#[chassis::injector(modules = [MainModule, SqlxModule])]
 pub trait Integrator {
     fn provide_main(&self) -> Main;
+    fn provide_db_migrator(&self) -> DatabaseMigratorRef;
 }
 
 pub fn data<T: Clone + Send>(value: T) -> impl Filter<Extract = (T,), Error = Infallible> + Clone {
@@ -145,15 +152,23 @@ impl Main {
 
 #[tokio::main]
 async fn main() -> Result<(), String> {
-    env_logger::try_init().in_context("Failed to init logger")?;
-
-    let integrator = <dyn Integrator>::new().unwrap();
-    let main = integrator.provide_main();
+    dotenvy::dotenv().in_context("Unable to load .env files")?;
+    env_logger::try_init().in_context("Unable to initialize logger")?;
 
     let mut sigterm =
-        signal(SignalKind::terminate()).in_context("Failed to register SIGTERM handler")?;
+        signal(SignalKind::terminate()).in_context("Unable to register SIGTERM handler")?;
     let mut sigint =
-        signal(SignalKind::interrupt()).in_context("Failed to register SIGINT handler")?;
+        signal(SignalKind::interrupt()).in_context("Unable to register SIGINT handler")?;
+
+    let integrator = <dyn Integrator>::new().in_context("Unable to build injector")?;
+
+    integrator
+        .provide_db_migrator()
+        .migrate()
+        .await
+        .in_context("Unable to migrate database")?;
+
+    let main = integrator.provide_main();
 
     tokio::select! {
         ret = main.run() => { ret },

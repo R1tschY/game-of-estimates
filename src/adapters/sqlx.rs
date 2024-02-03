@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use futures_util::TryStreamExt;
 use serde::{Deserialize, Serialize};
 use sqlx::migrate::Migrator;
@@ -6,8 +8,34 @@ use sqlx::types::Json;
 use sqlx::{PgPool, Row};
 use time::OffsetDateTime;
 
-use crate::ports::{DbResult, RoomRepository};
+use crate::ports::{
+    DatabaseMigrator, DatabaseMigratorRef, DatabaseUrl, DbResult, RoomRepository, RoomRepositoryRef,
+};
 use crate::room::RoomEvent;
+
+#[derive(Default)]
+pub struct SqlxModule;
+
+#[chassis::module]
+impl SqlxModule {
+    #[chassis(singleton)]
+    pub fn provide_pool(database_url: DatabaseUrl) -> PgPool {
+        PgPoolOptions::new()
+            .max_connections(5)
+            .connect_lazy(&database_url.0)
+            .expect("Database configuration should be valid")
+    }
+
+    #[chassis(singleton)]
+    pub fn provide_db_migrator(pool: PgPool) -> DatabaseMigratorRef {
+        Arc::new(SqlxMigrator::new(pool))
+    }
+
+    #[chassis(singleton)]
+    pub fn provide_room_repo(pool: PgPool) -> RoomRepositoryRef {
+        Arc::new(SqlxRoomRepository::new(pool))
+    }
+}
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum DbRoomEvent {
@@ -38,29 +66,35 @@ impl From<DbRoomEvent> for RoomEvent {
 
 static MIGRATOR: Migrator = sqlx::migrate!();
 
-pub async fn create_pool() -> DbResult<PgPool> {
-    let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-
-    let pool = PgPoolOptions::new()
-        .max_connections(5)
-        .connect(&database_url)
-        .await?;
-    MIGRATOR.run(&pool).await?;
-    Ok(pool)
-}
-
-pub struct DieselRoomRepository {
+pub struct SqlxMigrator {
     pool: PgPool,
 }
 
-impl DieselRoomRepository {
+impl SqlxMigrator {
     pub fn new(pool: PgPool) -> Self {
         Self { pool }
     }
 }
 
 #[async_trait::async_trait]
-impl RoomRepository for DieselRoomRepository {
+impl DatabaseMigrator for SqlxMigrator {
+    async fn migrate(&self) -> DbResult<()> {
+        Ok(MIGRATOR.run(&self.pool).await?)
+    }
+}
+
+pub struct SqlxRoomRepository {
+    pool: PgPool,
+}
+
+impl SqlxRoomRepository {
+    pub fn new(pool: PgPool) -> Self {
+        Self { pool }
+    }
+}
+
+#[async_trait::async_trait]
+impl RoomRepository for SqlxRoomRepository {
     async fn append_room_event(&self, room_id: &str, event: RoomEvent) -> DbResult<()> {
         sqlx::query("INSERT INTO room_events (occurred_at, room_id, event_data) VALUES (?, ?, ?)")
             .bind(OffsetDateTime::now_utc())
