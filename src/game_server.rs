@@ -1,3 +1,4 @@
+use log::error;
 use std::collections::HashMap;
 
 use tokio::sync::mpsc;
@@ -67,7 +68,26 @@ impl Actor for GameServer {
                         self.rooms.remove(&room);
                     }
                 } else {
-                    Self::send_rejection(&player_addr, RejectReason::RoomDoesNotExist).await;
+                    match self.room_repo.get_room_events(&room).await {
+                        Ok(events) => {
+                            if events.is_empty() {
+                                Self::send_rejection(&player_addr, RejectReason::RoomDoesNotExist)
+                                    .await;
+                            }
+
+                            if let Some(restored_room) = Room::restore(&room, events) {
+                                self.rooms.insert(room, restored_room.start());
+                            } else {
+                                error!("Failed to restore room {}", room);
+                                Self::send_rejection(&player_addr, RejectReason::JoinGameError)
+                                    .await;
+                            }
+                        }
+                        Err(db_err) => {
+                            error!("Failed to restore room {}: {:?}", room, db_err);
+                            Self::send_rejection(&player_addr, RejectReason::JoinGameError).await;
+                        }
+                    }
                 }
             }
 

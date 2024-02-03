@@ -99,7 +99,7 @@ pub struct Room {
 }
 
 pub enum RoomEvent {
-    Created { id: String, deck: Vec<String> },
+    Created { deck: String },
     PlayerJoined { player_id: String },
     PlayerLeaved { player_id: String },
 }
@@ -125,6 +125,34 @@ impl Room {
             open: false,
             deck,
         }
+    }
+
+    pub fn restore(id: &str, events: Vec<RoomEvent>) -> Option<Self> {
+        let mut iter = events.into_iter();
+
+        let deck = if let Some(RoomEvent::Created { deck }) = iter.next() {
+            deck
+        } else {
+            return None;
+        };
+
+        for evt in iter {
+            match evt {
+                RoomEvent::Created { .. } => {
+                    return None;
+                }
+                RoomEvent::PlayerJoined { .. } | RoomEvent::PlayerLeaved { .. } => {
+                    // ignored: player must join again
+                }
+            }
+        }
+
+        Some(Self {
+            id: id.to_string(),
+            players: HashMap::default(),
+            open: false,
+            deck,
+        })
     }
 
     pub fn gen_id() -> String {
