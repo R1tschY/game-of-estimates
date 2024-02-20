@@ -1,5 +1,7 @@
 use std::sync::Arc;
 
+use base64::engine::general_purpose::URL_SAFE_NO_PAD;
+use base64::Engine;
 use futures_util::TryStreamExt;
 use serde::{Deserialize, Serialize};
 use sqlx::migrate::Migrator;
@@ -7,6 +9,7 @@ use sqlx::postgres::PgPoolOptions;
 use sqlx::types::Json;
 use sqlx::{PgPool, Row};
 use time::OffsetDateTime;
+use uuid::Uuid;
 
 use crate::ports::{
     DatabaseMigrator, DatabaseMigratorRef, DatabaseUrl, DbResult, RoomRepository, RoomRepositoryRef,
@@ -93,21 +96,32 @@ impl SqlxRoomRepository {
     }
 }
 
+fn decode_room_id(id: &str) -> Uuid {
+    let mut buf: [u8; 18] = [0; 18];
+    match URL_SAFE_NO_PAD.decode_slice(id, &mut buf) {
+        Ok(size) if size == 16 => Uuid::from_slice(&buf[..16]).unwrap(),
+        Ok(size) => panic!("Room ID '{id}' is not a Base64 decoded UUID: wrong size {size}"),
+        Err(err) => panic!("Room ID '{id}' is not a Base64 decoded UUID: {err}"),
+    }
+}
+
 #[async_trait::async_trait]
 impl RoomRepository for SqlxRoomRepository {
     async fn append_room_event(&self, room_id: &str, event: RoomEvent) -> DbResult<()> {
-        sqlx::query("INSERT INTO room_events (occurred_at, room_id, event_data) VALUES (?, ?, ?)")
-            .bind(OffsetDateTime::now_utc())
-            .bind(room_id)
-            .bind(Json(DbRoomEvent::from(event)))
-            .execute(&self.pool)
-            .await?;
+        sqlx::query(
+            "INSERT INTO room_events (occurred_at, room_id, event_data) VALUES ($1, $2, $3)",
+        )
+        .bind(OffsetDateTime::now_utc())
+        .bind(decode_room_id(room_id))
+        .bind(Json(DbRoomEvent::from(event)))
+        .execute(&self.pool)
+        .await?;
         Ok(())
     }
 
     async fn get_room_events(&self, id: &str) -> DbResult<Vec<RoomEvent>> {
-        let mut rows = sqlx::query("SELECT event_data FROM room_events WHERE room_id = ?")
-            .bind(id)
+        let mut rows = sqlx::query("SELECT event_data FROM room_events WHERE room_id = $1")
+            .bind(decode_room_id(id))
             .fetch(&self.pool);
 
         let mut res = vec![];
