@@ -16,8 +16,8 @@ impl Display for DbError {
 pub type DbResult<T> = Result<T, DbError>;
 
 impl<E> From<E> for DbError
-    where
-        E: Error + Send + Sync + 'static,
+where
+    E: Error + Send + Sync + 'static,
 {
     fn from(error: E) -> Self {
         DbError(error.into())

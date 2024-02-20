@@ -22,11 +22,11 @@ trait ErrorContextExt<T> {
     fn in_context(self, context: &str) -> Result<T, String>;
 }
 
-impl<T, E: fmt::Debug> ErrorContextExt<T> for Result<T, E> {
+impl<T, E: fmt::Display> ErrorContextExt<T> for Result<T, E> {
     fn in_context(self, context: &str) -> Result<T, String> {
         match self {
             Ok(ok) => Ok(ok),
-            Err(err) => Err(format!("{}: {:?}", context, err)),
+            Err(err) => Err(format!("{}: {}", context, err)),
         }
     }
 }
@@ -84,7 +84,7 @@ pub trait Integrator {
     fn provide_db_migrator(&self) -> DatabaseMigratorRef;
 }
 
-pub fn data<T: Clone + Send>(value: T) -> impl Filter<Extract = (T,), Error = Infallible> + Clone {
+pub fn data<T: Clone + Send>(value: T) -> impl Filter<Extract=(T, ), Error=Infallible> + Clone {
     warp::any().map(move || value.clone())
 }
 
