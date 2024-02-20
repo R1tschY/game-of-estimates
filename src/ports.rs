@@ -1,4 +1,5 @@
 use std::error::Error;
+use std::fmt::{Display, Formatter};
 use std::sync::Arc;
 
 use crate::room::RoomEvent;
@@ -6,11 +7,17 @@ use crate::room::RoomEvent;
 #[derive(Debug)]
 pub struct DbError(anyhow::Error);
 
+impl Display for DbError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        Display::fmt(&self.0, f)
+    }
+}
+
 pub type DbResult<T> = Result<T, DbError>;
 
 impl<E> From<E> for DbError
-where
-    E: Error + Send + Sync + 'static,
+    where
+        E: Error + Send + Sync + 'static,
 {
     fn from(error: E) -> Self {
         DbError(error.into())

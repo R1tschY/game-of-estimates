@@ -75,7 +75,9 @@ impl Actor for GameServer {
                                     .await;
                             }
 
-                            if let Some(restored_room) = Room::restore(&room, events) {
+                            if let Some(restored_room) =
+                                Room::restore(&room, events, self.room_repo.clone())
+                            {
                                 self.rooms.insert(room, restored_room.start());
                             } else {
                                 error!("Failed to restore room {}", room);
@@ -97,7 +99,12 @@ impl Actor for GameServer {
                 deck,
             } => {
                 let room_id = Room::gen_id();
-                let room = Room::new(&room_id, (player_addr, player), deck);
+                let room = Room::new(
+                    &room_id,
+                    (player_addr, player),
+                    deck,
+                    self.room_repo.clone(),
+                );
                 self.rooms.insert(room_id, room.start());
             }
         }

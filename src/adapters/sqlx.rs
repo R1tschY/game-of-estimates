@@ -39,7 +39,7 @@ impl SqlxModule {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum DbRoomEvent {
-    Created { id: String, deck: Vec<String> },
+    Created { deck: String },
     PlayerJoined { player_id: String },
     PlayerLeaved { player_id: String },
 }
@@ -47,7 +47,7 @@ pub enum DbRoomEvent {
 impl From<RoomEvent> for DbRoomEvent {
     fn from(value: RoomEvent) -> Self {
         match value {
-            RoomEvent::Created { id, deck } => DbRoomEvent::Created { id, deck },
+            RoomEvent::Created { deck } => DbRoomEvent::Created { deck },
             RoomEvent::PlayerJoined { player_id } => DbRoomEvent::PlayerJoined { player_id },
             RoomEvent::PlayerLeaved { player_id } => DbRoomEvent::PlayerLeaved { player_id },
         }
@@ -57,7 +57,7 @@ impl From<RoomEvent> for DbRoomEvent {
 impl From<DbRoomEvent> for RoomEvent {
     fn from(value: DbRoomEvent) -> Self {
         match value {
-            DbRoomEvent::Created { id, deck } => RoomEvent::Created { id, deck },
+            DbRoomEvent::Created { deck } => RoomEvent::Created { deck },
             DbRoomEvent::PlayerJoined { player_id } => RoomEvent::PlayerJoined { player_id },
             DbRoomEvent::PlayerLeaved { player_id } => RoomEvent::PlayerLeaved { player_id },
         }

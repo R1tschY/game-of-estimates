@@ -12,6 +12,7 @@ use uactor::blocking::{Actor, ActorContext, Addr};
 use uactor::tokio::blocking::Context;
 
 use crate::player::{PlayerAddr, PlayerInformation};
+use crate::ports::RoomRepositoryRef;
 
 #[derive(Debug)]
 pub enum RoomMessage {
@@ -96,6 +97,7 @@ pub struct Room {
     deck: String,
     players: HashMap<String, GamePlayer>,
     open: bool,
+    repo: RoomRepositoryRef,
 }
 
 pub enum RoomEvent {
@@ -110,7 +112,12 @@ async fn delayed_message<T: Debug>(addr: Addr<T>, msg: T, duration: Duration) {
 }
 
 impl Room {
-    pub fn new(id: &str, creator: (PlayerAddr, PlayerInformation), deck: String) -> Self {
+    pub fn new(
+        id: &str,
+        creator: (PlayerAddr, PlayerInformation),
+        deck: String,
+        repo: RoomRepositoryRef,
+    ) -> Self {
         info!("{}: Created room", id);
 
         let player_id = creator.1.id.clone();
@@ -124,10 +131,11 @@ impl Room {
             players,
             open: false,
             deck,
+            repo,
         }
     }
 
-    pub fn restore(id: &str, events: Vec<RoomEvent>) -> Option<Self> {
+    pub fn restore(id: &str, events: Vec<RoomEvent>, repo: RoomRepositoryRef) -> Option<Self> {
         let mut iter = events.into_iter();
 
         let deck = if let Some(RoomEvent::Created { deck }) = iter.next() {
@@ -152,6 +160,7 @@ impl Room {
             players: HashMap::default(),
             open: false,
             deck,
+            repo,
         })
     }
 
@@ -192,7 +201,20 @@ impl Room {
         let player_id = player.id.clone();
         let game_player = GamePlayer::new(player_addr, player);
         let game_player_state = game_player.to_state();
-        self.players.insert(player_id, game_player.clone());
+        self.players.insert(player_id.clone(), game_player.clone());
+
+        if let Err(err) = self
+            .repo
+            .append_room_event(
+                &self.id,
+                RoomEvent::PlayerJoined {
+                    player_id: player_id.to_string(),
+                },
+            )
+            .await
+        {
+            warn!("Suppressed database error: {}", err);
+        }
 
         // welcome
         let players_state = self.players.values().map(|p| p.to_state()).collect();
@@ -200,7 +222,7 @@ impl Room {
             &game_player,
             GamePlayerMessage::Welcome(self.id.clone(), ctx.addr(), self.to_state(), players_state),
         )
-        .await;
+            .await;
 
         // introduce
         self.send_to_players(GamePlayerMessage::PlayerJoined(game_player_state.clone()))
@@ -209,6 +231,19 @@ impl Room {
 
     async fn remove_player(&mut self, player_id: &str, ctx: &mut Context<Self>) {
         self.players.remove(player_id);
+
+        if let Err(err) = self
+            .repo
+            .append_room_event(
+                &self.id,
+                RoomEvent::PlayerLeaved {
+                    player_id: player_id.to_string(),
+                },
+            )
+            .await
+        {
+            warn!("Suppressed database error: {}", err);
+        }
 
         // announce
         self.send_to_players(GamePlayerMessage::PlayerLeft(player_id.to_string()))
@@ -371,6 +406,27 @@ impl Actor for Room {
     }
 
     async fn setup(&mut self, ctx: &mut Context<Self>) {
+        if let Err(err) = self
+            .repo
+            .append_room_event(
+                &self.id,
+                RoomEvent::Created {
+                    deck: self.deck.clone(),
+                },
+            )
+            .await
+        {
+            warn!(
+                "Unable to create room {}, because of database error: {}",
+                self.id, err
+            );
+            self.send_to_players(GamePlayerMessage::Rejected(RejectReason::CreateGameError))
+                .await;
+            self.players.clear();
+            ctx.force_quit();
+            return;
+        }
+
         let players_state: Vec<PlayerState> = self.players.values().map(|p| p.to_state()).collect();
         let game_state = self.to_state();
 
@@ -380,14 +436,17 @@ impl Actor for Room {
             game_state.clone(),
             players_state.clone(),
         ))
-        .await;
+            .await;
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use std::sync::Arc;
+
     use tokio::sync::mpsc;
 
+    use crate::ports::{DbResult, RoomRepository};
     use crate::room::GamePlayerMessage::GameStateChanged;
     use crate::room::RoomMessage::*;
 
@@ -398,13 +457,28 @@ mod tests {
         room_addr: Addr<RoomMessage>,
     }
 
+    struct FakeRoomRepository;
+
+    #[async_trait::async_trait]
+    impl RoomRepository for FakeRoomRepository {
+        async fn append_room_event(&self, _id: &str, _evt: RoomEvent) -> DbResult<()> {
+            Ok(())
+        }
+
+        async fn get_room_events(&self, _id: &str) -> DbResult<Vec<RoomEvent>> {
+            Ok(vec![])
+        }
+    }
+
     impl RoomTester {
         pub fn new_room(creator: &str, voter: bool) -> Self {
             let (player_addr, rx, player_info) = Self::create_player(creator, voter);
+            let repo: RoomRepositoryRef = Arc::new(FakeRoomRepository);
             let room = Room::new(
                 "TEST-ROOM",
                 (player_addr.clone(), player_info),
                 "TEST-DECK".to_string(),
+                repo,
             );
             let room_addr = room.start();
             Self {
