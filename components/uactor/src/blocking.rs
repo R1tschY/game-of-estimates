@@ -111,7 +111,7 @@ where
     fn run(actor: A) -> Addr<A::Message> {
         let (tx, rx) = mpsc::channel(64); // TODO: config to change size
         let ctx = Self::new(tx.clone(), rx);
-        S::spawn(ctx.into_future(actor));
+        let _ = S::spawn(ctx.into_future(actor));
         tx
     }
 }
