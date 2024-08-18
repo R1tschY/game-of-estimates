@@ -257,6 +257,10 @@ export class WebSocketService {
     }
 
     on_disconnected(event: CloseEvent) {
+        if (this.ws == null) {
+            return
+        }
+
         console.log('disconnected', event)
         this.connecting_store.set(false)
         this.connected_store.set(false)
@@ -265,6 +269,10 @@ export class WebSocketService {
     }
 
     on_connection_error(event: Event) {
+        if (this.ws == null) {
+            return
+        }
+
         console.log('error', event)
         this.connected_store.set(false)
         this.connecting_store.set(false)
@@ -287,12 +295,18 @@ export class WebSocketService {
         this.ws.addEventListener('error', (evt) =>
             this.on_connection_error(evt),
         )
+
+        window.addEventListener('beforeunload', () => this.silent_disconnect())
     }
 
     private guessWsAddr(): string {
         const loc = window.location
         const protocol = loc.protocol === 'http:' ? 'ws:' : 'wss:'
         return `${protocol}//${loc.host}/ws`
+    }
+
+    private silent_disconnect() {
+        this.ws = null
     }
 }
 
