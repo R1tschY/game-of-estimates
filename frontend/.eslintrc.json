@@ -25,7 +25,9 @@
       }
     }
   ],
-  "rules": {},
+  "rules": {
+    "@typescript-eslint/no-explicit-any": "warn"
+  },
   "settings": {
     "svelte3/typescript": true
   }

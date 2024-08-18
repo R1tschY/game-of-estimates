@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+    <title>Game Of Estimates - Planning Poker</title>
+
+    <!-- favicon -->
+    <!--        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=00aJ2wj5ym">-->
+    <!--        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=00aJ2wj5ym">-->
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=00aJ2wj5ym">
+    <link rel="manifest" href="/site.webmanifest?v=00aJ2wj5ym">
+    <link rel="mask-icon" href="/safari-pinned-tab.svg?v=00aJ2wj5ym" color="#ed8b00">
+    <link rel="shortcut icon" href="/favicon.ico?v=00aJ2wj5ym">
+    <meta name="apple-mobile-web-app-title" content="Game of Estimates">
+    <meta name="application-name" content="Game of Estimates">
+    <meta name="msapplication-TileColor" content="#ed8b00">
+
+    <meta name="theme-color" content="#ed8b00">
+    <meta name="description" content="Planning Poker / Scrum poker game for story planning">
+    <meta name="keywords" content="Planning Poker, Scrum Poker, Scrum, Planning, Agile">
+    <meta name="author" content="Richard Liebscher">
+
+    <link rel="stylesheet" href="{{ css }}">
+</head>
+<body>
+
+<section class="hero head">
+    <div class="hero-body">
+        <div class="container">
+            <h1 class="title"><a href="/">Game Of Estimates</a></h1>
+            <h2 class="subtitle">Planning Poker</h2>
+        </div>
+    </div>
+</section>
+
+{{> @partial-block }}
+
+<footer class="footer">
+    <div class="content has-text-centered">
+        <p>{{{text 'byAuthor'}}}</p>
+        <p>{{{text 'license'}}}</p>
+        <div>
+            <a href="/" class="footer-icon">
+                <img src="github.svg" alt="GitHub"/>
+            </a>
+        </div>
+    </div>
+</footer>
+
+</body>
+</html>

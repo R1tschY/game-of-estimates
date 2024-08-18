@@ -2,6 +2,7 @@ use log::error;
 use std::collections::HashMap;
 
 use tokio::sync::mpsc;
+use tokio::sync::oneshot;
 
 use uactor::blocking::Actor;
 use uactor::tokio::blocking::Context;
@@ -20,9 +21,7 @@ pub enum GameServerMessage {
     },
     Create {
         deck: String,
-
-        player_addr: PlayerAddr,
-        player: PlayerInformation,
+        reply: oneshot::Sender<String>,
     },
 }
 
@@ -93,19 +92,11 @@ impl Actor for GameServer {
                 }
             }
 
-            GameServerMessage::Create {
-                player_addr,
-                player,
-                deck,
-            } => {
+            GameServerMessage::Create { deck, reply } => {
                 let room_id = Room::gen_id();
-                let room = Room::new(
-                    &room_id,
-                    (player_addr, player),
-                    deck,
-                    self.room_repo.clone(),
-                );
-                self.rooms.insert(room_id, room.start());
+                let room = Room::new(&room_id, deck, self.room_repo.clone());
+                self.rooms.insert(room_id.clone(), room.start());
+                let _ = reply.send(room_id);
             }
         }
     }

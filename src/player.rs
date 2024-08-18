@@ -111,19 +111,6 @@ impl Player {
                 debug!("{}: Player disconnected friendly", self.id);
                 return false;
             }
-            RemoteMessage::CreateRoom { deck } => {
-                debug!("{}: Wants to create a room", self.id);
-                let player_addr = self.addr();
-                self.leave_old_room().await;
-                self.room_id = Some(TO_BE_CREATED.to_string()); // as marker
-                let information = self.get_player_information();
-                self.send_join_message(GameServerMessage::Create {
-                    player_addr,
-                    player: information,
-                    deck,
-                })
-                .await;
-            }
             RemoteMessage::JoinRoom { room } => {
                 debug!("{}: Wants to join {}", self.id, &room);
                 let player_addr = self.addr();

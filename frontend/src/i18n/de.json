@@ -1,0 +1,24 @@
+{
+  "language": "de",
+  "strings": {
+    "createRoom": "Erstelle Raum",
+    "deck": "Deck",
+    "customDeck": "Benutzerdefiniertes Deck",
+    "customDeckField": "Kartenwerte",
+    "customDeckPlaceholder": "Kommaseparierte Liste: 1,2,3,...",
+    "customDeckHelp": "Kommaseparierte Liste der Kartenwerte",
+    "observer": "Beobachter",
+    "playerNamePlaceholder": "Ohne Name",
+    "estimates": "Schätzungen",
+    "restart": "Neu starten",
+    "open": "Öffnen",
+    "copyRoomLink": "Kopiere Raum Link",
+    "changeName": "Ändere Name",
+    "chooseYourEstimate": "Wähle deine Schätzung",
+    "license": "Der Quellcode steht unter der <a href=\"https://opensource.org/licenses/mit-license.php\">MIT</a> Lizenz.",
+    "byAuthor": "<strong>Game Of Estimates</strong> von <a href=\"https://github.com/R1tschY\">Richard Liebscher</a>.",
+    "summary": "Plane deinen Sprint mit einem kleinen Spiel",
+    "description": "Game Of Estimates gibt dir die Möglichkeit dein <a href=\"https://de.wikipedia.org/wiki/Scrum#Planungspoker\">Planning Poker</a> (auch bekannt als Scrum Poker) online und kostenlos durchzuführen. Helfe mit diese Software besser zu machen. Sie ist <a href=\"https://github.com/R1tschY/game-of-estimates\">Open Source</a>!",
+    "noscript": "Bitte aktiviere JavaScript, um zu Spielen."
+  }
+}

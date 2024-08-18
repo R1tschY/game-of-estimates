@@ -1,6 +1,4 @@
 export interface TranslationFile {
-    plurals(n: number): number
-
     language: string
     strings: Strings
 }
@@ -11,7 +9,6 @@ export interface Strings {
 
 export interface Translator {
     getText(textId: string): string
-    getTextN(singularId: string, pluralId: string, n: number): string
 }
 
 export interface TranslationFiles {
@@ -57,19 +54,6 @@ export class DefaultTranslator implements Translator {
             return value
         } else {
             return textId
-        }
-    }
-
-    getTextN(singularId: string, pluralId: string, n: number) {
-        const values = this.currentLanguage.strings[singularId]
-        if (values !== undefined) {
-            if (!Array.isArray(values)) {
-                throw new Error('Expected plural text')
-            }
-            const plural = values[this.currentLanguage.plurals(n)]
-            return plural !== undefined ? plural : pluralId
-        } else {
-            return n === 1 ? singularId : pluralId
         }
     }
 

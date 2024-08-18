@@ -37,6 +37,7 @@ base64 = "0.21.7"
 anyhow = "1.0"
 time = "0.3.31"
 dotenvy = "0.15.7"
+handlebars = { version = "5.1.0", features = ["dir_source"] }
 
 [dependencies.sqlx]
 version = "0.7"

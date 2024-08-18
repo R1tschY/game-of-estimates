@@ -1,6 +1,5 @@
 import { derived, get, writable } from 'svelte/store'
 import type { Readable, Writable } from 'svelte/store'
-import { navigate } from 'svelte-routing'
 import { client, wsService } from './client'
 import type { GameState, PlayerState } from './client'
 import type { Option } from './basetypes'
@@ -201,14 +200,6 @@ export const players: Readable<Array<PlayerExtInfo>> =
 client.welcome.connect(() => {
     const state = get(ownPlayerState)
     client.updatePlayer(state.voter, state.name)
-})
-
-client.joined.connect((evt) => {
-    navigate('/room/' + evt.room)
-})
-
-client.rejected.connect(() => {
-    navigate('/')
 })
 
 // sveltex

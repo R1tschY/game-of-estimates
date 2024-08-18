@@ -112,23 +112,11 @@ async fn delayed_message<T: Debug>(addr: Addr<T>, msg: T, duration: Duration) {
 }
 
 impl Room {
-    pub fn new(
-        id: &str,
-        creator: (PlayerAddr, PlayerInformation),
-        deck: String,
-        repo: RoomRepositoryRef,
-    ) -> Self {
+    pub fn new(id: &str, deck: String, repo: RoomRepositoryRef) -> Self {
         info!("{}: Created room", id);
-
-        let player_id = creator.1.id.clone();
-        let game_player = GamePlayer::new(creator.0.clone(), creator.1);
-
-        let mut players = HashMap::new();
-        players.insert(player_id, game_player);
-
         Self {
             id: id.to_string(),
-            players,
+            players: HashMap::new(),
             open: false,
             deck,
             repo,
@@ -222,7 +210,7 @@ impl Room {
             &game_player,
             GamePlayerMessage::Welcome(self.id.clone(), ctx.addr(), self.to_state(), players_state),
         )
-            .await;
+        .await;
 
         // introduce
         self.send_to_players(GamePlayerMessage::PlayerJoined(game_player_state.clone()))
@@ -436,7 +424,7 @@ impl Actor for Room {
             game_state.clone(),
             players_state.clone(),
         ))
-            .await;
+        .await;
     }
 }
 
@@ -474,12 +462,7 @@ mod tests {
         pub fn new_room(creator: &str, voter: bool) -> Self {
             let (player_addr, rx, player_info) = Self::create_player(creator, voter);
             let repo: RoomRepositoryRef = Arc::new(FakeRoomRepository);
-            let room = Room::new(
-                "TEST-ROOM",
-                (player_addr.clone(), player_info),
-                "TEST-DECK".to_string(),
-                repo,
-            );
+            let room = Room::new("TEST-ROOM", "TEST-DECK".to_string(), repo);
             let room_addr = room.start();
             Self {
                 players: vec![rx],
