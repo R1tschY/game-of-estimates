@@ -3,12 +3,14 @@ use crate::web::handlebars::Template;
 use crate::web::headers::Language;
 use crate::web::i18n::AcceptLanguageHelper;
 use crate::web::i18n::I18nHelper;
+use crate::web::prometheus::Prometheus;
 use crate::web::see_other::SeeOther;
 use ::handlebars::Handlebars;
 use game_of_estimates::game_server::{GameServerAddr, GameServerMessage};
 use game_of_estimates::player::Player;
 use game_of_estimates::remote::RemoteConnection;
 use log::error;
+use prometheus_client::registry::Registry;
 use rocket::figment::providers::{Env, Format, Toml};
 use rocket::figment::Figment;
 use rocket::form::Form;
@@ -25,6 +27,7 @@ pub mod embed;
 pub mod handlebars;
 pub mod headers;
 pub mod i18n;
+pub mod prometheus;
 pub mod see_other;
 
 #[derive(Embed)]
@@ -140,6 +143,7 @@ pub async fn rocket(game_server: GameServerAddr) -> Rocket<Build> {
             hbs.register_helper("text", Box::new(i18n_helper.clone()));
             hbs
         }))
+        .attach(Prometheus::new(Registry::default()))
         .manage(trans_helper)
         .manage(game_server)
         .mount("/", routes![lobby, create_room, room, websocket])
