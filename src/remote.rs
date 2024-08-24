@@ -2,9 +2,10 @@ use std::convert::TryInto;
 
 use futures_util::{SinkExt, StreamExt};
 use quick_error::quick_error;
+use rocket_ws::stream::DuplexStream;
+use rocket_ws::Message;
 use serde::{Deserialize, Serialize};
 use tokio::time::{Duration, Instant};
-use warp::ws::Message;
 
 use crate::room::{GameState, PlayerState};
 
@@ -61,7 +62,7 @@ pub enum RemoteMessage {
 quick_error! {
     #[derive(Debug)]
     pub enum ConnError {
-        Ws(err: warp::Error) {
+        Ws(err: rocket_ws::result::Error) {
             display("Web socket error: {}", err)
             from()
         }
@@ -78,14 +79,14 @@ quick_error! {
 type ConnResult<T> = Result<T, ConnError>;
 
 pub struct RemoteConnection {
-    socket: warp::ws::WebSocket,
+    socket: DuplexStream,
 
     last_ping_start: Instant,
     last_ping_id: u16,
 }
 
 impl RemoteConnection {
-    pub fn new(socket: warp::ws::WebSocket) -> Self {
+    pub fn new(socket: DuplexStream) -> Self {
         let now = Instant::now();
         Self {
             socket,
@@ -108,7 +109,7 @@ impl RemoteConnection {
         self.last_ping_start = now;
 
         self.socket
-            .send(Message::ping(self.last_ping_id.to_le_bytes().to_vec()))
+            .send(Message::Ping(self.last_ping_id.to_le_bytes().to_vec()))
             .await
             .map_err(|err| err.into())
     }
@@ -116,19 +117,18 @@ impl RemoteConnection {
     pub async fn recv(&mut self) -> ConnResult<RemoteMessage> {
         while let Some(msg) = self.socket.next().await {
             match msg? {
-                msg if msg.is_text() => return Ok(serde_json::from_str(msg.to_str().unwrap())?),
-                msg if msg.is_close() => return Ok(RemoteMessage::Close),
-                msg if msg.is_pong() => {
-                    if msg.into_bytes().try_into().map(u16::from_le_bytes) == Ok(self.last_ping_id)
-                    {
+                Message::Text(msg) => return Ok(serde_json::from_str(&msg)?),
+                Message::Close(_) => return Ok(RemoteMessage::Close),
+                Message::Pong(pong) => {
+                    if pong.try_into().map(u16::from_le_bytes) == Ok(self.last_ping_id) {
                         let duration = Instant::now().checked_duration_since(self.last_ping_start);
                         if let Some(duration) = duration {
                             return Ok(RemoteMessage::Ping(duration));
                         }
                     }
                 }
-                msg if msg.is_ping() => {
-                    let _ = self.socket.send(Message::pong(msg.into_bytes())).await;
+                Message::Ping(ping) => {
+                    let _ = self.socket.send(Message::Pong(ping)).await;
                 }
                 msg => return Err(ConnError::UnsupportedMessageFormat(msg)),
             }

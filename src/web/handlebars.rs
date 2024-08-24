@@ -1,0 +1,60 @@
+use handlebars::{Handlebars, JsonValue, TemplateError};
+use rocket::http::{ContentType, Status};
+use rocket::response::Responder;
+use rocket::{error_, info_, response, Request};
+use serde::Serialize;
+use std::borrow::Cow;
+
+pub struct Context {
+    hbs: Handlebars<'static>,
+}
+
+impl Context {
+    pub fn new() -> Self {
+        Self {
+            hbs: Handlebars::new(),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct Template {
+    content_type: ContentType,
+    name: Cow<'static, str>,
+    value: JsonValue,
+}
+
+impl Template {
+    pub fn state(hbs: Handlebars<'static>) -> Context {
+        Context { hbs }
+    }
+
+    pub fn html(name: impl Into<Cow<'static, str>>, value: JsonValue) -> Self {
+        Self {
+            name: name.into(),
+            value,
+            content_type: ContentType::HTML,
+        }
+    }
+
+    pub fn render(self, ctx: &Context) -> Result<(ContentType, String), Status> {
+        ctx.hbs
+            .render_with_context(self.name.as_ref(), &handlebars::Context::from(self.value))
+            .map_err(|e| {
+                error_!("Template '{}' failed to render", self.name);
+                Status::InternalServerError
+            })
+            .map(|out| (self.content_type, out))
+    }
+}
+
+impl<'r> Responder<'r, 'static> for Template {
+    fn respond_to(self, req: &'r Request<'_>) -> response::Result<'static> {
+        let ctxt = req.rocket().state::<Context>().ok_or_else(|| {
+            error_!("Missing template context");
+            Status::InternalServerError
+        })?;
+
+        self.render(&ctxt)?.respond_to(req)
+    }
+}

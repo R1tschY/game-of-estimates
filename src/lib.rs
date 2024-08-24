@@ -41,7 +41,6 @@ macro_rules! assert_no_message {
     };
 }
 
-pub mod assets;
 pub mod game_server;
 pub mod player;
 pub mod room;
