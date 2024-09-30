@@ -459,13 +459,12 @@ mod tests {
     }
 
     impl RoomTester {
-        pub fn new_room(creator: &str, voter: bool) -> Self {
-            let (player_addr, rx, player_info) = Self::create_player(creator, voter);
+        pub fn new_room() -> Self {
             let repo: RoomRepositoryRef = Arc::new(FakeRoomRepository);
             let room = Room::new("TEST-ROOM", "TEST-DECK".to_string(), repo);
             let room_addr = room.start();
             Self {
-                players: vec![rx],
+                players: vec![],
                 room_addr,
             }
         }
@@ -520,7 +519,8 @@ mod tests {
 
     #[tokio::test]
     async fn check_open_when_all_voted() {
-        let mut tester = RoomTester::new_room("1", true);
+        let mut tester = RoomTester::new_room();
+        tester.join_player("1", true).await;
         tester.join_player("2", true).await;
 
         // ACT
@@ -534,7 +534,8 @@ mod tests {
 
     #[tokio::test]
     async fn check_open_with_non_voter() {
-        let mut tester = RoomTester::new_room("1", true);
+        let mut tester = RoomTester::new_room();
+        tester.join_player("1", true).await;
         tester.join_player("2", true).await;
         tester.join_player("3", false).await;
 
@@ -549,7 +550,8 @@ mod tests {
 
     #[tokio::test]
     async fn check_open_after_player_became_non_voter() {
-        let mut tester = RoomTester::new_room("1", true);
+        let mut tester = RoomTester::new_room();
+        tester.join_player("1", true).await;
         tester.join_player("2", true).await;
         tester.join_player("3", true).await;
 
@@ -571,7 +573,8 @@ mod tests {
 
     #[tokio::test]
     async fn check_open_after_player_left() {
-        let mut tester = RoomTester::new_room("1", true);
+        let mut tester = RoomTester::new_room();
+        tester.join_player("1", true).await;
         tester.join_player("2", true).await;
         tester.join_player("3", true).await;
 
@@ -587,7 +590,8 @@ mod tests {
 
     #[tokio::test]
     async fn check_no_voting_when_closed() {
-        let mut tester = RoomTester::new_room("r1", true);
+        let mut tester = RoomTester::new_room();
+        tester.join_player("r1", true).await;
         tester.join_player("p1", true).await;
 
         // ACT
