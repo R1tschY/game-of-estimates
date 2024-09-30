@@ -83,6 +83,7 @@ jobs:
 
       - name: Setup Rust toolchain
         run: |
+          sudo apt-get install musl-tools
           rustup toolchain install stable --profile minimal --no-self-update -t $CARGO_BUILD_TARGET
           rustup default stable
         shell: bash
