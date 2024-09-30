@@ -21,6 +21,7 @@ jobs:
 
       - name: Setup Rust toolchain
         run: |
+          apt install musl-tools
           rustup toolchain install stable --profile minimal --no-self-update -c clippy -c rustfmt -t $CARGO_BUILD_TARGET
           rustup default stable
         shell: bash
