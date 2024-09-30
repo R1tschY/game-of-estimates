@@ -25,7 +25,7 @@ const SUPPORTED: &[Coding] = &[
     Coding::Deflate,
 ];
 
-fn compress(request: &Request<'_>, response: &mut Response) {
+fn compress(lvl: Level, request: &Request<'_>, response: &mut Response) {
     if response.headers().get_one("Content-Encoding").is_some() {
         return;
     }
@@ -33,7 +33,7 @@ fn compress(request: &Request<'_>, response: &mut Response) {
     let ae = request
         .headers()
         .typed_get::<AcceptEncoding>()
-        .unwrap_or_else(|| AcceptEncoding::default());
+        .unwrap_or_else(AcceptEncoding::default);
     match ae.match_one_of(SUPPORTED) {
         Some(coding) => {
             let mut response = Response::new();
@@ -41,17 +41,15 @@ fn compress(request: &Request<'_>, response: &mut Response) {
             match coding {
                 #[cfg(feature = "compress-gzip")]
                 Coding::Gzip => {
-                    let body = GzipEncoder::with_quality(
-                        BufReader::new(response.body_mut().take()),
-                        Level::Default,
-                    );
+                    let body =
+                        GzipEncoder::with_quality(BufReader::new(response.body_mut().take()), lvl);
                     response.set_streamed_body(body)
                 }
                 #[cfg(feature = "compress-deflate")]
                 Coding::Deflate => {
                     let body = DeflateEncoder::with_quality(
                         BufReader::new(response.body_mut().take()),
-                        Level::Default,
+                        lvl,
                     );
                     response.set_streamed_body(body)
                 }
@@ -59,20 +57,17 @@ fn compress(request: &Request<'_>, response: &mut Response) {
                 Coding::Brotli => {
                     let body = BrotliEncoder::with_quality(
                         BufReader::new(response.body_mut().take()),
-                        Level::Default,
+                        lvl,
                     );
                     response.set_streamed_body(body)
                 }
                 #[cfg(feature = "compress-zstd")]
                 Coding::Zstandard => {
-                    let body = ZstdEncoder::with_quality(
-                        BufReader::new(response.body_mut().take()),
-                        Level::Default,
-                    );
+                    let body =
+                        ZstdEncoder::with_quality(BufReader::new(response.body_mut().take()), lvl);
                     response.set_streamed_body(body)
                 }
                 Coding::Identity => return,
-                _ => unreachable!(),
             };
 
             response.set_header(rocket::http::Header::new(
@@ -96,12 +91,15 @@ fn compress(request: &Request<'_>, response: &mut Response) {
     }
 }
 
-pub struct Compressed<T>(T);
+pub struct Compressed<T> {
+    level: Level,
+    inner: T,
+}
 
 impl<'r, 'o: 'r, T: Responder<'r, 'o>> Responder<'r, 'o> for Compressed<T> {
     fn respond_to(self, request: &'r Request<'_>) -> response::Result<'o> {
-        let mut response = self.0.respond_to(request)?;
-        compress(request, &mut response);
+        let mut response = self.inner.respond_to(request)?;
+        compress(self.level, request, &mut response);
         Ok(response)
     }
 }
@@ -189,7 +187,7 @@ impl<P: CompressionPredicate + Sync + Send + 'static> Fairing for Compression<P>
 
     async fn on_response<'r>(&self, req: &'r Request<'_>, res: &mut Response<'r>) {
         if self.pred.should_compress(res) {
-            compress(req, res)
+            compress(self.level, req, res)
         }
     }
 }

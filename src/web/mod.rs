@@ -16,7 +16,6 @@ use prometheus_client::registry::Registry;
 use rocket::figment::providers::{Env, Format, Toml};
 use rocket::figment::Figment;
 use rocket::form::Form;
-use rocket::fs::FileServer;
 use rocket::http::Status;
 use rocket::{routes, Build, FromForm, Rocket, State};
 use rocket_ws::WebSocket;
@@ -76,7 +75,7 @@ async fn create_room(
         .inner()
         .send(GameServerMessage::Create { deck, reply: tx })
         .await;
-    if let Err(_) = res {
+    if res.is_err() {
         error!("Failed to create room: game service is offline");
         return Err(Status::ServiceUnavailable);
     }
@@ -110,9 +109,10 @@ async fn websocket(
     let game_server = game_server.inner().clone();
     ws.channel(move |ws| {
         Box::pin(async move {
-            Ok(Player::new(RemoteConnection::new(ws), game_server)
+            Player::new(RemoteConnection::new(ws), game_server)
                 .run()
-                .await)
+                .await;
+            Ok(())
         })
     })
 }

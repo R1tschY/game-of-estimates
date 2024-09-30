@@ -37,7 +37,7 @@ pub trait ActorContext<A: Actor>: std::marker::Sync + std::marker::Send + 'stati
 
     fn addr(&self) -> Addr<A::Message>;
 
-    fn spawn<F: Future>(f: F) -> <Self::System as AsyncSystem>::JoinHandle<F::Output>
+    fn spawn<F>(f: F) -> <Self::System as AsyncSystem>::JoinHandle<F::Output>
     where
         F: Future + Send + 'static,
         F::Output: Send + 'static;
@@ -89,7 +89,7 @@ where
         self.tx.clone()
     }
 
-    fn spawn<F: Future>(f: F) -> S::JoinHandle<F::Output>
+    fn spawn<F>(f: F) -> S::JoinHandle<F::Output>
     where
         F: Future + Send + 'static,
         F::Output: Send + 'static,
@@ -100,7 +100,7 @@ where
     fn run(actor: A) -> Addr<A::Message> {
         let (tx, rx) = mpsc::unbounded_channel();
         let ctx = Self::new(tx.clone(), rx);
-        let _ = S::spawn(ctx.into_future(actor));
+        drop(S::spawn(ctx.into_future(actor)));
         tx
     }
 }

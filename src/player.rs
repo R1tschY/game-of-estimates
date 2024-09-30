@@ -140,7 +140,7 @@ impl Player {
                     self.id, &voter, &name
                 );
                 self.voter = voter;
-                self.name = name.clone();
+                self.name.clone_from(&name);
 
                 if self.room.is_some() {
                     self.send_to_room(RoomMessage::UpdatePlayer {

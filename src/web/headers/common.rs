@@ -16,6 +16,7 @@ impl<T> Weighted<T> {
         &self.value
     }
 
+    #[allow(unused)]
     pub fn into_value(self) -> T {
         self.value
     }
@@ -141,6 +142,7 @@ pub(crate) fn tchar_pred(c: u8) -> bool {
     TCHAR.get(c as usize).copied() == Some(true)
 }
 
+#[allow(unused)]
 pub(crate) fn tchar(s: &[u8]) -> Option<(&[u8], ())> {
     match s.split_first() {
         Some((c, s)) if tchar_pred(*c) => Some((s, ())),
@@ -179,7 +181,7 @@ impl TryFrom<f32> for QValue {
     type Error = ();
 
     fn try_from(value: f32) -> Result<Self, Self::Error> {
-        if value < 0.0 || value > 1.0 {
+        if !(0.0..=1.0).contains(&value) {
             Err(())
         } else {
             Ok(Self((value * 1000.0).round() as u16))

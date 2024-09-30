@@ -9,6 +9,7 @@ use std::str::FromStr;
 pub struct Language(&'static str);
 
 impl Language {
+    #[allow(unused)]
     pub fn as_str(&self) -> &'static str {
         self.0
     }
@@ -71,7 +72,7 @@ impl FromStr for AcceptLanguage {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut langs = s
-            .split(",")
+            .split(',')
             .map(|elem| {
                 let x = elem.trim_matches(|c: char| matches!(c, ' ' | '\x09'));
                 Ok(match x.split_once(';') {

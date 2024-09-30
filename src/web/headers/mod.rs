@@ -1,5 +1,3 @@
-use std::borrow::Cow;
-
 mod parse;
 
 mod accept_encoding;
@@ -28,10 +26,6 @@ pub trait Header<'h> {
     where
         Self: Sized,
         I: Iterator<Item = &'h str>;
-
-    fn encode<E>(&self, values: &mut E)
-    where
-        E: Extend<Cow<'h, str>>;
 }
 
 /// An extension trait adding typed header methods to `rocket::http::HeaderMap`

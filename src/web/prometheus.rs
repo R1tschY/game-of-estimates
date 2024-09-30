@@ -1,11 +1,11 @@
 use prometheus_client::encoding::text::encode;
-use prometheus_client::encoding::{EncodeLabelSet, EncodeLabelValue};
+use prometheus_client::encoding::EncodeLabelSet;
 use prometheus_client::metrics::counter::Counter;
 use prometheus_client::metrics::family::Family;
 use prometheus_client::metrics::histogram::Histogram;
 use prometheus_client::registry::Registry;
 use rocket::fairing::{Fairing, Info, Kind};
-use rocket::http::{ContentType, Method, Status};
+use rocket::http::{Method, Status};
 use rocket::route::{Handler, Outcome};
 use rocket::{Build, Data, Request, Response, Rocket, Route};
 use std::io::Cursor;
@@ -61,18 +61,6 @@ impl Prometheus {
             http_requests_total,
             http_requests_duration_seconds,
         }
-    }
-
-    pub fn registry(&self) -> &Registry {
-        &self.registry
-    }
-
-    pub fn http_requests_total(&self) -> &Family<Labels, Counter> {
-        &self.http_requests_total
-    }
-
-    pub fn http_requests_duration_seconds(&self) -> &Family<Labels, Histogram> {
-        &self.http_requests_duration_seconds
     }
 }
 

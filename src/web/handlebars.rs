@@ -1,20 +1,11 @@
-use handlebars::{Handlebars, JsonValue, TemplateError};
+use handlebars::{Handlebars, JsonValue};
 use rocket::http::{ContentType, Status};
 use rocket::response::Responder;
-use rocket::{error_, info_, response, Request};
-use serde::Serialize;
+use rocket::{error_, response, Request};
 use std::borrow::Cow;
 
 pub struct Context {
     hbs: Handlebars<'static>,
-}
-
-impl Context {
-    pub fn new() -> Self {
-        Self {
-            hbs: Handlebars::new(),
-        }
-    }
 }
 
 #[derive(Debug)]
@@ -40,7 +31,7 @@ impl Template {
     pub fn render(self, ctx: &Context) -> Result<(ContentType, String), Status> {
         ctx.hbs
             .render_with_context(self.name.as_ref(), &handlebars::Context::from(self.value))
-            .map_err(|e| {
+            .map_err(|_| {
                 error_!("Template '{}' failed to render", self.name);
                 Status::InternalServerError
             })
@@ -55,6 +46,6 @@ impl<'r> Responder<'r, 'static> for Template {
             Status::InternalServerError
         })?;
 
-        self.render(&ctxt)?.respond_to(req)
+        self.render(ctxt)?.respond_to(req)
     }
 }

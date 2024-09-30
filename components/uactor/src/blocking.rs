@@ -2,7 +2,6 @@
 
 use std::future::Future;
 use std::marker::PhantomData;
-
 use tokio::sync::mpsc;
 
 use crate::core::AsyncSystem;
@@ -41,7 +40,7 @@ pub trait ActorContext<A: Actor>: std::marker::Sync + std::marker::Send + 'stati
     fn force_quit(&mut self);
 
     /// Spawn coroutine
-    fn spawn<F: Future>(f: F) -> <Self::System as AsyncSystem>::JoinHandle<F::Output>
+    fn spawn<F>(f: F) -> <Self::System as AsyncSystem>::JoinHandle<F::Output>
     where
         F: Future + Send + 'static,
         F::Output: Send + 'static;
@@ -100,7 +99,7 @@ where
         self.rx = None;
     }
 
-    fn spawn<F: Future>(f: F) -> S::JoinHandle<F::Output>
+    fn spawn<F>(f: F) -> S::JoinHandle<F::Output>
     where
         F: Future + Send + 'static,
         F::Output: Send + 'static,
@@ -111,7 +110,7 @@ where
     fn run(actor: A) -> Addr<A::Message> {
         let (tx, rx) = mpsc::channel(64); // TODO: config to change size
         let ctx = Self::new(tx.clone(), rx);
-        let _ = S::spawn(ctx.into_future(actor));
+        drop(S::spawn(ctx.into_future(actor)));
         tx
     }
 }

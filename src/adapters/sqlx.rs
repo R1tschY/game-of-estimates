@@ -99,7 +99,7 @@ impl SqlxRoomRepository {
 fn decode_room_id(id: &str) -> Uuid {
     let mut buf: [u8; 18] = [0; 18];
     match URL_SAFE_NO_PAD.decode_slice(id, &mut buf) {
-        Ok(size) if size == 16 => Uuid::from_slice(&buf[..16]).unwrap(),
+        Ok(16) => Uuid::from_slice(&buf[..16]).unwrap(),
         Ok(size) => panic!("Room ID '{id}' is not a Base64 decoded UUID: wrong size {size}"),
         Err(err) => panic!("Room ID '{id}' is not a Base64 decoded UUID: {err}"),
     }

@@ -1,7 +1,6 @@
 use crate::web::headers::single;
 use crate::web::headers::{Header, InvalidHeaderValue};
 use std::borrow::Cow;
-use std::iter;
 
 pub struct ETag<'h>(EntityTag<'h>);
 
@@ -13,6 +12,7 @@ impl<'h> ETag<'h> {
         })
     }
 
+    #[allow(unused)]
     pub fn new_weak(etag: impl Into<Cow<'h, str>>) -> Self {
         ETag(EntityTag {
             weak: true,
@@ -32,13 +32,6 @@ impl<'h> Header<'h> for ETag<'h> {
         I: Iterator<Item = &'h str>,
     {
         single(values).and_then(EntityTag::parse).map(ETag)
-    }
-
-    fn encode<E>(&self, values: &mut E)
-    where
-        E: Extend<Cow<'h, str>>,
-    {
-        values.extend(iter::once(self.0.write().into()))
     }
 }
 
@@ -62,18 +55,11 @@ impl<'h> Header<'h> for IfNoneMatch<'h> {
         I: Iterator<Item = &'h str>,
     {
         values
-            .flat_map(|v| v.split(","))
+            .flat_map(|v| v.split(','))
             .map(|v| v.trim_matches(|c| c == ' ' || c == '\t'))
-            .map(|v| EntityPattern::parse(v))
+            .map(EntityPattern::parse)
             .collect::<Result<Vec<EntityPattern>, InvalidHeaderValue>>()
             .map(IfNoneMatch)
-    }
-
-    fn encode<E>(&self, values: &mut E)
-    where
-        E: Extend<Cow<'h, str>>,
-    {
-        values.extend(self.0.iter().map(|e| e.write()))
     }
 }
 
@@ -84,11 +70,11 @@ struct EntityTag<'h> {
 
 impl<'h> EntityTag<'h> {
     pub fn parse(input: &'h str) -> Result<Self, InvalidHeaderValue> {
-        if input.len() < 2 || !input.ends_with("\"") {
+        if input.len() < 2 || !input.ends_with('"') {
             return Err(InvalidHeaderValue);
         }
 
-        if input.starts_with("\"") {
+        if input.starts_with('"') {
             Ok(EntityTag {
                 weak: false,
                 entity_tag: Cow::from(&input[1..input.len() - 1]),
@@ -103,6 +89,7 @@ impl<'h> EntityTag<'h> {
         }
     }
 
+    #[allow(unused)]
     pub fn write(&self) -> String {
         if self.weak {
             format!("W/\"{}\"", self.entity_tag)
@@ -115,6 +102,7 @@ impl<'h> EntityTag<'h> {
         self.entity_tag == etag.entity_tag
     }
 
+    #[allow(unused)]
     pub fn matches_strong(&self, etag: &EntityTag<'_>) -> bool {
         !self.weak && !etag.weak && self.entity_tag == etag.entity_tag
     }
@@ -134,6 +122,7 @@ impl<'h> EntityPattern<'h> {
         }
     }
 
+    #[allow(unused)]
     pub fn write(&self) -> Cow<'static, str> {
         match self {
             EntityPattern::Any => "*".into(),
@@ -148,6 +137,7 @@ impl<'h> EntityPattern<'h> {
         }
     }
 
+    #[allow(unused)]
     pub fn matches_strong(&self, etag: &ETag<'_>) -> bool {
         match self {
             EntityPattern::Any => true,

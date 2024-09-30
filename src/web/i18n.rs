@@ -10,15 +10,18 @@ use std::sync::Arc;
 
 #[derive(Deserialize, Clone)]
 pub struct Translation {
+    #[allow(unused)]
     language: String,
     strings: HashMap<String, String>,
 }
 
 impl Translation {
+    #[allow(unused)]
     pub fn new(language: String, strings: HashMap<String, String>) -> Self {
         Self { language, strings }
     }
 
+    #[allow(unused)]
     pub fn language(&self) -> &str {
         &self.language
     }

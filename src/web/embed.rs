@@ -31,9 +31,9 @@ fn gen_etag(asset: &EmbeddedFile) -> ETag<'static> {
     ETag::new_strong(URL_SAFE_NO_PAD.encode(asset.metadata.sha256_hash()))
 }
 
-fn response_builder<'a>(asset: &'a EmbeddedFile) -> Builder<'static> {
+fn response_builder(asset: &EmbeddedFile) -> Builder<'static> {
     let mut res = Response::build();
-    res.raw_header("ETag", gen_etag_header(&asset));
+    res.raw_header("ETag", gen_etag_header(asset));
     // TODO: make configurable: add immutable
     res.raw_header("Cache-Control", "public, max-age=604800");
     res.raw_header("Content-Type", asset.metadata.mimetype().to_string());
@@ -67,6 +67,12 @@ impl<T: Embed> AssetCatalog<T> {
             ignored: PhantomData,
             rank: Self::DEFAULT_RANK,
         }
+    }
+}
+
+impl<T: Embed> Default for AssetCatalog<T> {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

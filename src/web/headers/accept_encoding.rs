@@ -3,9 +3,7 @@ use crate::web::headers::{Header, InvalidHeaderValue};
 use rocket::http::Status;
 use rocket::request::{FromRequest, Outcome};
 use rocket::Request;
-use serde::Serializer;
-use std::borrow::Cow;
-use std::fmt::{Display, Formatter, Write};
+use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
 #[derive(PartialEq, Debug, Copy, Clone)]
@@ -106,13 +104,11 @@ impl CodingDirective {
     fn parse(input: &[u8]) -> Option<(&[u8], Self)> {
         if let Some((s, _)) = c(input, b'*') {
             Some((s, CodingDirective::Asterisk))
+        } else if let Some((s, r)) = Coding::parse(input) {
+            Some((s, CodingDirective::Coding(r)))
         } else {
-            if let Some((s, r)) = Coding::parse(input) {
-                Some((s, CodingDirective::Coding(r)))
-            } else {
-                let (s, _) = token(input)?;
-                Some((s, CodingDirective::Unknown))
-            }
+            let (s, _) = token(input)?;
+            Some((s, CodingDirective::Unknown))
         }
     }
 }
@@ -128,7 +124,7 @@ impl FromStr for CodingDirective {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match Self::parse(s.as_bytes()) {
-            Some((rest, res)) if rest.is_empty() => Ok(res),
+            Some(([], res)) => Ok(res),
             _ => Err(()),
         }
     }
@@ -189,28 +185,6 @@ fn qagg(a: Option<QValue>, b: QValue) -> QValue {
 }
 
 impl AcceptEncoding {
-    pub(crate) fn new(
-        identity: Option<QValue>,
-        #[cfg(feature = "compress-gzip")] gzip: Option<QValue>,
-        #[cfg(feature = "compress-deflate")] deflate: Option<QValue>,
-        #[cfg(feature = "compress-zstd")] zstd: Option<QValue>,
-        #[cfg(feature = "compress-brotli")] brotli: Option<QValue>,
-        asterisk: Option<QValue>,
-    ) -> Self {
-        Self {
-            identity,
-            #[cfg(feature = "compress-gzip")]
-            gzip,
-            #[cfg(feature = "compress-deflate")]
-            deflate,
-            #[cfg(feature = "compress-zstd")]
-            zstd,
-            #[cfg(feature = "compress-brotli")]
-            brotli,
-            asterisk,
-        }
-    }
-
     pub(crate) fn empty() -> Self {
         Self {
             identity: None,
@@ -281,7 +255,6 @@ impl AcceptEncoding {
                     return identity;
                 }
             }
-            _ => return QValue::unacceptable(),
         }
 
         self.asterisk.unwrap_or(QValue::unacceptable())
@@ -290,12 +263,10 @@ impl AcceptEncoding {
     fn is_identity_acceptable(&self) -> bool {
         if let Some(q) = self.identity {
             q.is_acceptable()
+        } else if let Some(q) = self.asterisk {
+            q.is_acceptable()
         } else {
-            if let Some(q) = self.asterisk {
-                q.is_acceptable()
-            } else {
-                true
-            }
+            true
         }
     }
 
@@ -340,7 +311,6 @@ impl AcceptEncoding {
                 Coding::Identity => {
                     self.identity = Some(qagg(self.identity, value.weight()));
                 }
-                _ => {}
             },
             CodingDirective::Asterisk => {
                 self.asterisk = Some(qagg(self.asterisk, value.weight()));
@@ -406,13 +376,6 @@ impl<'h> Header<'h> for AcceptEncoding {
             Some(x) => x.parse().map_err(|_| InvalidHeaderValue),
             None => Ok(AcceptEncoding::default()),
         }
-    }
-
-    fn encode<E>(&self, values: &mut E)
-    where
-        E: Extend<Cow<'h, str>>,
-    {
-        todo!()
     }
 }
 
