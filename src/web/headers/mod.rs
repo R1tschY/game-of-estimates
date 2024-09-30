@@ -2,9 +2,12 @@ use std::borrow::Cow;
 
 mod parse;
 
+mod accept_encoding;
 mod accept_language;
+mod common;
 mod etag;
 
+pub use accept_encoding::{AcceptEncoding, Coding};
 pub use accept_language::{AcceptLanguage, Language};
 pub use etag::{ETag, IfNoneMatch};
 

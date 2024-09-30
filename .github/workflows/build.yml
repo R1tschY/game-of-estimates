@@ -1,6 +1,6 @@
 name: Build + Test
 
-on: [push]
+on: [ push ]
 
 permissions:
   contents: write
@@ -41,7 +41,7 @@ jobs:
         run: cargo clippy -- -D warnings
 
       - name: Test
-        run: cargo test --release
+        run: cargo test --all-features
 
   frontend-check:
     runs-on: ubuntu-latest

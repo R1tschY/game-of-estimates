@@ -11,7 +11,12 @@ categories = ["games"]
 publish = false
 
 [features]
+default = ["compress-gzip", "compress-zstd"]
 tls = []
+compress-deflate = ["async-compression/deflate"]
+compress-gzip = ["async-compression/gzip"]
+compress-brotli = ["async-compression/brotli"]
+compress-zstd = ["async-compression/zstd"]
 
 [dependencies]
 tokio = { version = "^1.28", features = ["macros", "sync", "net", "rt-multi-thread", "time", "signal"] }
@@ -40,6 +45,7 @@ rocket = "0.5.1"
 rocket_ws = "0.1.1"
 rust-embed = { version = "8.5.0", features = ["mime-guess"] }
 prometheus-client = "0.22.3"
+async-compression = { version = "0.4.12", optional = true, features = ["tokio"] }
 
 [dependencies.sqlx]
 version = "0.7"

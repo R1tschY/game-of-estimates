@@ -1,3 +1,4 @@
+use crate::web::compress::{Compression, DefaultPredicate};
 use crate::web::embed::AssetCatalog;
 use crate::web::handlebars::Template;
 use crate::web::headers::Language;
@@ -6,6 +7,7 @@ use crate::web::i18n::I18nHelper;
 use crate::web::prometheus::Prometheus;
 use crate::web::see_other::SeeOther;
 use ::handlebars::Handlebars;
+use async_compression::Level;
 use game_of_estimates::game_server::{GameServerAddr, GameServerMessage};
 use game_of_estimates::player::Player;
 use game_of_estimates::remote::RemoteConnection;
@@ -23,6 +25,7 @@ use serde_json::json;
 use std::collections::HashMap;
 use std::path::Path;
 
+pub mod compress;
 pub mod embed;
 pub mod handlebars;
 pub mod headers;
@@ -144,6 +147,10 @@ pub async fn rocket(game_server: GameServerAddr) -> Rocket<Build> {
             hbs
         }))
         .attach(Prometheus::new(Registry::default()))
+        .attach(Compression::new(
+            Level::Default,
+            DefaultPredicate::default(),
+        ))
         .manage(trans_helper)
         .manage(game_server)
         .mount("/", routes![lobby, create_room, room, websocket])
