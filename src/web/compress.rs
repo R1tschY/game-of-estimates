@@ -36,8 +36,6 @@ fn compress(lvl: Level, request: &Request<'_>, response: &mut Response) {
         .unwrap_or_else(AcceptEncoding::default);
     match ae.match_one_of(SUPPORTED) {
         Some(coding) => {
-            let mut response = Response::new();
-
             match coding {
                 #[cfg(feature = "compress-gzip")]
                 Coding::Gzip => {
