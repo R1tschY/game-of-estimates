@@ -2,51 +2,51 @@
 
 @forward 'styles/cards'
 @forward 'styles/bulma'
-@use "bulma/sass/utilities/_all.sass" as bulma-utils
+@use "bulma/sass/utilities" as bulma-utils
 
 .footer-icon > svg
-    width: 32px
-    height: 32px
+  width: 32px
+  height: 32px
 
 .footer-icon > svg:hover
-    fill: gray
+  fill: gray
 
 .modal-content
-    background-color: white
-    padding: 2rem
-    border-radius: 6px
+  background-color: white
+  padding: 2rem
+  border-radius: 6px
 
 .create-room-form
-    border: solid 1px bulma-utils.$border
-    border-radius: bulma-utils.$radius-large
-    padding: bulma-utils.$block-spacing
+  border: solid 1px bulma-utils.$border
+  border-radius: bulma-utils.$radius-large
+  padding: bulma-utils.$block-spacing
 
 .player-section
-    border: solid 1px bulma-utils.$border
-    border-radius: bulma-utils.$radius-large
-    padding: bulma-utils.$block-spacing
+  border: solid 1px bulma-utils.$border
+  border-radius: bulma-utils.$radius-large
+  padding: bulma-utils.$block-spacing
 
 .estimates-section
-    border: solid 1px bulma-utils.$border
-    border-radius: bulma-utils.$radius-large
-    padding: bulma-utils.$block-spacing
+  border: solid 1px bulma-utils.$border
+  border-radius: bulma-utils.$radius-large
+  padding: bulma-utils.$block-spacing
 
 .player-name-control
-    padding: 2px
+  padding: 2px
 
-    .input
-        border-color: transparent
-        box-shadow: none
-        font-size: 1.5rem
+  .input
+    border-color: transparent
+    box-shadow: none
+    font-size: 1.5rem
 
-    &:has(.input:focus) .input, &:hover .input
-        border: solid 1px bulma-utils.$border
-        box-shadow: inset 0 0.0625em 0.125em rgba(10, 10, 10, 0.05)
+  &:has(.input:focus) .input, &:hover .input
+    border: solid 1px bulma-utils.$border
+    box-shadow: inset 0 0.0625em 0.125em rgba(10, 10, 10, 0.05)
 
-    .button
-        display: none
+  .button
+    display: none
 
-    &:has(.input:focus) .button, &:hover .button
-        display: inherit
+  &:has(.input:focus) .button, &:hover .button
+    display: inherit
 
 
