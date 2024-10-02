@@ -89,12 +89,13 @@ async fn create_room(
     }
 }
 
-#[rocket::get("/room")]
-fn room(lang: Language) -> Template {
+#[rocket::get("/room/<id>")]
+fn room(lang: Language, id: &str) -> Template {
     Template::html(
         "room.html",
         json!({
             "lang": lang,
+            "roomId": id,
             "js": "/assets/room.js",
             "css": "/assets/style.css",
         }),
