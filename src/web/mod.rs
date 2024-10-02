@@ -140,6 +140,8 @@ pub async fn rocket(game_server: GameServerAddr) -> Rocket<Build> {
     rocket::custom(figment)
         .manage(Template::state({
             let mut hbs = Handlebars::new();
+            #[cfg(debug_assertions)]
+            hbs.set_dev_mode(true);
             let templates_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/templates");
             hbs.register_templates_directory(templates_dir, Default::default())
                 .expect("templates should be valid");
