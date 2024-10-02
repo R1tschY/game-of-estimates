@@ -35,6 +35,7 @@ fn response_builder(asset: &EmbeddedFile) -> Builder<'static> {
     let mut res = Response::build();
     res.raw_header("ETag", gen_etag_header(asset));
     // TODO: make configurable: add immutable
+    #[cfg(not(debug_assertions))]
     res.raw_header("Cache-Control", "public, max-age=604800");
     res.raw_header("Content-Type", asset.metadata.mimetype().to_string());
     res
