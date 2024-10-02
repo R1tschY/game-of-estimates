@@ -10,7 +10,11 @@
 @forward "bulma/sass/elements/title";
 @forward "bulma/sass/elements/notification";
 @forward "bulma/sass/elements/content";
+@forward "bulma/sass/elements/box";
 @forward "bulma/sass/helpers/typography";
+@forward "bulma/sass/helpers/flexbox";
+@forward "bulma/sass/helpers/visibility";
+@forward "bulma/sass/helpers/spacing";
 @forward "bulma/sass/layout/section" with (
   $section-padding: 1rem 0.5rem,
   $section-padding-desktop: 1rem 1rem,

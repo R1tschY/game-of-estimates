@@ -4,6 +4,12 @@
 @forward 'styles/bulma'
 @use "bulma/sass/utilities" as bulma-utils
 
+body
+  min-height: 100vh
+  display: flex
+  flex-direction: column
+  justify-content: space-between
+
 .footer-icon > svg
   width: 32px
   height: 32px
@@ -15,11 +21,6 @@
   background-color: white
   padding: 2rem
   border-radius: 6px
-
-.create-room-form
-  border: solid 1px bulma-utils.$border
-  border-radius: bulma-utils.$radius-large
-  padding: bulma-utils.$block-spacing
 
 .player-section
   border: solid 1px bulma-utils.$border

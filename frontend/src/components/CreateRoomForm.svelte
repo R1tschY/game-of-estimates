@@ -21,7 +21,6 @@
 
     function createRoom() {
         action = 'create'
-        //client.createRoom(deckId === 'custom' ? 'custom:' + customDeck : deckId)
     }
 </script>
 
@@ -56,15 +55,13 @@
 
 <div class="field">
     <div class="control">
-        <div class="columns is-centered">
-            <div class="column is-narrow">
-                <button
-                    type="submit"
-                    class="button is-primary"
-                    class:is-loading={action === 'create'}
-                    on:click={createRoom}>{getText('createRoom')}</button
-                >
-            </div>
+        <div class="is-flex is-flex-direction-row is-justify-content-center">
+            <button
+                type="submit"
+                class="button is-primary"
+                class:is-loading={action === 'create'}
+                on:click={createRoom}>{getText('createRoom')}</button
+            >
         </div>
     </div>
 </div>

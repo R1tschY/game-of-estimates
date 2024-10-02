@@ -1,20 +1,19 @@
 {{#> layout }}
-    <section class="section">
-        <div class="container">
-            <h1 class="title is-4">{{text 'summary'}}</h1>
-            <p>{{{text 'description'}}}</p>
-        </div>
-    </section>
-
-    <section class="section">
-        <div class="container">
-            <div class="columns is-centered">
-                <form id="create-room-form" class="create-room-form column is-half"
-                      method="post" action="/room/create"></form>
-                <noscript>{{{text 'noscript'}}}</noscript>
+    <main class="is-flex-grow-1 mt-3 mb-6">
+        <section class="section">
+            <div class="container is-max-tablet">
+                <h1 class="title is-4">{{text 'summary'}}</h1>
+                <p>{{{text 'description'}}}</p>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <script type="module" crossorigin="" src="{{ js }}"></script>
+        <section class="section ml-3 mr-3">
+            <div class="columns is-centered is-half">
+                <form id="create-room-form" class="box" method="post" action="/room/create"></form>
+                <noscript class="box">{{{text 'noscript'}}}</noscript>
+            </div>
+        </section>
+
+        <script type="module" crossorigin="" src="{{ js }}"></script>
+    </main>
 {{/layout}}
