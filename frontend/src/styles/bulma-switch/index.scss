@@ -1,6 +1,6 @@
 // Copied from https://gitlab.com/jf.brazeau/bulma-switch-migration
 
-@use "sass:math";
+@use 'sass:math';
 @use 'bulma/sass/utilities/initial-variables' as iv;
 @use 'bulma/sass/utilities/derived-variables' as dv;
 @use 'bulma/sass/utilities/controls' as ctrl;
@@ -161,7 +161,7 @@ $switch-focus: 1px dotted iv.$grey-light !default;
 
       &::after,
       &:after {
-        box-shadow: 0px 0px 3px iv.$grey;
+        box-shadow: 0 0 3px iv.$grey;
       }
     }
   }
