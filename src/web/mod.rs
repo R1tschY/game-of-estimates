@@ -1,5 +1,5 @@
 use crate::web::compress::{Compression, DefaultPredicate};
-use crate::web::embed::AssetCatalog;
+use crate::web::embed::{get_asset_url, AssetCatalog};
 use crate::web::handlebars::Template;
 use crate::web::headers::Language;
 use crate::web::i18n::AcceptLanguageHelper;
@@ -42,8 +42,8 @@ fn lobby(lang: Language) -> Template {
         "lobby.html",
         json!({
             "lang": lang,
-            "js": "/assets/createRoom.js",
-            "css": "/assets/style.css",
+            "js": get_asset_url::<MyAssetCatalog>("assets/createRoom.js"),
+            "css": get_asset_url::<MyAssetCatalog>("assets/style.css"),
         }),
     )
 }
@@ -96,8 +96,8 @@ fn room(lang: Language, id: &str) -> Template {
         json!({
             "lang": lang,
             "roomId": id,
-            "js": "/assets/room.js",
-            "css": "/assets/style.css",
+            "js": get_asset_url::<MyAssetCatalog>("assets/room.js"),
+            "css": get_asset_url::<MyAssetCatalog>("assets/style.css"),
         }),
     )
 }
