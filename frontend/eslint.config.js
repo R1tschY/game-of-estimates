@@ -1,36 +1,44 @@
-export default [
+// @ts-check
+
+import globals from 'globals'
+import eslint from '@eslint/js'
+import tseslint from 'typescript-eslint'
+import eslintPluginSvelte from 'eslint-plugin-svelte'
+import prettierConfig from 'eslint-config-prettier'
+import svelteConfig from './svelte.config.js'
+
+export default tseslint.config(
+    eslint.configs.recommended,
+    ...tseslint.configs.strict,
+    ...tseslint.configs.stylistic,
+    ...eslintPluginSvelte.configs['flat/prettier'],
+    prettierConfig,
     {
-        root: true,
-        parserOptions: {
-            ecmaVersion: 12,
-            sourceType: 'module',
-        },
-        env: {
-            es6: true,
-            browser: true,
-        },
-        extends: [
-            'eslint:recommended',
-            'prettier',
-            'plugin:@typescript-eslint/recommended',
-            'plugin:svelte/prettier',
-        ],
-        parser: '@typescript-eslint/parser',
-        plugins: [],
-        overrides: [
-            {
-                files: ['*.svelte'],
-                parser: 'svelte-eslint-parser',
-                parserOptions: {
-                    parser: '@typescript-eslint/parser',
-                },
+        files: ['*.svelte', '**/*.svelte'],
+        languageOptions: {
+            parserOptions: {
+                parser: '@typescript-eslint/parser',
+                extraFileExtensions: ['.svelte'],
+                svelteConfig,
             },
-        ],
-        rules: {
-            '@typescript-eslint/no-explicit-any': 'warn',
-        },
-        settings: {
-            'svelte3/typescript': true,
         },
     },
-]
+    {
+        languageOptions: {
+            ecmaVersion: 12,
+            sourceType: 'module',
+            globals: {
+                ...globals.browser,
+            },
+            parserOptions: {
+                projectService: true,
+                tsconfigRootDir: import.meta.dirname,
+                extraFileExtensions: ['.svelte'],
+            },
+        },
+        rules: {
+            '@typescript-eslint/no-explicit-any': 'warn',
+            '@typescript-eslint/no-non-null-assertion': 'off',
+        },
+    },
+)

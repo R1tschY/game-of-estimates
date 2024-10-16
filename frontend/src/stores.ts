@@ -110,16 +110,16 @@ export interface PlayerExtInfo {
     vote: Option<string>
 }
 
-export const players: Readable<Array<PlayerExtInfo>> =
+export const players: Readable<PlayerExtInfo[]> =
     (function createRoomState() {
-        const { subscribe, set, update } = writable<Array<PlayerExtInfo>>([])
+        const { subscribe, set, update } = writable<PlayerExtInfo[]>([])
 
-        function findPlayer(state: Array<PlayerExtInfo>, id: string): number {
+        function findPlayer(state: PlayerExtInfo[], id: string): number {
             return state.findIndex((player) => player.id === id)
         }
 
         client.joined.connect((evt) => {
-            const players: Array<PlayerExtInfo> = []
+            const players: PlayerExtInfo[] = []
             for (const player of evt.players) {
                 players.push({
                     id: player.id,

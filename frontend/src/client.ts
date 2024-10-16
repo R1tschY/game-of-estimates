@@ -78,13 +78,13 @@ export class Client {
     roomId: Writable<Option<string>>
     lastError: Writable<Option<string>>
 
-    welcome: Signal<WelcomeMessageEvent> = new Signal()
-    joined: Signal<JoinedEvent> = new Signal()
-    playerJoined: Signal<PlayerJoinedEvent> = new Signal()
-    playerChanged: Signal<PlayerChangedEvent> = new Signal()
-    playerLeft: Signal<PlayerLeftEvent> = new Signal()
-    stateChanged: Signal<GameChangedEvent> = new Signal()
-    rejected: Signal<RejectedEvent> = new Signal()
+    welcome = new Signal<WelcomeMessageEvent>()
+    joined = new Signal<JoinedEvent>()
+    playerJoined = new Signal<PlayerJoinedEvent>()
+    playerChanged = new Signal<PlayerChangedEvent>()
+    playerLeft = new Signal<PlayerLeftEvent>()
+    stateChanged = new Signal<GameChangedEvent>()
+    rejected = new Signal<RejectedEvent>()
 
     constructor(wsService: WebSocketService) {
         this.state = writable('connecting')
@@ -218,10 +218,10 @@ export class WebSocketService {
     error_store: Writable<boolean>
     reconnectTimer: Option<number>
 
-    message: Signal<BaseMessageEvent> = new Signal()
-    connected: Signal<undefined> = new Signal()
-    disconnected: Signal<undefined> = new Signal()
-    error: Signal<undefined> = new Signal()
+    message = new Signal<BaseMessageEvent>()
+    connected = new Signal<undefined>()
+    disconnected = new Signal<undefined>()
+    error = new Signal<undefined>()
 
     constructor() {
         this.ws_store = writable(null)

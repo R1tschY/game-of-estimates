@@ -1,30 +1,24 @@
 export interface TranslationFile {
     language: string
-    strings: Strings
-}
-
-export interface Strings {
-    [index: string]: string | string[]
+    strings: Record<string, string | string[]>
 }
 
 export interface Translator {
     getText(textId: string): string
 }
 
-export interface TranslationFiles {
-    [index: string]: TranslationFile
-}
+export type TranslationFiles = Record<string, TranslationFile>;
 
 export class DefaultTranslator implements Translator {
     private readonly translationFiles: TranslationFiles
-    private readonly preferredLanguages: ReadonlyArray<string>
+    private readonly preferredLanguages: readonly string[]
     private readonly fallback: string
 
     private currentLanguage: TranslationFile
 
     constructor(
         translationFiles: TranslationFiles,
-        customPreferredLanguages?: ReadonlyArray<string>,
+        customPreferredLanguages?: readonly string[],
         fallback = 'en',
     ) {
         if (translationFiles[fallback] === undefined) {
