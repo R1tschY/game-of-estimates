@@ -7,7 +7,7 @@ export interface Translator {
     getText(textId: string): string
 }
 
-export type TranslationFiles = Record<string, TranslationFile>;
+export type TranslationFiles = Record<string, TranslationFile>
 
 export class DefaultTranslator implements Translator {
     private readonly translationFiles: TranslationFiles
