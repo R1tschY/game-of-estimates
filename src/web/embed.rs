@@ -92,7 +92,7 @@ impl<T: Embed + 'static> Handler for AssetCatalog<T> {
         if let Some(asset) = T::get(&path) {
             let v = if let Some(v) = request.query_value::<&str>("v") {
                 if let Some(v) = v.ok().and_then(|v| URL_SAFE_NO_PAD.decode(v).ok()) {
-                    if &asset.metadata.sha256_hash() as &[u8] == &v {
+                    if &asset.metadata.sha256_hash() as &[u8] == v {
                         Some(v)
                     } else {
                         return Outcome::forward(data, Status::NotFound);
