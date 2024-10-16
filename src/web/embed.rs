@@ -34,7 +34,10 @@ fn gen_etag(asset: &EmbeddedFile) -> ETag<'static> {
     ETag::new_strong(URL_SAFE_NO_PAD.encode(asset.metadata.sha256_hash()))
 }
 
-fn response_builder(asset: &EmbeddedFile, #[allow(unused)] cache_busting: bool) -> Builder<'static> {
+fn response_builder(
+    asset: &EmbeddedFile,
+    #[allow(unused)] cache_busting: bool,
+) -> Builder<'static> {
     let mut res = Response::build();
     res.raw_header("ETag", gen_etag_header(asset));
     #[cfg(not(debug_assertions))]
