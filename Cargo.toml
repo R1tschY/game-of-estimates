@@ -35,7 +35,7 @@ sha1 = "0.10.6"
 mime_guess = "2.0.5"
 mime = "0.3.17"
 hex = "0.4.3"
-uuid = { version = "1.10.0", features = ["v7"] }
+uuid = { version = "1.11.0", features = ["v7"] }
 base64 = "0.22.1"
 anyhow = "1.0"
 time = "0.3"
