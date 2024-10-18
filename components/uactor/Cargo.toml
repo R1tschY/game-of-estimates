@@ -9,5 +9,5 @@ edition = "2018"
 
 [dependencies]
 tokio = { version = "^1.28", features = ["macros", "sync", "rt"] }
-futures-util = "^0.3.28"
+futures-util = "^0.3.31"
 async-trait = "^0.1.68"
