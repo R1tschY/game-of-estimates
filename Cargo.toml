@@ -45,7 +45,7 @@ rocket = "0.5.1"
 rocket_ws = "0.1.1"
 rust-embed = { version = "8.5.0", features = ["mime-guess"] }
 prometheus-client = "0.22.3"
-async-compression = { version = "0.4.12", optional = true, features = ["tokio"] }
+async-compression = { version = "0.4.16", optional = true, features = ["tokio"] }
 
 [dependencies.sqlx]
 version = "0.8"
