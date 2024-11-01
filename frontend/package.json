@@ -12,7 +12,7 @@
         "@sveltejs/vite-plugin-svelte": "^3.1.2",
         "@tsconfig/svelte": "^5.0.4",
         "@types/eslint__js": "^8.42.3",
-        "@typescript-eslint/eslint-plugin": "^8.8.0",
+        "@typescript-eslint/eslint-plugin": "^8.12.2",
         "@typescript-eslint/parser": "^8.8.0",
         "bulma": "^1.0.2",
         "eslint": "^9.12.0",
