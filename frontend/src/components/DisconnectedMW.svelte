@@ -3,7 +3,7 @@
 </script>
 
 <div class="modal" class:is-active={!$connected}>
-    <div class="modal-background" />
+    <div class="modal-background"></div>
     <div class="modal-content reconnecting-content">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 55">
             <circle cx="35" cy="30" r="5" fill="#333">

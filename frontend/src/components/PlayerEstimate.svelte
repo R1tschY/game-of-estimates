@@ -23,7 +23,7 @@
                 </div>
             </div>
         </div>
-        <div class="game-card placeholder" />
+        <div class="game-card placeholder"></div>
     </div>
     <div class="game-card-name">
         {player.name || ''}
