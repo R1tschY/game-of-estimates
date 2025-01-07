@@ -34,7 +34,7 @@ pub mod i18n;
 mod metrics;
 
 #[derive(Embed)]
-#[folder = "frontend/dist/"]
+#[folder = "frontend/build/"]
 pub struct MyAssetCatalog;
 
 pub struct AppState {

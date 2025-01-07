@@ -1,14 +1,21 @@
 # deps
 node_modules
 
-# target
-dist
-dist-ssr
+# Output
+.output
+.vercel
+/.svelte-kit
+/build
 
 # Editors
 .DS_Store
 .vscode
 .idea
+Thumbs.db
 
 *storybook.log
 storybook-static
+
+# Vite
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
