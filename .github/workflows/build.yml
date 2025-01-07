@@ -33,7 +33,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
 
       - name: Fake frontend build
-        run: mkdir -p frontend/dist
+        run: mkdir -p frontend/build
 
       - name: Fmt
         run: cargo fmt --all -- --check

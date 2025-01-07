@@ -33,7 +33,7 @@ pub mod prometheus;
 pub mod see_other;
 
 #[derive(Embed)]
-#[folder = "frontend/dist/"]
+#[folder = "frontend/build/"]
 pub struct MyAssetCatalog;
 
 #[rocket::get("/")]

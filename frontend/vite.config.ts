@@ -1,24 +1,27 @@
 import { resolve } from 'path'
 import { defineConfig } from 'vite'
-import { svelte } from '@sveltejs/vite-plugin-svelte'
+import { sveltekit } from '@sveltejs/kit/vite'
+import { paraglide } from '@inlang/paraglide-sveltekit/vite'
 import eslint from 'vite-plugin-eslint'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-    plugins: [svelte(), eslint()],
+    plugins: [
+        sveltekit(),
+        eslint(),
+        paraglide({
+            project: './project.inlang',
+            outdir: './src/lib/paraglide',
+        }),
+    ],
     envPrefix: 'GOE_',
-    build: {
-        rollupOptions: {
-            input: {
-                createRoom: resolve(__dirname, 'src/entries/create-room.ts'),
-                createRoomDemo: resolve(__dirname, 'create-room.html'),
-                room: resolve(__dirname, 'src/entries/room.ts'),
-                style: resolve(__dirname, 'src/main.sass'),
+    css: {
+        preprocessorOptions: {
+            scss: {
+                quietDeps: true,
             },
-            output: {
-                assetFileNames: 'assets/[name][extname]',
-                chunkFileNames: 'assets/[name].js',
-                entryFileNames: 'assets/[name].js',
+            sass: {
+                quietDeps: true,
             },
         },
     },

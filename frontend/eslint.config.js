@@ -47,4 +47,7 @@ export default tseslint.config(
             '@typescript-eslint/no-non-null-assertion': 'off',
         },
     },
+    {
+        ignores: ['build/', '.svelte-kit/', 'dist/', 'src/lib/paraglide'],
+    },
 )
