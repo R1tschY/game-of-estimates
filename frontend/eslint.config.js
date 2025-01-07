@@ -1,6 +1,7 @@
 // @ts-check
 
 import globals from 'globals'
+import prettier from 'eslint-config-prettier'
 import eslint from '@eslint/js'
 import tseslint from 'typescript-eslint'
 import eslintPluginSvelte from 'eslint-plugin-svelte'
@@ -11,16 +12,21 @@ export default tseslint.config(
     eslint.configs.recommended,
     ...tseslint.configs.strict,
     ...tseslint.configs.stylistic,
+    ...eslintPluginSvelte.configs['flat/recommended'],
+    prettier,
     ...eslintPluginSvelte.configs['flat/prettier'],
     prettierConfig,
     {
-        files: ['*.svelte', '**/*.svelte'],
+        files: ['**/*.svelte'],
         languageOptions: {
             parserOptions: {
-                parser: '@typescript-eslint/parser',
+                parser: tseslint.parser,
                 extraFileExtensions: ['.svelte'],
                 svelteConfig,
             },
+        },
+        rules: {
+            'svelte/no-at-html-tags': 'warn',
         },
     },
     {
