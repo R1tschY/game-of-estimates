@@ -19,7 +19,7 @@ compress-brotli = ["async-compression/brotli"]
 compress-zstd = ["async-compression/zstd"]
 
 [dependencies]
-tokio = { version = "^1.40.0", features = ["macros", "sync", "net", "rt-multi-thread", "time", "signal"] }
+tokio = { version = "^1.43.0", features = ["macros", "sync", "net", "rt-multi-thread", "time", "signal"] }
 env_logger = { version = "^0.11.5", default-features = false }
 futures-util = { version = "^0.3.31", default-features = false }
 log = "^0.4.22"
