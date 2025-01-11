@@ -4,7 +4,7 @@ import purgecss from '@fullhuman/postcss-purgecss'
 export default {
     plugins: [
         purgecss({
-            content: ['./src/**/*.{svelte,js,ts}'], // declaring source files
+            content: ['./src/**/*.{svelte,js,ts}', '../src/templates/**/*.hbs'], // declaring source files
             safelist: {
                 standard: [/^svelte-/], // required for inline component styles
             },
