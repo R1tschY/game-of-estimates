@@ -11,6 +11,8 @@
 @forward 'bulma/sass/elements/notification';
 @forward 'bulma/sass/elements/content';
 @forward 'bulma/sass/elements/box';
+@forward 'bulma/sass/components/modal';
+@forward 'bulma/sass/components/navbar';
 @forward 'bulma/sass/helpers/typography';
 @forward 'bulma/sass/helpers/flexbox';
 @forward 'bulma/sass/helpers/visibility';
@@ -26,7 +28,6 @@
 @forward 'bulma/sass/form/shared';
 @forward 'bulma/sass/form/select';
 @forward 'bulma/sass/form/tools';
-@forward 'bulma/sass/components/modal';
 
 @forward 'bulma/sass/themes';
 
