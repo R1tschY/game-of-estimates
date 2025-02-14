@@ -53,7 +53,7 @@ default-features = false
 features = ["runtime-tokio", "tls-rustls", "postgres", "migrate", "macros", "uuid", "time", "json"]
 
 [dev-dependencies]
-ctor = "0.2"
+ctor = "0.3"
 
 [workspace]
 members = [
