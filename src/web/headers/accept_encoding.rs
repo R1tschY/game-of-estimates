@@ -505,6 +505,11 @@ mod tests {
         }
     }
 
+    #[cfg(all(
+        feature = "compress-gzip",
+        feature = "compress-deflate",
+        feature = "compress-zstd"
+    ))]
     mod matching {
         use super::*;
         use crate::web::headers::Coding::{Deflate, Gzip, Identity, Zstandard};
