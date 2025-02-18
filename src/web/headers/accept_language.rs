@@ -1,4 +1,4 @@
-use crate::web::i18n::AcceptLanguageHelper;
+use crate::web::i18n::LanguageNegotiator;
 use rocket::http::Status;
 use rocket::request::{FromRequest, Outcome};
 use rocket::Request;
@@ -36,7 +36,7 @@ impl<'r> FromRequest<'r> for Language {
 
         let state = request
             .rocket()
-            .state::<AcceptLanguageHelper>()
+            .state::<LanguageNegotiator>()
             .expect("AcceptLanguageHelper should be provided as state");
         Outcome::Success(Language(state.get_language(accepted)))
     }

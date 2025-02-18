@@ -2,8 +2,8 @@ use crate::web::compress::{Compression, DefaultPredicate};
 use crate::web::embed::{get_asset_url, AssetCatalog};
 use crate::web::handlebars::Template;
 use crate::web::headers::Language;
-use crate::web::i18n::AcceptLanguageHelper;
-use crate::web::i18n::I18nHelper;
+use crate::web::i18n::LanguageNegotiator;
+use crate::web::i18n::Translator;
 use crate::web::prometheus::Prometheus;
 use crate::web::see_other::SeeOther;
 use ::handlebars::Handlebars;
@@ -131,8 +131,8 @@ pub async fn rocket(game_server: GameServerAddr) -> Rocket<Build> {
         serde_json::de::from_str(include_str!("../../frontend/src/i18n/en.json"))
             .expect("english translation should be valid"),
     );
-    let trans_helper = AcceptLanguageHelper::new(&translations);
-    let i18n_helper = I18nHelper::new(translations);
+    let lang = LanguageNegotiator::new(&translations);
+    let translator = Translator::new(translations);
 
     let figment = Figment::from(rocket::Config::default())
         .merge(Toml::file("game_of_estimates.toml").nested())
@@ -146,7 +146,8 @@ pub async fn rocket(game_server: GameServerAddr) -> Rocket<Build> {
             let templates_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/templates");
             hbs.register_templates_directory(templates_dir, Default::default())
                 .expect("templates should be valid");
-            hbs.register_helper("text", Box::new(i18n_helper.clone()));
+            hbs.register_helper("text", Box::new(translator.clone()));
+            hbs.register_helper("asset", Box::new(translator.clone()));
             hbs
         }))
         .attach(Prometheus::new(Registry::default()))
@@ -154,7 +155,7 @@ pub async fn rocket(game_server: GameServerAddr) -> Rocket<Build> {
             Level::Default,
             DefaultPredicate::default(),
         ))
-        .manage(trans_helper)
+        .manage(lang)
         .manage(game_server)
         .mount("/", routes![lobby, create_room, room, websocket])
         .mount("/", AssetCatalog::<MyAssetCatalog>::new())

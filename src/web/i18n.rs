@@ -32,11 +32,11 @@ impl Translation {
 }
 
 #[derive(Clone)]
-pub struct AcceptLanguageHelper {
+pub struct LanguageNegotiator {
     translations: Arc<Vec<&'static str>>,
 }
 
-impl AcceptLanguageHelper {
+impl LanguageNegotiator {
     pub fn new(translations: &HashMap<&'static str, Translation>) -> Self {
         Self {
             translations: Arc::new(translations.iter().map(|x| *x.0).collect()),
@@ -58,17 +58,17 @@ impl AcceptLanguageHelper {
 }
 
 #[derive(Clone)]
-pub struct I18nHelper {
+pub struct Translator {
     translations: HashMap<&'static str, Translation>,
 }
 
-impl I18nHelper {
+impl Translator {
     pub fn new(translations: HashMap<&'static str, Translation>) -> Self {
         Self { translations }
     }
 }
 
-impl HelperDef for I18nHelper {
+impl HelperDef for Translator {
     fn call_inner<'reg: 'rc, 'rc>(
         &self,
         helper: &Helper<'rc>,
