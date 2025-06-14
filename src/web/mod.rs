@@ -1,5 +1,5 @@
 use crate::web::compress::{Compression, DefaultPredicate};
-use crate::web::embed::{get_asset_url, AssetCatalog};
+use crate::web::embed::{get_asset_url, AssetCatalog, EmbedTemplateContext};
 use crate::web::handlebars::Template;
 use crate::web::headers::Language;
 use crate::web::i18n::LanguageNegotiator;
@@ -42,8 +42,6 @@ fn lobby(lang: Language) -> Template {
         "lobby.html",
         json!({
             "lang": lang,
-            "js": get_asset_url::<MyAssetCatalog>("assets/createRoom.js"),
-            "css": get_asset_url::<MyAssetCatalog>("assets/style.css"),
         }),
     )
 }
@@ -147,7 +145,10 @@ pub async fn rocket(game_server: GameServerAddr) -> Rocket<Build> {
             hbs.register_templates_directory(templates_dir, Default::default())
                 .expect("templates should be valid");
             hbs.register_helper("text", Box::new(translator.clone()));
-            hbs.register_helper("asset", Box::new(translator.clone()));
+            hbs.register_helper(
+                "asset",
+                Box::new(EmbedTemplateContext::<MyAssetCatalog>::new()),
+            );
             hbs
         }))
         .attach(Prometheus::new(Registry::default()))

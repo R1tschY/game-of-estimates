@@ -1,6 +1,10 @@
 use crate::web::headers::{ETag, HeaderMapExt, IfNoneMatch};
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::{encoded_len, Engine};
+use handlebars::{
+    Context, Handlebars, Helper, HelperDef, RenderContext, RenderError, RenderErrorReason,
+    ScopedJson,
+};
 use rocket::http::uri::fmt::Path;
 use rocket::http::uri::Segments;
 use rocket::http::{Method, Status};
@@ -8,6 +12,7 @@ use rocket::response::{Builder, Responder};
 use rocket::route::{Handler, Outcome};
 use rocket::{response, Data, Request, Response, Route};
 use rust_embed::{Embed, EmbeddedFile};
+use serde_json::Value;
 use std::io::Cursor;
 use std::marker::PhantomData;
 
@@ -170,4 +175,44 @@ pub fn get_asset_url<T: Embed>(file_path: &str) -> Option<String> {
         URL_SAFE_NO_PAD.encode_string(file.metadata.sha256_hash(), &mut res);
         res
     })
+}
+
+#[derive(Clone)]
+pub struct EmbedTemplateContext<T>(PhantomData<T>);
+
+impl<T> EmbedTemplateContext<T> {
+    pub fn new() -> Self {
+        Self(PhantomData)
+    }
+}
+
+impl<T: Embed> HelperDef for EmbedTemplateContext<T> {
+    fn call_inner<'reg: 'rc, 'rc>(
+        &self,
+        helper: &Helper<'rc>,
+        _: &'reg Handlebars<'reg>,
+        _: &'rc Context,
+        _: &mut RenderContext<'reg, 'rc>,
+    ) -> Result<ScopedJson<'rc>, RenderError> {
+        let arg = match helper.param(0) {
+            None => Err(RenderError::from(RenderErrorReason::ParamNotFoundForIndex(
+                "asset", 0,
+            ))),
+            Some(param) => match param.value() {
+                Value::String(param) => Ok(param),
+                _ => Err(RenderError::from(RenderErrorReason::Other(
+                    "Helper asset param at index 0 has invalid param type, string expected"
+                        .to_string(),
+                ))),
+            },
+        }?;
+
+        match get_asset_url::<T>(arg) {
+            Some(url) => Ok(Value::String(url).into()),
+            None => Err(RenderError::from(RenderErrorReason::Other(format!(
+                "Helper asset argument '{}' is not a known asset",
+                arg
+            )))),
+        }
+    }
 }

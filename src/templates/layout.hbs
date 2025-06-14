@@ -10,11 +10,11 @@
     <!--        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=00aJ2wj5ym">-->
     <!--        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=00aJ2wj5ym">-->
 
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=00aJ2wj5ym">
-    <link rel="manifest" href="/site.webmanifest?v=00aJ2wj5ym">
-    <link rel="mask-icon" href="/safari-pinned-tab.svg?v=00aJ2wj5ym" color="#ed8b00">
-    <link rel="shortcut icon" href="/favicon.ico?v=00aJ2wj5ym">
+    <link rel="icon" type="image/svg+xml" href="{{ asset 'favicon.svg' }}"/>
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset 'apple-touch-icon.png' }}">
+    <link rel="manifest" href="{{ asset 'site.webmanifest' }}">
+    <link rel="mask-icon" href="{{ asset 'safari-pinned-tab.svg' }}" color="#ed8b00">
+    <link rel="shortcut icon" href="{{ asset 'favicon.ico' }}">
     <meta name="apple-mobile-web-app-title" content="Game of Estimates">
     <meta name="application-name" content="Game of Estimates">
     <meta name="msapplication-TileColor" content="#ed8b00">
@@ -24,7 +24,7 @@
     <meta name="keywords" content="Planning Poker, Scrum Poker, Scrum, Planning, Agile">
     <meta name="author" content="Richard Liebscher">
 
-    <link rel="stylesheet" href="{{ css }}">
+    <link rel="stylesheet" href="{{ asset 'assets/style.css' }}">
 </head>
 <body>
 
@@ -93,7 +93,7 @@
         <p>{{{text 'license'}}}</p>
         <div>
             <a href="/" class="footer-icon">
-                <img src="github.svg" alt="GitHub"/>
+                <img src="{{ asset 'github.svg' }}" alt="GitHub"/>
             </a>
         </div>
     </div>
