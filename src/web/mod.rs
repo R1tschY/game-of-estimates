@@ -79,7 +79,7 @@ async fn create_room(
     }
 
     match rx.await {
-        Ok(Some(room_id)) => Ok(SeeOther::new(format!("/room/{}", room_id))),
+        Ok(Some(room_id)) => Ok(SeeOther::new(format!("/room/{room_id}"))),
         Ok(None) => Err(Status::ServiceUnavailable),
         Err(_) => {
             error!("Failed to create room: game service dropped message");

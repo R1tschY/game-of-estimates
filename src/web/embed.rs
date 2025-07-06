@@ -210,8 +210,7 @@ impl<T: Embed> HelperDef for EmbedTemplateContext<T> {
         match get_asset_url::<T>(arg) {
             Some(url) => Ok(Value::String(url).into()),
             None => Err(RenderError::from(RenderErrorReason::Other(format!(
-                "Helper asset argument '{}' is not a known asset",
-                arg
+                "Helper asset argument '{arg}' is not a known asset",
             )))),
         }
     }

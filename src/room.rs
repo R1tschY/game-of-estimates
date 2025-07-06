@@ -121,7 +121,7 @@ impl Room {
             repo,
         };
 
-        if let Err(err) = self_
+        self_
             .repo
             .append_room_event(
                 &self_.id,
@@ -129,10 +129,7 @@ impl Room {
                     deck: self_.deck.clone(),
                 },
             )
-            .await
-        {
-            return Err(err);
-        }
+            .await?;
 
         info!("{}: Created room", id);
         Ok(self_)

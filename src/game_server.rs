@@ -8,7 +8,7 @@ use uactor::blocking::Actor;
 use uactor::tokio::blocking::Context;
 
 use crate::player::{PlayerAddr, PlayerInformation};
-use crate::ports::{DbError, RoomRepositoryRef};
+use crate::ports::RoomRepositoryRef;
 use crate::room::{GamePlayerMessage, RejectReason, Room, RoomAddr, RoomMessage};
 
 #[derive(Debug)]
