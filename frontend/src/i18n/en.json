@@ -3,6 +3,10 @@
     "strings": {
         "createRoom": "Create room",
         "deck": "Deck",
+        "customDeck": "Custom Deck",
+        "customDeckField": "Card values",
+        "customDeckPlaceholder": "Comma-separated list: 1,2,3,...",
+        "customDeckHelp": "Comma-separated list of card values",
         "observer": "Observer",
         "estimates": "Estimates",
         "restart": "Restart",
@@ -13,8 +17,8 @@
         "chooseYourEstimate": "Choose your estimate",
         "license": "The source code is licensed under <a href=\"https://opensource.org/licenses/mit-license.php\">MIT</a>.",
         "byAuthor": "<strong>Game Of Estimates</strong> by <a href=\"https://github.com/R1tschY\">Richard Liebscher</a>.",
-        "summary": "Plan your sprint with a little game",
-        "description": "Game Of Estimates gives you the chance to do your <a href=\"https://en.wikipedia.org/wiki/Planning_poker\">Planning Poker</a> (also known as Scrum Poker) online and for free. Feel free to contribute, because it is <a href=\"https://github.com/R1tschY/game-of-estimates\">open source</a>!",
+        "summary": "Online <a href=\"https://en.wikipedia.org/wiki/Planning_poker\">Planning Poker</a> (also known as Scrum Poker)",
+        "description": "Quickly create a room and send the link to participants.<p><ul><li>No registration required<li>No ads<li>Free without limitations<li>Open Source<li>Your privacy is respected</ul>",
         "noscript": "Please activate JavaScript to play."
     }
 }

@@ -17,8 +17,8 @@
         "chooseYourEstimate": "Wähle deine Schätzung",
         "license": "Der Quellcode steht unter der <a href=\"https://opensource.org/licenses/mit-license.php\">MIT</a> Lizenz.",
         "byAuthor": "<strong>Game Of Estimates</strong> von <a href=\"https://github.com/R1tschY\">Richard Liebscher</a>.",
-        "summary": "Plane deinen Sprint mit einem kleinen Spiel",
-        "description": "Game Of Estimates gibt dir die Möglichkeit dein <a href=\"https://de.wikipedia.org/wiki/Scrum#Planungspoker\">Planning Poker</a> (auch bekannt als Scrum Poker) online und kostenlos durchzuführen. Helfe mit diese Software besser zu machen. Sie ist <a href=\"https://github.com/R1tschY/game-of-estimates\">Open Source</a>!",
+        "summary": "Online <a href=\"https://de.wikipedia.org/wiki/Scrum#Planungspoker\">Planning Poker</a> (auch bekannt als Scrum Poker)",
+        "description": "Schnell Raum anlegen und Link an Teilnehmer senden.<p><ul><li>Keine Anmeldung nötig<li>Keine Werbung<li>Ohne Einschränkungen kostenlos<li>Open Source<li>Deine Privatsphäre wird geachtet</ul>",
         "noscript": "Bitte aktiviere JavaScript, um zu Spielen."
     }
 }
