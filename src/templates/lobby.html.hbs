@@ -1,16 +1,26 @@
 {{#> layout }}
     <main class="is-flex-grow-1 mt-3 mb-6">
         <section class="section">
-            <div class="container is-max-tablet">
-                <h1 class="title is-4">{{text 'summary'}}</h1>
-                <p>{{{text 'description'}}}</p>
+            <div class="container content is-max-tablet">
+                <h1 class="title is-4">{{{text 'summary'}}}</h1>
+                <p class="subtitle">{{{text 'summary'}}}</p>
             </div>
         </section>
 
-        <section class="section ml-3 mr-3">
+        <section class="section m-3">
             <div class="columns is-centered is-half">
-                <form id="create-room-form" class="box" method="post" action="/room"></form>
+                <form id="create-room-form" class="box p-5" method="post" action="/room"></form>
                 <noscript class="box">{{{text 'noscript'}}}</noscript>
+            </div>
+        </section>
+
+        <section class="hero is-primary is-medium">
+            <div class="hero-body">
+                <div class="columns is-centered is-half">
+                    <div class="container content is-max-tablet">
+                        <p>{{{text 'description'}}}</p>
+                    </div>
+                </div>
             </div>
         </section>
 
