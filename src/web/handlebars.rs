@@ -31,8 +31,8 @@ impl Template {
     pub fn render(self, ctx: &Context) -> Result<(ContentType, String), Status> {
         ctx.hbs
             .render_with_context(self.name.as_ref(), &handlebars::Context::from(self.value))
-            .map_err(|_| {
-                error_!("Template '{}' failed to render", self.name);
+            .map_err(|err| {
+                error_!("Template '{}' failed to render: {}", self.name, err);
                 Status::InternalServerError
             })
             .map(|out| (self.content_type, out))
