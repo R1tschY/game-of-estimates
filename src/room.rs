@@ -12,7 +12,7 @@ use uactor::blocking::{Actor, ActorContext, Addr};
 use uactor::tokio::blocking::Context;
 
 use crate::player::{PlayerAddr, PlayerInformation};
-use crate::ports::RoomRepositoryRef;
+use crate::ports::{DbError, RoomRepositoryRef};
 
 #[derive(Debug)]
 pub enum RoomMessage {
@@ -112,15 +112,30 @@ async fn delayed_message<T: Debug>(addr: Addr<T>, msg: T, duration: Duration) {
 }
 
 impl Room {
-    pub fn new(id: &str, deck: String, repo: RoomRepositoryRef) -> Self {
-        info!("{}: Created room", id);
-        Self {
+    pub async fn new(id: &str, deck: String, repo: RoomRepositoryRef) -> Result<Self, DbError> {
+        let self_ = Self {
             id: id.to_string(),
             players: HashMap::new(),
             open: false,
             deck,
             repo,
+        };
+
+        if let Err(err) = self_
+            .repo
+            .append_room_event(
+                &self_.id,
+                RoomEvent::Created {
+                    deck: self_.deck.clone(),
+                },
+            )
+            .await
+        {
+            return Err(err);
         }
+
+        info!("{}: Created room", id);
+        Ok(self_)
     }
 
     pub fn restore(id: &str, events: Vec<RoomEvent>, repo: RoomRepositoryRef) -> Option<Self> {
@@ -394,27 +409,6 @@ impl Actor for Room {
     }
 
     async fn setup(&mut self, ctx: &mut Context<Self>) {
-        if let Err(err) = self
-            .repo
-            .append_room_event(
-                &self.id,
-                RoomEvent::Created {
-                    deck: self.deck.clone(),
-                },
-            )
-            .await
-        {
-            warn!(
-                "Unable to create room {}, because of database error: {}",
-                self.id, err
-            );
-            self.send_to_players(GamePlayerMessage::Rejected(RejectReason::CreateGameError))
-                .await;
-            self.players.clear();
-            ctx.force_quit();
-            return;
-        }
-
         let players_state: Vec<PlayerState> = self.players.values().map(|p| p.to_state()).collect();
         let game_state = self.to_state();
 
@@ -459,10 +453,10 @@ mod tests {
     }
 
     impl RoomTester {
-        pub fn new_room() -> Self {
+        pub async fn new_room() -> Self {
             let repo: RoomRepositoryRef = Arc::new(FakeRoomRepository);
-            let room = Room::new("TEST-ROOM", "TEST-DECK".to_string(), repo);
-            let room_addr = room.start();
+            let room = Room::new("TEST-ROOM", "TEST-DECK".to_string(), repo).await;
+            let room_addr = room.unwrap().start();
             Self {
                 players: vec![],
                 room_addr,
@@ -519,7 +513,7 @@ mod tests {
 
     #[tokio::test]
     async fn check_open_when_all_voted() {
-        let mut tester = RoomTester::new_room();
+        let mut tester = RoomTester::new_room().await;
         tester.join_player("1", true).await;
         tester.join_player("2", true).await;
 
@@ -534,7 +528,7 @@ mod tests {
 
     #[tokio::test]
     async fn check_open_with_non_voter() {
-        let mut tester = RoomTester::new_room();
+        let mut tester = RoomTester::new_room().await;
         tester.join_player("1", true).await;
         tester.join_player("2", true).await;
         tester.join_player("3", false).await;
@@ -550,7 +544,7 @@ mod tests {
 
     #[tokio::test]
     async fn check_open_after_player_became_non_voter() {
-        let mut tester = RoomTester::new_room();
+        let mut tester = RoomTester::new_room().await;
         tester.join_player("1", true).await;
         tester.join_player("2", true).await;
         tester.join_player("3", true).await;
@@ -573,7 +567,7 @@ mod tests {
 
     #[tokio::test]
     async fn check_open_after_player_left() {
-        let mut tester = RoomTester::new_room();
+        let mut tester = RoomTester::new_room().await;
         tester.join_player("1", true).await;
         tester.join_player("2", true).await;
         tester.join_player("3", true).await;
@@ -590,7 +584,7 @@ mod tests {
 
     #[tokio::test]
     async fn check_no_voting_when_closed() {
-        let mut tester = RoomTester::new_room();
+        let mut tester = RoomTester::new_room().await;
         tester.join_player("r1", true).await;
         tester.join_player("p1", true).await;
 

@@ -1,4 +1,4 @@
-use log::error;
+use log::{error, warn};
 use std::collections::HashMap;
 
 use tokio::sync::mpsc;
@@ -8,7 +8,7 @@ use uactor::blocking::Actor;
 use uactor::tokio::blocking::Context;
 
 use crate::player::{PlayerAddr, PlayerInformation};
-use crate::ports::RoomRepositoryRef;
+use crate::ports::{DbError, RoomRepositoryRef};
 use crate::room::{GamePlayerMessage, RejectReason, Room, RoomAddr, RoomMessage};
 
 #[derive(Debug)]
@@ -21,7 +21,7 @@ pub enum GameServerMessage {
     },
     Create {
         deck: String,
-        reply: oneshot::Sender<String>,
+        reply: oneshot::Sender<Option<String>>,
     },
 }
 
@@ -72,9 +72,7 @@ impl Actor for GameServer {
                             if events.is_empty() {
                                 Self::send_rejection(&player_addr, RejectReason::RoomDoesNotExist)
                                     .await;
-                            }
-
-                            if let Some(restored_room) =
+                            } else if let Some(restored_room) =
                                 Room::restore(&room, events, self.room_repo.clone())
                             {
                                 self.rooms.insert(room, restored_room.start());
@@ -94,9 +92,20 @@ impl Actor for GameServer {
 
             GameServerMessage::Create { deck, reply } => {
                 let room_id = Room::gen_id();
-                let room = Room::new(&room_id, deck, self.room_repo.clone());
-                self.rooms.insert(room_id.clone(), room.start());
-                let _ = reply.send(room_id);
+                let room = Room::new(&room_id, deck, self.room_repo.clone()).await;
+                match room {
+                    Ok(room) => {
+                        self.rooms.insert(room_id.clone(), room.start());
+                        let _ = reply.send(Some(room_id));
+                    }
+                    Err(err) => {
+                        warn!(
+                            "Unable to create room {}, because of database error: {}",
+                            room_id, err
+                        );
+                        let _ = reply.send(None);
+                    }
+                }
             }
         }
     }
