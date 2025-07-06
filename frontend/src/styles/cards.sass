@@ -19,6 +19,7 @@ $card-selected-offset: $card-height * 0.5
     transition: transform 1s, margin-top 0.2s
     border-radius: 10px 0 10px 0
     transform: rotateY(0deg)
+    transform-origin: right center
 
     display: flex
     align-items: stretch
@@ -97,11 +98,11 @@ $card-selected-offset: $card-height * 0.5
 
 
 .backcover > .game-card-back
-    transform: rotateY(0deg)
+    transform: translateX(-$card-width) rotateY(0deg)
 
 
 .backcover > .game-card-front
-    transform: rotateY(180deg)
+    transform: translateX(-$card-width) rotateY(180deg)
 
 
 .hidden > .game-card
