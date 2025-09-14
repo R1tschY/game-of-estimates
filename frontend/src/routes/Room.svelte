@@ -68,7 +68,7 @@
                     />
                 </div>
 
-                <div class="column" />
+                <div class="column"></div>
 
                 <!-- Voter -->
                 <div class="column is-narrow">
