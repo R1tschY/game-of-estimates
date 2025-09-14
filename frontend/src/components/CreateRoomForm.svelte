@@ -26,8 +26,9 @@
 
 <div class="field">
     <label class="label" for="deck_field">{getText('deck')}</label>
-    <div class="control is-expanded" id="deck_field">
+    <div class="control is-expanded">
         <SelectWithButton
+            id="deck_field"
             items={decks_dropdown}
             name="deck"
             bind:value={deckId}
@@ -36,7 +37,7 @@
 </div>
 {#if deckId === 'custom'}
     <div class="field">
-        <label class="label" for="deck_field"
+        <label class="label" for="custom_deck_field"
             >{getText('customDeckField')}</label
         >
         <div class="control">
