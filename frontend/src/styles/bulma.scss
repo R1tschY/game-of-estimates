@@ -2,7 +2,17 @@
 @use 'colors';
 
 @use 'bulma/sass/utilities' as utils with (
-    $primary: colors.$tt-orange
+    $primary: colors.$primary,
+    $cssvars-prefix: 'b-',
+    $radius-small: 2px,
+    $radius: 4px,
+    $radius-medium: 8px,
+    $radius-large: 12px,
+    $link: colors.$link,
+    $success: colors.$success,
+    $warning: colors.$warning,
+    $info: colors.$info,
+    $danger: colors.$danger
 );
 
 @forward 'bulma/sass/base';

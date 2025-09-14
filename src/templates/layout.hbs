@@ -25,6 +25,7 @@
     <meta name="author" content="Richard Liebscher">
 
     <link rel="stylesheet" href="{{ asset 'assets/style.css' }}">
+    <script type="module" crossorigin="" src="{{ asset 'assets/icons.js' }}"></script>
 </head>
 <body>
 
@@ -38,12 +39,6 @@
             <span aria-hidden="true"></span>
             <span aria-hidden="true"></span>
         </a>
-    </div>
-
-    <div id="navbarBasicExample" class="navbar-menu">
-        <div class="navbar-start">
-            <a class="navbar-item">Lobby</a>
-        </div>
     </div>
 
     <div class="navbar-end">
@@ -65,25 +60,8 @@
                 </a>
             </div>
         </div>
-
-        <div class="navbar-item">
-            <div class="buttons">
-                <a class="button is-primary">
-                    Create room
-                </a>
-            </div>
-        </div>
     </div>
 </nav>
-
-<section class="hero head">
-    <div class="hero-body">
-        <div class="container">
-            <h1 class="title"><a href="/">Game Of Estimates</a></h1>
-            <h2 class="subtitle">Planning Poker</h2>
-        </div>
-    </div>
-</section>
 
 {{> @partial-block }}
 
@@ -93,7 +71,7 @@
         <p>{{{text 'license'}}}</p>
         <div>
             <a href="/" class="footer-icon">
-                <img src="{{ asset 'github.svg' }}" alt="GitHub"/>
+                <i data-lucide="github"/>
             </a>
         </div>
     </div>

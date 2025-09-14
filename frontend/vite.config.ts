@@ -13,6 +13,7 @@ export default defineConfig({
                 createRoom: resolve(__dirname, 'src/entries/create-room.ts'),
                 createRoomDemo: resolve(__dirname, 'create-room.html'),
                 room: resolve(__dirname, 'src/entries/room.ts'),
+                icons: resolve(__dirname, 'src/entries/icons.ts'),
                 style: resolve(__dirname, 'src/main.sass'),
             },
             output: {

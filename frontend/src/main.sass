@@ -2,6 +2,8 @@
 
 @forward 'styles/cards'
 @forward 'styles/bulma'
+@forward 'styles/icons'
+@use "styles/colors" as colors
 @use "bulma/sass/utilities" as bulma-utils
 
 body
@@ -9,6 +11,7 @@ body
   display: flex
   flex-direction: column
   justify-content: space-between
+  background-color: colors.$bg
 
 .footer-icon > svg
   width: 32px

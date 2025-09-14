@@ -13,7 +13,7 @@ $card-selected-offset: $card-height * 0.5
     font-size: 1.7em
     text-align: center
     margin: 0.25rem 0.5rem 0.25rem 0.5rem
-    border: 1px solid colors.$tt-gray
+    border: 1px solid #cccccc
     box-shadow: 0 0 0.5em -0.125em rgba(10, 10, 10, 0.1)
     outline: 0
     transition: transform 1s, margin-top 0.2s
@@ -63,8 +63,9 @@ $card-selected-offset: $card-height * 0.5
 //    z-index: 3
 
 .game-card.selected
-    background-color: white //#{adjust-color($primary, $lightness: 45%)}
-    //color: white 
+    background-color: white
+    //#{adjust-color($primary, $lightness: 45%)}
+    //color: white
     margin-top: -$card-selected-offset
     box-shadow: 0 0 0.7em -0.125em rgba(10, 10, 10, 0.3)
 
@@ -78,7 +79,8 @@ $card-selected-offset: $card-height * 0.5
 
 
 .game-card-back
-    background-color: white //#{adjust-color($primary, $lightness: 45%)}
+    background-color: white
+    //#{adjust-color($primary, $lightness: 45%)}
     color: black
     backface-visibility: hidden
     transform: rotateY(180deg)
@@ -141,4 +143,5 @@ $card-selected-offset: $card-height * 0.5
 
 .hand-entry-inner
     position: absolute
-    left: -8mm // TODO
+    left: -8mm
+// TODO

@@ -2,23 +2,44 @@
     <main class="is-flex-grow-1 mt-3 mb-6">
         <section class="section">
             <div class="container content is-max-tablet">
-                <h1 class="title is-4">{{{text 'summary'}}}</h1>
+                <h1 class="title is-1">{{{text 'title'}}}</h1>
                 <p class="subtitle">{{{text 'summary'}}}</p>
             </div>
         </section>
 
         <section class="section m-3">
-            <div class="columns is-centered is-half">
-                <form id="create-room-form" class="box p-5" method="post" action="/room"></form>
-                <noscript class="box">{{{text 'noscript'}}}</noscript>
+            <div class="columns is-centered">
+                <div class="column is-half">
+                    <h2 class="title is-5">{{ text 'lobbyActionText' }}</h2>
+                    <form id="create-room-form" class="box p-5" method="post" action="/room"></form>
+                    <noscript class="box">{{{text 'noscript'}}}</noscript>
+                </div>
             </div>
         </section>
 
         <section class="hero is-primary is-medium">
             <div class="hero-body">
                 <div class="columns is-centered is-half">
-                    <div class="container content is-max-tablet">
-                        <p>{{{text 'description'}}}</p>
+                    <div class="container is-max-tablet is-size-5">
+                        <i data-lucide="hat-glasses" class="is-large"></i>
+                        <ul>
+                            <li>{{{text 'lobbyClaimPrivacy1'}}}</li>
+                            <li>{{{text 'lobbyClaimPrivacy2'}}}</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="hero is-success is-medium">
+            <div class="hero-body">
+                <div class="columns is-centered is-half">
+                    <div class="container is-max-tablet is-size-5">
+                        <i data-lucide="bird" class="is-large"></i>
+                        <ul>
+                            <li>{{{text 'lobbyClaimFree1'}}}</li>
+                            <li>{{{text 'lobbyClaimFree2'}}}</li>
+                        </ul>
                     </div>
                 </div>
             </div>

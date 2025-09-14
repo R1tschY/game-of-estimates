@@ -1,8 +1,13 @@
 {
     "language": "de",
     "strings": {
-        "createRoom": "Erstelle Raum",
+        "createRoom": "Raum erstellen",
         "deck": "Deck",
+        "lobbyActionText": "Einfach Raum anlegen und Link an Teilnehmer senden:",
+        "lobbyClaimPrivacy1": "Keine Anmeldung nötig",
+        "lobbyClaimPrivacy2": "Persönliche Einstellungen werden im Browser gespeichert",
+        "lobbyClaimFree1": "Keine Werbung",
+        "lobbyClaimFree2": "Ohne Einschränkungen kostenlos",
         "customDeck": "Benutzerdefiniertes Deck",
         "customDeckField": "Kartenwerte",
         "customDeckPlaceholder": "Kommaseparierte Liste: 1,2,3,...",
@@ -17,6 +22,7 @@
         "chooseYourEstimate": "Wähle deine Schätzung",
         "license": "Der Quellcode steht unter der <a href=\"https://opensource.org/licenses/mit-license.php\">MIT</a> Lizenz.",
         "byAuthor": "<strong>Game Of Estimates</strong> von <a href=\"https://github.com/R1tschY\">Richard Liebscher</a>.",
+        "title": "Game Of Estimates",
         "summary": "Online <a href=\"https://de.wikipedia.org/wiki/Scrum#Planungspoker\">Planning Poker</a> (auch bekannt als Scrum Poker)",
         "description": "Schnell Raum anlegen und Link an Teilnehmer senden.<p><ul><li>Keine Anmeldung nötig<li>Keine Werbung<li>Ohne Einschränkungen kostenlos<li>Open Source<li>Deine Privatsphäre wird geachtet</ul>",
         "noscript": "Bitte aktiviere JavaScript, um zu Spielen."
