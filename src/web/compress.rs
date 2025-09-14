@@ -89,6 +89,7 @@ fn compress(lvl: Level, request: &Request<'_>, response: &mut Response) {
     }
 }
 
+#[allow(unused)]
 pub struct Compressed<T> {
     level: Level,
     inner: T,
