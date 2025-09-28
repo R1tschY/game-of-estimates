@@ -1,15 +1,31 @@
 @charset "utf-8";
+@use 'sass:color';
 
-$caf-noir: #45361bff;
-$caribbean-current: #2f717eff;
-$avocado: #4f8426ff;
-$dutch-white: #f3e2c2ff;
-$rust: #b64a1bff;
+@function color-shades($color) {
+    @return (
+        100: color.adjust($color, $lightness: 20%),
+        200: color.adjust($color, $lightness: 40%),
+        300: color.adjust($color, $lightness: 60%),
+        400: color.adjust($color, $lightness: 80%),
+        500: $color,
+        600: color.adjust($color, $lightness: -20%),
+        700: color.adjust($color, $lightness: -40%),
+        800: color.adjust($color, $lightness: -60%),
+        900: color.adjust($color, $lightness: -80%)
+    );
+}
 
-$primary: $rust;
-$link: $rust;
-$info: $caribbean-current;
-$danger: $caribbean-current;
-$warning: $caribbean-current;
-$success: $avocado;
-$bg: $dutch-white;
+$_caf-noir: #45361bff;
+$_caribbean-current: #2f717eff;
+$_avocado: #4f8426ff;
+$_dutch-white: #f3e2c2ff;
+$_rust: #b64a1bff;
+$_gray: #666;
+
+$primary: color-shades($_rust);
+$link: color-shades($_rust);
+$info: color-shades($_caribbean-current);
+$danger: color-shades($_caribbean-current);
+$warning: color-shades($_caribbean-current);
+$success: color-shades($_avocado);
+$bg: color-shades($_dutch-white);

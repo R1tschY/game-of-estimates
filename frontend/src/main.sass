@@ -5,13 +5,14 @@
 @forward 'styles/icons'
 @use "styles/colors" as colors
 @use "bulma/sass/utilities" as bulma-utils
+@use 'sass:map'
 
 body
   min-height: 100vh
   display: flex
   flex-direction: column
   justify-content: space-between
-  background-color: colors.$bg
+  background-color: map.get(colors.$bg, 100)
 
 .footer-icon > svg
   width: 32px

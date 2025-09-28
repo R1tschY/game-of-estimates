@@ -1,18 +1,19 @@
 @charset "utf-8";
 @use 'colors';
+@use 'sass:map';
 
 @use 'bulma/sass/utilities' as utils with (
-    $primary: colors.$primary,
+    $primary: map.get(colors.$primary, 100),
     $cssvars-prefix: 'b-',
     $radius-small: 2px,
     $radius: 4px,
     $radius-medium: 8px,
     $radius-large: 12px,
-    $link: colors.$link,
-    $success: colors.$success,
-    $warning: colors.$warning,
-    $info: colors.$info,
-    $danger: colors.$danger
+    $link: map.get(colors.$link, 500),
+    $success: map.get(colors.$success, 500),
+    $warning: map.get(colors.$warning, 500),
+    $info: map.get(colors.$info, 500),
+    $danger: map.get(colors.$danger, 500)
 );
 
 @forward 'bulma/sass/base';
