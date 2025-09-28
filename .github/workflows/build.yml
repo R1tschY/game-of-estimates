@@ -78,7 +78,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build frontend
-        run: npm install && npm run build
+        run: npm clean-install && npm run build
         working-directory: frontend
 
       - name: Setup Rust toolchain
