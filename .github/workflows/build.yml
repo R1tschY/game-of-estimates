@@ -123,7 +123,7 @@ jobs:
         shell: bash
 
       - name: Upload binary package
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: binary
           path: game-of-estimates_${{ steps.version.outputs.version }}_${{ env.CARGO_BUILD_TARGET }}.tar.bz2
