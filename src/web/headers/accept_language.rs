@@ -1,7 +1,10 @@
+use crate::web::headers::common::QValue;
 use crate::web::i18n::LanguageNegotiator;
-use rocket::http::Status;
-use rocket::request::{FromRequest, Outcome};
-use rocket::Request;
+use axum::extract::{FromRequestParts, OptionalFromRequestParts};
+use axum::http::request::Parts;
+use axum::http::StatusCode;
+use axum::response::{IntoResponse, Response};
+use http::header::ACCEPT_LANGUAGE;
 use serde::{Serialize, Serializer};
 use std::convert::Infallible;
 use std::str::FromStr;
@@ -24,21 +27,25 @@ impl Serialize for Language {
     }
 }
 
-#[rocket::async_trait]
-impl<'r> FromRequest<'r> for Language {
-    type Error = Infallible;
+impl<S> FromRequestParts<S> for Language
+where
+    S: Send + Sync,
+{
+    type Rejection = Infallible;
 
-    async fn from_request(request: &'r Request<'_>) -> Outcome<Self, Self::Error> {
+    async fn from_request_parts(request: &mut Parts, _: &S) -> Result<Self, Self::Rejection> {
         let accepted = request
-            .headers()
-            .get_one("accept-language")
+            .headers
+            .get(ACCEPT_LANGUAGE)
+            .and_then(|value| value.to_str().ok())
             .and_then(|value| AcceptLanguage::from_str(value).ok());
 
-        let state = request
-            .rocket()
-            .state::<LanguageNegotiator>()
-            .expect("AcceptLanguageHelper should be provided as state");
-        Outcome::Success(Language(state.get_language(accepted)))
+        let negotiator = request
+            .extensions
+            .get::<LanguageNegotiator>()
+            .expect("LanguageNegotiator should be provided as axum extension");
+
+        Ok(Language(negotiator.get_language(accepted)))
     }
 }
 
@@ -52,16 +59,56 @@ impl AcceptLanguage {
     }
 }
 
-#[rocket::async_trait]
-impl<'r> FromRequest<'r> for AcceptLanguage {
-    type Error = ();
+pub struct AcceptLanguageRejection;
 
-    async fn from_request(request: &'r Request<'_>) -> Outcome<Self, Self::Error> {
-        match request.headers().get_one("accept-language") {
-            None => Outcome::Error((Status::BadRequest, ())),
-            Some(value) => match AcceptLanguage::from_str(value) {
-                Ok(res) => Outcome::Success(res),
-                Err(_) => Outcome::Error((Status::BadRequest, ())),
+impl IntoResponse for AcceptLanguageRejection {
+    fn into_response(self) -> Response {
+        (
+            StatusCode::BAD_REQUEST,
+            "Failed to parse accept-language header",
+        )
+            .into_response()
+    }
+}
+
+impl<S> FromRequestParts<S> for AcceptLanguage
+where
+    S: Send + Sync,
+{
+    type Rejection = AcceptLanguageRejection;
+
+    async fn from_request_parts(request: &mut Parts, _: &S) -> Result<Self, Self::Rejection> {
+        match request
+            .headers
+            .get(ACCEPT_LANGUAGE)
+            .and_then(|value| value.to_str().ok())
+        {
+            None => Err(AcceptLanguageRejection),
+            Some(value) => AcceptLanguage::from_str(value).map_err(|_| AcceptLanguageRejection),
+        }
+    }
+}
+
+impl<S> OptionalFromRequestParts<S> for AcceptLanguage
+where
+    S: Send + Sync,
+{
+    type Rejection = AcceptLanguageRejection;
+
+    async fn from_request_parts(
+        request: &mut Parts,
+        _: &S,
+    ) -> Result<Option<Self>, Self::Rejection> {
+        match request
+            .headers
+            .get(ACCEPT_LANGUAGE)
+            .map(|value| value.to_str().ok())
+        {
+            None => Ok(None),
+            Some(None) => Err(AcceptLanguageRejection),
+            Some(Some(value)) => match AcceptLanguage::from_str(value) {
+                Ok(res) => Ok(Some(res)),
+                Err(_) => Err(AcceptLanguageRejection),
             },
         }
     }
@@ -78,20 +125,15 @@ impl FromStr for AcceptLanguage {
                 Ok(match x.split_once(';') {
                     Some((lang, weight)) => (
                         lang,
-                        match f32::from_str(
-                            weight
-                                .trim_matches(|c: char| matches!(c, ' ' | '\x09'))
-                                .strip_prefix("q=")
-                                .ok_or(())?,
-                        ) {
-                            Ok(w) => w,
-                            Err(_) => return Err(()),
+                        match QValue::parse_weight(weight.as_bytes()) {
+                            Some((_, q)) => q,
+                            None => return Err(()),
                         },
                     ),
-                    None => (x, 1.0f32),
+                    None => (x, QValue::max()),
                 })
             })
-            .collect::<Result<Vec<(&str, f32)>, Self::Err>>()?;
+            .collect::<Result<Vec<(&str, QValue)>, Self::Err>>()?;
 
         langs.sort_by(|a, b| a.partial_cmp(b).unwrap());
 

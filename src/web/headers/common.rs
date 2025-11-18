@@ -8,10 +8,12 @@ pub struct Weighted<T> {
 }
 
 impl<T> Weighted<T> {
+    #[allow(unused)]
     pub fn new(value: T, weight: QValue) -> Self {
         Self { value, weight }
     }
 
+    #[allow(unused)]
     pub fn value(&self) -> &T {
         &self.value
     }
@@ -21,6 +23,7 @@ impl<T> Weighted<T> {
         self.value
     }
 
+    #[allow(unused)]
     pub fn weight(&self) -> QValue {
         self.weight
     }
@@ -33,6 +36,7 @@ impl<T> Weighted<T> {
 pub struct QValue(u16);
 
 impl QValue {
+    #[allow(unused)]
     pub fn unacceptable() -> Self {
         QValue(0)
     }
@@ -41,10 +45,12 @@ impl QValue {
         QValue(1000)
     }
 
+    #[allow(unused)]
     pub fn is_unacceptable(&self) -> bool {
         self.0 == 0
     }
 
+    #[allow(unused)]
     pub fn is_acceptable(&self) -> bool {
         self.0 != 0
     }
@@ -150,6 +156,7 @@ pub(crate) fn tchar(s: &[u8]) -> Option<(&[u8], ())> {
     }
 }
 
+#[allow(unused)]
 pub(crate) fn token(s: &[u8]) -> Option<(&[u8], &[u8])> {
     let n = s.iter().copied().take_while(|c| tchar_pred(*c)).count();
     if n >= 1 {

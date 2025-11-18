@@ -1,96 +1,103 @@
-use crate::web::compress::{Compression, DefaultPredicate};
 use crate::web::embed::{get_asset_url, AssetCatalog, EmbedTemplateContext};
-use crate::web::handlebars::Template;
+use crate::web::handlebars::{Template, TemplateRenderer, TemplateResult};
 use crate::web::headers::Language;
 use crate::web::i18n::LanguageNegotiator;
 use crate::web::i18n::Translator;
-use crate::web::prometheus::Prometheus;
-use crate::web::see_other::SeeOther;
+use crate::web::metrics::handler::serve_metrics;
+use crate::web::metrics::prometheus::RequestMetrics;
+use crate::web::metrics::service::RequestMetricsLayer;
+use crate::ListenAddr;
 use ::handlebars::Handlebars;
-use async_compression::Level;
+use axum::extract::ws::WebSocket;
+use axum::extract::{Path, Request, State, WebSocketUpgrade};
+use axum::response::{ErrorResponse, Redirect, Response};
+use axum::routing::{any, post};
+use axum::{routing::get, Extension, Form, Router};
 use game_of_estimates::game_server::{GameServerAddr, GameServerMessage};
 use game_of_estimates::player::Player;
 use game_of_estimates::remote::RemoteConnection;
+use http::StatusCode;
 use log::error;
 use prometheus_client::registry::Registry;
-use rocket::figment::providers::{Env, Format, Toml};
-use rocket::figment::Figment;
-use rocket::form::Form;
-use rocket::http::Status;
-use rocket::{routes, Build, FromForm, Rocket, State};
-use rocket_ws::WebSocket;
 use rust_embed::Embed;
+use serde::Deserialize;
 use serde_json::json;
 use std::collections::HashMap;
-use std::path::Path;
+use std::sync::Arc;
+use tower::ServiceBuilder;
+use tower_http::compression::CompressionLayer;
 
-pub mod compress;
 pub mod embed;
 pub mod handlebars;
 pub mod headers;
 pub mod i18n;
-pub mod prometheus;
-pub mod see_other;
+mod metrics;
 
 #[derive(Embed)]
 #[folder = "frontend/dist/"]
 pub struct MyAssetCatalog;
 
-#[rocket::get("/")]
-fn lobby(lang: Language) -> Template {
-    Template::html(
+pub struct AppState {
+    game_server: GameServerAddr,
+    hbs: TemplateRenderer,
+}
+
+async fn lobby(lang: Language, State(state): State<Arc<AppState>>) -> TemplateResult {
+    state.hbs.render(Template::html(
         "lobby.html",
         json!({
             "lang": lang,
         }),
-    )
+    ))
 }
 
-#[derive(FromForm)]
-struct CreateRoomFormData<'r> {
-    deck: &'r str,
-    custom_deck: Option<&'r str>,
+#[derive(Deserialize)]
+struct CreateRoomFormData {
+    deck: String,
+    custom_deck: Option<String>,
 }
 
-#[rocket::post("/room", data = "<data>")]
 async fn create_room(
-    data: Form<CreateRoomFormData<'_>>,
-    game_server_addr: &State<GameServerAddr>,
-) -> Result<SeeOther, Status> {
+    State(state): State<Arc<AppState>>,
+    Form(data): Form<CreateRoomFormData>,
+) -> Result<Redirect, ErrorResponse> {
     let (tx, rx) = tokio::sync::oneshot::channel();
     let deck: String = if data.deck == "custom" {
         match data.custom_deck {
             Some(custom_deck) => format!("custom:{custom_deck}"),
             None => {
                 error!("missing custom deck form field");
-                return Err(Status::UnprocessableEntity);
+                return Err(StatusCode::UNPROCESSABLE_ENTITY.into());
             }
         }
     } else {
         data.deck.to_string()
     };
-    let res = game_server_addr
-        .inner()
+    let res = state
+        .game_server
         .send(GameServerMessage::Create { deck, reply: tx })
         .await;
     if res.is_err() {
         error!("Failed to create room: game service is offline");
-        return Err(Status::ServiceUnavailable);
+        return Err(StatusCode::SERVICE_UNAVAILABLE.into());
     }
 
     match rx.await {
-        Ok(Some(room_id)) => Ok(SeeOther::new(format!("/room/{room_id}"))),
-        Ok(None) => Err(Status::ServiceUnavailable),
+        Ok(Some(room_id)) => Ok(Redirect::to(&format!("/room/{room_id}"))),
+        Ok(None) => Err(StatusCode::SERVICE_UNAVAILABLE.into()),
         Err(_) => {
             error!("Failed to create room: game service dropped message");
-            Err(Status::ServiceUnavailable)
+            Err(StatusCode::SERVICE_UNAVAILABLE.into())
         }
     }
 }
 
-#[rocket::get("/room/<id>")]
-fn room(lang: Language, id: &str) -> Template {
-    Template::html(
+async fn room(
+    State(state): State<Arc<AppState>>,
+    Path(id): Path<String>,
+    lang: Language,
+) -> TemplateResult {
+    state.hbs.render(Template::html(
         "room.html",
         json!({
             "lang": lang,
@@ -98,26 +105,23 @@ fn room(lang: Language, id: &str) -> Template {
             "js": get_asset_url::<MyAssetCatalog>("assets/room.js"),
             "css": get_asset_url::<MyAssetCatalog>("assets/style.css"),
         }),
-    )
+    ))
 }
 
-#[rocket::get("/ws")]
-async fn websocket(
-    ws: WebSocket,
-    game_server: &State<GameServerAddr>,
-) -> rocket_ws::Channel<'static> {
-    let game_server = game_server.inner().clone();
-    ws.channel(move |ws| {
-        Box::pin(async move {
-            Player::new(RemoteConnection::new(ws), game_server)
-                .run()
-                .await;
-            Ok(())
-        })
+async fn websocket(State(state): State<Arc<AppState>>, ws: WebSocketUpgrade) -> Response {
+    let game_server = state.game_server.clone();
+    ws.on_upgrade(|socket: WebSocket| async {
+        Player::new(RemoteConnection::new(socket), game_server)
+            .run()
+            .await
     })
 }
 
-pub async fn rocket(game_server: GameServerAddr) -> Rocket<Build> {
+async fn assets(req: Request) -> Response {
+    AssetCatalog::<MyAssetCatalog>::new().serve(&req)
+}
+
+pub async fn main(game_server: GameServerAddr, listen_addr: ListenAddr) {
     // i18n
     let mut translations = HashMap::new();
     translations.insert(
@@ -133,32 +137,41 @@ pub async fn rocket(game_server: GameServerAddr) -> Rocket<Build> {
     let lang = LanguageNegotiator::new(&translations);
     let translator = Translator::new(translations);
 
-    let figment = Figment::from(rocket::Config::default())
-        .merge(Toml::file("game_of_estimates.toml").nested())
-        .merge(Env::prefixed("GOE_").global());
+    let mut hbs = Handlebars::new();
+    #[cfg(debug_assertions)]
+    hbs.set_dev_mode(true);
+    let templates_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("src/templates");
+    hbs.register_templates_directory(templates_dir, Default::default())
+        .expect("templates should be valid");
+    hbs.register_helper("text", Box::new(translator.clone()));
+    hbs.register_helper(
+        "asset",
+        Box::new(EmbedTemplateContext::<MyAssetCatalog>::new()),
+    );
 
-    rocket::custom(figment)
-        .manage(Template::state({
-            let mut hbs = Handlebars::new();
-            #[cfg(debug_assertions)]
-            hbs.set_dev_mode(true);
-            let templates_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/templates");
-            hbs.register_templates_directory(templates_dir, Default::default())
-                .expect("templates should be valid");
-            hbs.register_helper("text", Box::new(translator.clone()));
-            hbs.register_helper(
-                "asset",
-                Box::new(EmbedTemplateContext::<MyAssetCatalog>::new()),
-            );
-            hbs
+    let mut registry = Registry::default();
+    let req_metrics = RequestMetrics::new(&mut registry);
+
+    let app = Router::new()
+        .route("/", get(lobby))
+        .route("/room", post(create_room))
+        .route("/room/{id}", get(room))
+        .route("/ws", any(websocket))
+        .route("/metrics", get(serve_metrics(Arc::new(registry))))
+        .fallback(get(assets))
+        .with_state(Arc::new(AppState {
+            game_server,
+            hbs: TemplateRenderer::new(hbs),
         }))
-        .attach(Prometheus::new(Registry::default()))
-        .attach(Compression::new(
-            Level::Default,
-            DefaultPredicate::default(),
-        ))
-        .manage(lang)
-        .manage(game_server)
-        .mount("/", routes![lobby, create_room, room, websocket])
-        .mount("/", AssetCatalog::<MyAssetCatalog>::new())
+        .layer(
+            ServiceBuilder::new()
+                .layer(Extension(lang))
+                .layer(CompressionLayer::new())
+                .layer(RequestMetricsLayer::new(req_metrics)),
+        );
+
+    let listener = tokio::net::TcpListener::bind(listen_addr.0)
+        .await
+        .expect("should bind to listen address");
+    axum::serve(listener, app).await.unwrap();
 }

@@ -1,13 +1,9 @@
-use std::convert::TryInto;
-
-use futures_util::{SinkExt, StreamExt};
-use quick_error::quick_error;
-use rocket_ws::stream::DuplexStream;
-use rocket_ws::Message;
-use serde::{Deserialize, Serialize};
-use tokio::time::{Duration, Instant};
-
 use crate::room::{GameState, PlayerState};
+use axum::extract::ws::{Message, WebSocket};
+use quick_error::quick_error;
+use serde::{Deserialize, Serialize};
+use std::convert::TryInto;
+use tokio::time::{Duration, Instant};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 #[serde(tag = "type")]
@@ -62,7 +58,7 @@ pub enum RemoteMessage {
 quick_error! {
     #[derive(Debug)]
     pub enum ConnError {
-        Ws(err: rocket_ws::result::Error) {
+        Ws(err: axum::Error) {
             display("Web socket error: {}", err)
             from()
         }
@@ -79,14 +75,14 @@ quick_error! {
 type ConnResult<T> = Result<T, ConnError>;
 
 pub struct RemoteConnection {
-    socket: DuplexStream,
+    socket: WebSocket,
 
     last_ping_start: Instant,
     last_ping_id: u16,
 }
 
 impl RemoteConnection {
-    pub fn new(socket: DuplexStream) -> Self {
+    pub fn new(socket: WebSocket) -> Self {
         let now = Instant::now();
         Self {
             socket,
@@ -108,19 +104,22 @@ impl RemoteConnection {
         self.last_ping_id = self.last_ping_id.overflowing_add(1).0;
         self.last_ping_start = now;
 
+        let payload = self.last_ping_id.to_le_bytes();
         self.socket
-            .send(Message::Ping(self.last_ping_id.to_le_bytes().to_vec()))
+            .send(Message::Ping(payload.to_vec().into()))
             .await
             .map_err(|err| err.into())
     }
 
     pub async fn recv(&mut self) -> ConnResult<RemoteMessage> {
-        while let Some(msg) = self.socket.next().await {
+        while let Some(msg) = self.socket.recv().await {
             match msg? {
                 Message::Text(msg) => return Ok(serde_json::from_str(&msg)?),
                 Message::Close(_) => return Ok(RemoteMessage::Close),
                 Message::Pong(pong) => {
-                    if pong.try_into().map(u16::from_le_bytes) == Ok(self.last_ping_id) {
+                    if pong.as_ref().try_into().map(u16::from_le_bytes).ok()
+                        == Some(self.last_ping_id)
+                    {
                         let duration = Instant::now().checked_duration_since(self.last_ping_start);
                         if let Some(duration) = duration {
                             return Ok(RemoteMessage::Ping(duration));

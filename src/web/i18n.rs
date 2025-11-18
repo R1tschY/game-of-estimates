@@ -3,7 +3,7 @@ use handlebars::{
     Context, Handlebars, Helper, HelperDef, RenderContext, RenderError, RenderErrorReason,
     ScopedJson,
 };
-use rocket::serde::Deserialize;
+use serde::Deserialize;
 use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::Arc;

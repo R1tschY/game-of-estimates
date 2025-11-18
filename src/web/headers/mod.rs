@@ -1,12 +1,11 @@
 mod parse;
 
-mod accept_encoding;
 mod accept_language;
 mod common;
 mod etag;
 
-pub use accept_encoding::{AcceptEncoding, Coding};
 pub use accept_language::{AcceptLanguage, Language};
+use axum::http::HeaderValue;
 pub use etag::{ETag, IfNoneMatch};
 
 pub(crate) fn single<I: Iterator>(mut iter: I) -> Result<I::Item, InvalidHeaderValue> {
@@ -25,7 +24,7 @@ pub trait Header<'h> {
     fn decode<I>(values: &mut I) -> Result<Self, InvalidHeaderValue>
     where
         Self: Sized,
-        I: Iterator<Item = &'h str>;
+        I: Iterator<Item = &'h HeaderValue>;
 }
 
 /// An extension trait adding typed header methods to `rocket::http::HeaderMap`
@@ -41,7 +40,7 @@ pub trait HeaderMapExt<'h>: sealed::Sealed {
         H: Header<'h>;
 }
 
-impl<'h, 't> HeaderMapExt<'h> for &'h rocket::http::HeaderMap<'t> {
+impl<'h> HeaderMapExt<'h> for &'h http::HeaderMap<HeaderValue> {
     fn typed_get<H>(&self) -> Option<H>
     where
         H: Header<'h>,
@@ -53,7 +52,7 @@ impl<'h, 't> HeaderMapExt<'h> for &'h rocket::http::HeaderMap<'t> {
     where
         H: Header<'h>,
     {
-        let mut values = self.get(H::name());
+        let mut values = self.get_all(H::name()).iter();
         if values.size_hint().1 == Some(0) {
             Ok(None)
         } else {
@@ -63,6 +62,8 @@ impl<'h, 't> HeaderMapExt<'h> for &'h rocket::http::HeaderMap<'t> {
 }
 
 mod sealed {
+    use axum::http::HeaderValue;
+
     pub trait Sealed {}
-    impl<'t, 'h> Sealed for &'t ::rocket::http::HeaderMap<'h> {}
+    impl Sealed for &http::HeaderMap<HeaderValue> {}
 }
