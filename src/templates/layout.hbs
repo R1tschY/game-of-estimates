@@ -27,41 +27,7 @@
     <link rel="stylesheet" href="{{ asset 'assets/style.css' }}">
     <script type="module" crossorigin="" src="{{ asset 'assets/icons.js' }}"></script>
 </head>
-<body>
-
-<nav class="navbar" role="navigation" aria-label="main navigation">
-    <div class="navbar-brand">
-        <a class="navbar-item" href="/">Game Of Estimates</a>
-
-        <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false">
-            <span aria-hidden="true"></span>
-            <span aria-hidden="true"></span>
-            <span aria-hidden="true"></span>
-            <span aria-hidden="true"></span>
-        </a>
-    </div>
-
-    <div class="navbar-end">
-        <div class="navbar-item has-dropdown is-hoverable">
-            <a class="navbar-link">
-                Anonymous
-            </a>
-
-            <div class="navbar-dropdown">
-                <a class="navbar-item">
-                    Change Name
-                </a>
-                <a class="navbar-item">
-                    Visitor
-                </a>
-                <hr class="navbar-divider">
-                <a class="navbar-item">
-                    Report an issue
-                </a>
-            </div>
-        </div>
-    </div>
-</nav>
+<body class="is-justify-content-flex-start">
 
 {{> @partial-block }}
 

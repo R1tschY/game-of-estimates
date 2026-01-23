@@ -1,16 +1,16 @@
 {{#> layout }}
-    <main class="is-flex-grow-1 mt-3 mb-6">
-        <section class="section">
+    <main class="is-flex-grow-1 pt-3">
+        <section class="section pb-6">
             <div class="container content is-max-tablet">
                 <h1 class="title is-1">{{{text 'title'}}}</h1>
                 <p class="subtitle">{{{text 'summary'}}}</p>
             </div>
         </section>
 
-        <section class="section m-3">
+        <section class="section pb-6">
             <div class="columns is-centered">
                 <div class="column is-half">
-                    <h2 class="title is-5">{{ text 'lobbyActionText' }}</h2>
+                    <p class="pb-3">{{ text 'lobbyActionText' }}</p>
                     <form id="create-room-form" class="box p-5" method="post" action="/room"></form>
                     <noscript class="box">{{{text 'noscript'}}}</noscript>
                 </div>

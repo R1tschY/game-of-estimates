@@ -11,7 +11,7 @@ export const connected: Readable<boolean> = wsService.connected_store
 export const connecting: Readable<boolean> = wsService.connecting_store
 
 export interface PlayerSettings {
-    name: Option<string>
+    name: string
     voter: boolean
     debug: boolean
 }
@@ -19,7 +19,7 @@ export interface PlayerSettings {
 export const ownPlayerState: Writable<PlayerSettings> = writableLocalStorage(
     'goe-player-settings',
     {
-        name: null,
+        name: '',
         voter: true,
         debug: false,
     },
@@ -47,7 +47,7 @@ observer.subscribe((value) => {
 //     function(value) { this.voter = value; }
 // )
 
-export const name: Writable<Option<string>> = writable(get(ownPlayerState).name)
+export const name: Writable<string> = writable(get(ownPlayerState).name)
 name.subscribe((value) => {
     ownPlayerState.update((state) => {
         state.name = value

@@ -1,4 +1,4 @@
-import { getText } from './i18n'
+import { m } from '$lib/paraglide/messages.js'
 
 interface Deck {
     id: string
@@ -79,7 +79,7 @@ export const decks: Deck[] = [
 export function getDeck(id: string): Deck | undefined {
     if (id.startsWith('custom:')) {
         const cards = id.substring('custom:'.length).split(/\s*,\s*/)
-        return { id: 'custom', name: getText('customDeck'), cards }
+        return { id: 'custom', name: m.customDeck(), cards }
     }
 
     for (const elem of decks) {

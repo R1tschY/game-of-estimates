@@ -9,15 +9,13 @@
 <section class="hero head">
     <div class="hero-body">
         <div class="container">
-            <h1 class="title"><a href="/">Game Of Estimates</a></h1>
-            <h2 class="subtitle">Planning Poker</h2>
+            <h1 class="title"><a href="/">{m.title()}</a></h1>
+            <h2 class="subtitle">{@html m.summary()}</h2>
         </div>
     </div>
 </section>
 
-<main>
-    <slot />
-</main>
+<slot />
 
 <footer class="footer">
     <div class="content has-text-centered">
