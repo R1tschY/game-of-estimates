@@ -1,17 +1,9 @@
 <script lang="ts">
     import '../main.sass'
 
-    import type { AvailableLanguageTag } from '$lib/paraglide/runtime'
-    import { i18n } from '$lib/i18n'
-    import { page } from '$app/stores'
-    import { goto } from '$app/navigation'
-    import * as m from '$lib/paraglide/messages.js'
-
-    function switchToLanguage(newLanguage: AvailableLanguageTag) {
-        const canonicalPath = i18n.route($page.url.pathname)
-        const localisedPath = i18n.resolveRoute(canonicalPath, newLanguage)
-        goto(localisedPath)
-    }
+    import { page } from '$app/state'
+    import { locales, localizeHref } from '$lib/paraglide/runtime'
+    import { m } from '$lib/paraglide/messages.js'
 </script>
 
 <section class="hero head">
@@ -36,9 +28,15 @@
                 <img src="github.svg" alt="GitHub" />
             </a>
         </div>
-        <div>
-            <button onclick={() => switchToLanguage('en')}>en</button>
-            <button onclick={() => switchToLanguage('de')}>de</button>
-        </div>
+        <nav aria-label="Languages">
+            {#each locales as locale}
+                <a
+                    href={localizeHref(page.url.pathname, { locale })}
+                    data-sveltekit-reload
+                >
+                    {locale}
+                </a>
+            {/each}
+        </nav>
     </div>
 </footer>

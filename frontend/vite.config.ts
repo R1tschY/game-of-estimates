@@ -1,7 +1,6 @@
-import { resolve } from 'path'
+import { paraglideVitePlugin } from '@inlang/paraglide-js'
 import { defineConfig } from 'vite'
 import { sveltekit } from '@sveltejs/kit/vite'
-import { paraglide } from '@inlang/paraglide-sveltekit/vite'
 import eslint from 'vite-plugin-eslint'
 
 // https://vitejs.dev/config/
@@ -9,9 +8,10 @@ export default defineConfig({
     plugins: [
         sveltekit(),
         eslint(),
-        paraglide({
+        paraglideVitePlugin({
             project: './project.inlang',
             outdir: './src/lib/paraglide',
+            strategy: ['url', 'cookie', 'baseLocale'],
         }),
     ],
     envPrefix: 'GOE_',

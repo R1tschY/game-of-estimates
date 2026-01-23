@@ -1,5 +1,18 @@
 import type { Handle } from '@sveltejs/kit'
-import { i18n } from '$lib/i18n'
+import { paraglideMiddleware } from '$lib/paraglide/server'
 
-const handleParaglide: Handle = i18n.handle()
-export const handle: Handle = handleParaglide
+// creating a handle to use the paraglide middleware
+const paraglideHandle: Handle = ({ event, resolve }) =>
+    paraglideMiddleware(
+        event.request,
+        ({ request: localizedRequest, locale }) => {
+            event.request = localizedRequest
+            return resolve(event, {
+                transformPageChunk: ({ html }) => {
+                    return html.replace('%lang%', locale)
+                },
+            })
+        },
+    )
+
+export const handle: Handle = paraglideHandle
