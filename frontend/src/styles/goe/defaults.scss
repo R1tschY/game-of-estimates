@@ -1,7 +1,71 @@
+@use 'sass:color' as color;
+@use 'sass:map' as map;
+
+@mixin color-shade-vars($name, $color) {
+    $shades: (
+        100: 40%,
+        200: 30%,
+        300: 20%,
+        400: 10%,
+        500: 0,
+        600: -10%,
+        700: -20%,
+        800: -30%,
+        900: -40%,
+    );
+    @each $shade, $lightness in $shades {
+        @if $lightness != 0 {
+            --#{$name}-#{$shade}: #{color.adjust(
+                    $color,
+                    $lightness: $lightness
+                )};
+        } @else {
+            --#{$name}-#{$shade}: #{$color};
+        }
+    }
+}
+
+$bu: 16px;
+
 $size-1: 3rem !default;
 $size-2: 2.5rem !default;
 $size-3: 2rem !default;
 $size-4: 1.5rem !default;
 $size-5: 1.25rem !default;
-$size-6: 1rem !default;
+$size-6: 1rem !default; // 16px
 $size-7: 0.75rem !default;
+$size-8: 0.5rem !default;
+$size-9: 4px !default;
+$size-10: 2px !default;
+
+$fg: #222222 !default;
+$fg-invert: #ffffff !default;
+$bg: #ffffff !default;
+$primary: #00d1b2 !default;
+
+$_caf-noir: #45361bff;
+$_caribbean-current: #2f717eff;
+$_avocado: #4f8426ff;
+$_dutch-white: #f3e2c2ff;
+$_rust: #b64a1bff;
+$_gray: #666;
+
+$font-color: var(--fg-500) !default;
+
+$primary-color: $_rust !default;
+$default-color: #363636 !default;
+$active-color: color.scale($bg, $lightness: -10%) !default;
+$default-bg-color: color.adjust($bg, $lightness: -50%) !default;
+$secondary-bg-color: color.scale($bg, $lightness: 0%) !default;
+$hover-color: color.scale($bg, $lightness: -5%) !default;
+
+$radius: 6px !default;
+$border-width: 1px !default;
+$border-color: #c3c3c3 !default;
+
+:root {
+    @include color-shade-vars('fg', $fg);
+    @include color-shade-vars('bg', $bg);
+    @include color-shade-vars('gray', $_gray);
+    @include color-shade-vars('primary', $primary);
+}

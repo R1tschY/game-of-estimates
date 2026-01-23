@@ -1,4 +1,14 @@
+@charset "utf-8";
 @use 'defaults';
+
+/* Initial */
+
+:root {
+    font-size: defaults.$bu;
+    font-family: system-ui;
+    color: defaults.$font-color;
+    box-sizing: border-box;
+}
 
 /* Flex */
 
@@ -33,4 +43,39 @@
 /* Button */
 
 .g-btn {
+    background-color: defaults.$secondary-bg-color;
+    border-radius: defaults.$radius;
+    border: defaults.$border-width solid defaults.$border-color;
+    padding: defaults.$size-8 defaults.$size-7;
+
+    &:hover {
+        background-color: defaults.$hover-color;
+    }
+
+    &:active {
+        border-style: solid;
+        background-color: defaults.$active-color;
+    }
+
+    &[g-size='s'] {
+        padding: defaults.$size-8;
+    }
+
+    &[g-size='l'] {
+        padding: defaults.$size-6;
+    }
+
+    &[g-primary] {
+        background-color: defaults.$primary-color;
+        color: defaults.$fg-invert;
+    }
+
+    &[g-primary]:hover {
+        background-color: defaults.$hover-color;
+    }
+
+    &[g-primary]:active {
+        border-style: solid;
+        background-color: defaults.$active-color;
+    }
 }
