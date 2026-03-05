@@ -1,31 +1,85 @@
 @charset "utf-8";
 @use 'sass:color';
 
-@function color-shades($color) {
-    @return (
-        100: color.adjust($color, $lightness: 20%),
-        200: color.adjust($color, $lightness: 40%),
-        300: color.adjust($color, $lightness: 60%),
-        400: color.adjust($color, $lightness: 80%),
-        500: $color,
-        600: color.adjust($color, $lightness: -20%),
-        700: color.adjust($color, $lightness: -40%),
-        800: color.adjust($color, $lightness: -60%),
-        900: color.adjust($color, $lightness: -80%)
-    );
-}
+$deep-walnut-50: oklch(96.83% 0.01 81.8);
+$deep-walnut-100: oklch(93.63% 0.022 83.26);
+$deep-walnut-200: oklch(87.15% 0.042 83.86);
+$deep-walnut-300: oklch(80.71% 0.064 83.44);
+$deep-walnut-400: oklch(74.06% 0.085 81.67);
+$deep-walnut-500: oklch(67.64% 0.103 80.54);
+$deep-walnut-600: oklch(57.46% 0.086 80.52);
+$deep-walnut-700: oklch(47.03% 0.068 82.01);
+$deep-walnut-800: oklch(35.74% 0.049 82.58);
+$deep-walnut-900: oklch(23.59% 0.029 82.29);
+$deep-walnut-950: oklch(19.55% 0.021 79.82);
 
-$_caf-noir: #45361bff;
-$_caribbean-current: #2f717eff;
-$_avocado: #4f8426ff;
-$_dutch-white: #f3e2c2ff;
-$_rust: #b64a1bff;
+$stormy-teal-50: oklch(96.62% 0.011 211.04);
+$stormy-teal-100: oklch(93.32% 0.021 211.76);
+$stormy-teal-200: oklch(86.88% 0.042 209.68);
+$stormy-teal-300: oklch(80.28% 0.063 211.64);
+$stormy-teal-400: oklch(73.83% 0.08 212.34);
+$stormy-teal-500: oklch(67.83% 0.094 212.55);
+$stormy-teal-600: oklch(57.51% 0.079 213.39);
+$stormy-teal-700: oklch(46.96% 0.063 213.13);
+$stormy-teal-800: oklch(35.79% 0.045 210.86);
+$stormy-teal-900: oklch(23.35% 0.026 212.82);
+$stormy-teal-950: oklch(19.41% 0.019 214.03);
+
+$forest-moss-50: oklch(97.23% 0.02 131.45);
+$forest-moss-100: oklch(94.76% 0.042 130.93);
+$forest-moss-200: oklch(89.37% 0.082 132.11);
+$forest-moss-300: oklch(84.38% 0.123 132.49);
+$forest-moss-400: oklch(79.37% 0.158 133.23);
+$forest-moss-500: oklch(74.77% 0.189 134.62);
+$forest-moss-600: oklch(63.38% 0.157 134.35);
+$forest-moss-700: oklch(51.65% 0.127 134.31);
+$forest-moss-800: oklch(38.93% 0.091 134.22);
+$forest-moss-900: oklch(25.44% 0.054 133.13);
+$forest-moss-950: oklch(20.97% 0.04 132.57);
+
+$pearl-beige-50: oklch(97.18% 0.016 82.79);
+$pearl-beige-100: oklch(94.35% 0.033 83.71);
+$pearl-beige-200: oklch(88.51% 0.063 82.57);
+$pearl-beige-300: oklch(83.04% 0.094 82.3);
+$pearl-beige-400: oklch(77.64% 0.12 81.34);
+$pearl-beige-500: oklch(72.33% 0.138 77.61);
+$pearl-beige-600: oklch(61.49% 0.116 78.56);
+$pearl-beige-700: oklch(50.05% 0.093 78.43);
+$pearl-beige-800: oklch(37.79% 0.068 78.85);
+$pearl-beige-900: oklch(24.82% 0.041 81.27);
+$pearl-beige-950: oklch(20.29% 0.03 79.43);
+
+$rusty-spice-50: oklch(95.88% 0.017 40.8);
+$rusty-spice-100: oklch(91.89% 0.032 44.36);
+$rusty-spice-200: oklch(84.01% 0.069 44.6);
+$rusty-spice-300: oklch(76.36% 0.106 44.02);
+$rusty-spice-400: oklch(69.22% 0.143 43.09);
+$rusty-spice-500: oklch(63.08% 0.178 40.81);
+$rusty-spice-600: oklch(53.53% 0.148 41);
+$rusty-spice-700: oklch(43.71% 0.118 41.37);
+$rusty-spice-800: oklch(33.31% 0.085 42);
+$rusty-spice-900: oklch(21.88% 0.047 43.18);
+$rusty-spice-950: oklch(18.39% 0.035 46.35);
+
+/* derived */
+
+$accent-50: $deep-walnut-50;
+$accent-100: $deep-walnut-100;
+$accent-200: $deep-walnut-200;
+$accent-300: $deep-walnut-300;
+$accent-400: $deep-walnut-400;
+$accent-500: $deep-walnut-500;
+$accent-600: $deep-walnut-600;
+$accent-700: $deep-walnut-700;
+$accent-800: $deep-walnut-800;
+$accent-900: $deep-walnut-900;
+$accent-950: $deep-walnut-950;
+
 $_gray: #666;
 
-$primary: color-shades($_rust);
-$link: color-shades($_rust);
-$info: color-shades($_caribbean-current);
-$danger: color-shades($_caribbean-current);
-$warning: color-shades($_caribbean-current);
-$success: color-shades($_avocado);
-$bg: color-shades($_dutch-white);
+$link: $rusty-spice-500;
+$info: $stormy-teal-500;
+$danger: $stormy-teal-500;
+$warning: $stormy-teal-500;
+$success: $forest-moss-600;
+$bg: $deep-walnut-100;
