@@ -1,34 +1,27 @@
-use crate::web::embed::{get_asset_url, AssetCatalog, EmbedTemplateContext};
-use crate::web::handlebars::{Template, TemplateRenderer, TemplateResult};
-use crate::web::headers::Language;
-use crate::web::i18n::LanguageNegotiator;
-use crate::web::i18n::Translator;
 use crate::web::metrics::handler::serve_metrics;
 use crate::web::metrics::prometheus::RequestMetrics;
 use crate::web::metrics::service::RequestMetricsLayer;
 use crate::ListenAddr;
-use ::handlebars::Handlebars;
+use axum::body::Body;
 use axum::extract::ws::WebSocket;
-use axum::extract::{Path, Request, State, WebSocketUpgrade};
-use axum::response::{ErrorResponse, Redirect, Response};
+use axum::extract::{State, WebSocketUpgrade};
+use axum::response::{ErrorResponse, IntoResponse, Redirect, Response};
 use axum::routing::{any, post};
-use axum::{routing::get, Extension, Form, Router};
+use axum::{routing::get, Form, Router};
 use game_of_estimates::game_server::{GameServerAddr, GameServerMessage};
 use game_of_estimates::player::Player;
 use game_of_estimates::remote::RemoteConnection;
-use http::StatusCode;
+use http::{HeaderValue, StatusCode};
 use log::error;
 use prometheus_client::registry::Registry;
 use rust_embed::Embed;
 use serde::Deserialize;
-use serde_json::json;
-use std::collections::HashMap;
 use std::sync::Arc;
 use tower::ServiceBuilder;
 use tower_http::compression::CompressionLayer;
+use tower_serve_assets::embed::EmbedCatalog;
+use tower_serve_assets::ServeAssets;
 
-pub mod embed;
-pub mod handlebars;
 pub mod headers;
 pub mod i18n;
 mod metrics;
@@ -39,16 +32,6 @@ pub struct MyAssetCatalog;
 
 pub struct AppState {
     game_server: GameServerAddr,
-    hbs: TemplateRenderer,
-}
-
-async fn lobby(lang: Language, State(state): State<Arc<AppState>>) -> TemplateResult {
-    state.hbs.render(Template::html(
-        "lobby.html",
-        json!({
-            "lang": lang,
-        }),
-    ))
 }
 
 #[derive(Deserialize)]
@@ -92,20 +75,18 @@ async fn create_room(
     }
 }
 
-async fn room(
-    State(state): State<Arc<AppState>>,
-    Path(id): Path<String>,
-    lang: Language,
-) -> TemplateResult {
-    state.hbs.render(Template::html(
-        "room.html",
-        json!({
-            "lang": lang,
-            "roomId": id,
-            "js": get_asset_url::<MyAssetCatalog>("assets/room.js"),
-            "css": get_asset_url::<MyAssetCatalog>("assets/style.css"),
-        }),
-    ))
+async fn room() -> Response {
+    // TODO: etag caching
+    if let Some(asset) = MyAssetCatalog::get("200.html") {
+        let mut response = Body::from(asset.data).into_response();
+        response.headers_mut().append(
+            http::header::CONTENT_TYPE,
+            HeaderValue::from_static("text/html"),
+        );
+        response
+    } else {
+        (StatusCode::NOT_FOUND, "Asset not found").into_response()
+    }
 }
 
 async fn websocket(State(state): State<Arc<AppState>>, ws: WebSocketUpgrade) -> Response {
@@ -117,55 +98,20 @@ async fn websocket(State(state): State<Arc<AppState>>, ws: WebSocketUpgrade) -> 
     })
 }
 
-async fn assets(req: Request) -> Response {
-    AssetCatalog::<MyAssetCatalog>::new().serve(&req)
-}
-
 pub async fn main(game_server: GameServerAddr, listen_addr: ListenAddr) {
     // i18n
-    let mut translations = HashMap::new();
-    translations.insert(
-        "de",
-        serde_json::de::from_str(include_str!("../../frontend/src/i18n/de.json"))
-            .expect("german translation should be valid"),
-    );
-    translations.insert(
-        "en",
-        serde_json::de::from_str(include_str!("../../frontend/src/i18n/en.json"))
-            .expect("english translation should be valid"),
-    );
-    let lang = LanguageNegotiator::new(&translations);
-    let translator = Translator::new(translations);
-
-    let mut hbs = Handlebars::new();
-    #[cfg(debug_assertions)]
-    hbs.set_dev_mode(true);
-    let templates_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("src/templates");
-    hbs.register_templates_directory(templates_dir, Default::default())
-        .expect("templates should be valid");
-    hbs.register_helper("text", Box::new(translator.clone()));
-    hbs.register_helper(
-        "asset",
-        Box::new(EmbedTemplateContext::<MyAssetCatalog>::new()),
-    );
-
     let mut registry = Registry::default();
     let req_metrics = RequestMetrics::new(&mut registry);
 
     let app = Router::new()
-        .route("/", get(lobby))
         .route("/room", post(create_room))
         .route("/room/{id}", get(room))
         .route("/ws", any(websocket))
         .route("/metrics", get(serve_metrics(Arc::new(registry))))
-        .fallback(get(assets))
-        .with_state(Arc::new(AppState {
-            game_server,
-            hbs: TemplateRenderer::new(hbs),
-        }))
+        .fallback_service(ServeAssets::builder(EmbedCatalog::<MyAssetCatalog>::default()).build())
+        .with_state(Arc::new(AppState { game_server }))
         .layer(
             ServiceBuilder::new()
-                .layer(Extension(lang))
                 .layer(CompressionLayer::new())
                 .layer(RequestMetricsLayer::new(req_metrics)),
         );

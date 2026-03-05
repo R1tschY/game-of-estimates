@@ -29,13 +29,13 @@ rand = "^0.8.5"
 quick-error = "^2.0.1"
 async-trait = "^0.1.83"
 uactor = { path = "components/uactor" }
+tower-serve-assets = { path = "components/tower-serve-assets", features = ["rust-embed"] }
 chassis = { git = "https://github.com/R1tschY/chassis.git" }
 uuid = { version = "1.11.0", features = ["v7"] }
 base64 = "0.22.1"
 anyhow = "1.0"
 time = "0.3"
 dotenvy = "0.15.7"
-handlebars = { version = "6.1.0", features = ["dir_source"] }
 axum = { version = "0.8.6", features = ["ws", "form", "macros"] }
 rust-embed = { version = "8.5.0", features = ["mime-guess"] }
 prometheus-client = "0.22.3"
@@ -55,9 +55,7 @@ features = ["runtime-tokio", "tls-rustls", "postgres", "migrate", "macros", "uui
 ctor = "0.2"
 
 [workspace]
-members = [
-    "components/uactor"
-]
+members = ["components/tower-serve-assets", "components/uactor"]
 
 [profile.release]
 lto = "fat"

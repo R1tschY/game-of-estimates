@@ -1,5 +1,4 @@
-use crate::web::headers::single;
-use crate::web::headers::{Header, InvalidHeaderValue};
+use crate::headers::InvalidHeaderValue;
 use http::HeaderValue;
 use std::borrow::Cow;
 
@@ -20,21 +19,9 @@ impl<'h> ETag<'h> {
             entity_tag: etag.into(),
         })
     }
-}
 
-impl<'h> Header<'h> for ETag<'h> {
     fn name() -> &'static str {
         "ETag"
-    }
-
-    fn decode<I>(values: &mut I) -> Result<Self, InvalidHeaderValue>
-    where
-        Self: Sized,
-        I: Iterator<Item = &'h HeaderValue>,
-    {
-        single(values)
-            .and_then(|value| EntityTag::parse(value.as_bytes()))
-            .map(ETag)
     }
 }
 
@@ -67,7 +54,7 @@ fn trim(bytes: &[u8], pred: impl Fn(&u8) -> bool) -> &[u8] {
     trim_end(trim_start(bytes, &pred), &pred)
 }
 
-impl<'h> Header<'h> for IfNoneMatch<'h> {
+impl<'h> IfNoneMatch<'h> {
     fn name() -> &'static str {
         "If-None-Match"
     }
