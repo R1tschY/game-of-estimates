@@ -3,7 +3,6 @@
 
     import { get } from 'svelte/store'
     import DisconnectedMW from '$/components/organisms/DisconnectedMW.svelte'
-    import SingleTextInput from '$/components/atoms/SingleTextInput.svelte'
     import Switch from '$/components/atoms/Switch.svelte'
     import PlayerEstimate from '$/components/atoms/PlayerEstimate.svelte'
     import EstimatesControl from '$/components/molecules/EstimatesControl.svelte'
@@ -12,8 +11,6 @@
     import { onMount } from 'svelte'
 
     let { id } = $props()
-
-    let newName: string = $state($name ?? '')
 
     const open: boolean = $derived($gameState?.open ?? false)
 
@@ -40,24 +37,15 @@
     function restart() {
         client.restart()
     }
-
-    function changeName() {
-        $name = newName ?? ''
-    }
 </script>
 
 <section class="section">
     <div class="container box">
         <div class="columns">
             <!-- Name -->
-            <div class="column player-name-control">
-                <SingleTextInput
-                    id="player-name"
-                    action="✓"
-                    placeholder={m.playerNamePlaceholder()}
-                    bind:value={newName}
-                    on:submit={changeName}
-                />
+            <div class="column is-flex is-gap-2 is-align-items-center">
+                <p class="is-size-4">{$name ? $name : m.anonymous()}</p>
+                <button type="button" class="button">{m.rename()}</button>
             </div>
 
             <div class="column"></div>
@@ -79,13 +67,9 @@
     <div class="container box">
         <h2 class="title is-4">{m.estimates()}</h2>
         <div class="buttons">
-            <button class="button is-primary is-light" onclick={restart}
-                >{m.restart()}</button
-            >
-            <button
-                class="button is-primary is-light"
-                disabled={open}
-                onclick={forceOpen}>{m.open()}</button
+            <button class="button" onclick={restart}>{m.restart()}</button>
+            <button class="button" disabled={open} onclick={forceOpen}
+                >{m.open()}</button
             >
         </div>
         <ul class="game-board">
