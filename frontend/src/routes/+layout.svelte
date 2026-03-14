@@ -23,7 +23,7 @@
         <p>{@html m.license()}</p>
         <div>
             <a href="/" class="footer-icon">
-                <img src="github.svg" alt="GitHub" />
+                <img src="/github.svg" alt="GitHub" />
             </a>
         </div>
         <nav aria-label="Languages">

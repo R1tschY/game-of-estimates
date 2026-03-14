@@ -1,9 +1,14 @@
 import { derived, get, writable } from 'svelte/store'
 import type { Writable } from 'svelte/store'
+import { browser } from '$app/environment'
 
 // Local Storage
 
 export function writableLocalStorage<T>(key: string, value: T): Writable<T> {
+    if (!browser) {
+        return writable(value)
+    }
+
     const jsonValue = localStorage.getItem(key)
     if (jsonValue) {
         value = JSON.parse(jsonValue) as T

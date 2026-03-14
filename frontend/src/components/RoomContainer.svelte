@@ -1,21 +1,26 @@
 <script lang="ts">
-    import { gameState, name as nameStore, players, observer } from '../stores'
+    import { gameState, name, observer, players } from '../stores'
 
-    import { client } from '../client'
     import { get } from 'svelte/store'
     import DisconnectedMW from '../components/DisconnectedMW.svelte'
     import SingleTextInput from '../components/SingleTextInput.svelte'
     import Switch from '../components/Switch.svelte'
     import PlayerEstimate from '../components/PlayerEstimate.svelte'
     import EstimatesControl from '../components/EstimatesControl.svelte'
-    import { getText } from '../i18n'
+    import { client, wsService } from '../client'
+    import { m } from '$lib/paraglide/messages.js'
+    import { onMount } from 'svelte'
 
-    export let id: string
+    let { id } = $props()
 
-    let name: string = get(nameStore) ?? ''
+    let newName: string = $state($name ?? '')
 
-    let open: boolean
-    $: open = $gameState?.open ?? false
+    const open: boolean = $derived($gameState?.open ?? false)
+
+    onMount(() => {
+        console.log('onMount')
+        wsService.connect()
+    })
 
     // TODO: disconnect on unmount
     client.welcome.connect(() => {
@@ -37,7 +42,7 @@
     }
 
     function changeName() {
-        nameStore.set(name ? name : null)
+        $name = newName ?? ''
     }
 </script>
 
@@ -49,8 +54,8 @@
                 <SingleTextInput
                     id="player-name"
                     action="✓"
-                    placeholder={getText('playerNamePlaceholder')}
-                    bind:value={name}
+                    placeholder={m.playerNamePlaceholder()}
+                    bind:value={newName}
                     on:submit={changeName}
                 />
             </div>
@@ -63,7 +68,7 @@
                     id="player-is-voter"
                     class="player-name-control"
                     bind:value={$observer}
-                    label={getText('observer')}
+                    label={m.observer()}
                 />
             </div>
         </div>
@@ -72,15 +77,15 @@
 
 <section class="section">
     <div class="container box">
-        <h2 class="title is-4">{getText('estimates')}</h2>
+        <h2 class="title is-4">{m.estimates()}</h2>
         <div class="buttons">
-            <button class="button is-primary is-light" on:click={restart}
-                >{getText('restart')}</button
+            <button class="button is-primary is-light" onclick={restart}
+                >{m.restart()}</button
             >
             <button
                 class="button is-primary is-light"
                 disabled={open}
-                on:click={forceOpen}>{getText('open')}</button
+                onclick={forceOpen}>{m.open()}</button
             >
         </div>
         <ul class="game-board">
@@ -98,7 +103,7 @@
         <div class="container">
             <div class="columns is-centered">
                 <div class="column is-narrow">
-                    {getText('chooseYourEstimate')}
+                    {m.chooseYourEstimate()}
                 </div>
             </div>
             <EstimatesControl />

@@ -2,12 +2,12 @@
     import { decks } from '../deck'
     import SelectWithButton from '../components/SelectWithButton.svelte'
     import { m } from '$lib/paraglide/messages.js'
+    import { client } from '../client'
 
-    let deckId = decks[0].id
-    let customDeck = ''
+    let deckId = $state(decks[0].id)
+    let customDeck = $state('')
 
-    type Action = null | 'join' | 'create'
-    let action: Action = null
+    let errorMessage = $state()
 
     let decks_dropdown = decks
         .map((deck) => {
@@ -19,12 +19,24 @@
         })
         .concat([{ id: 'custom', label: m.customDeck() }])
 
-    function createRoom() {
-        action = 'create'
+    function submit(evt: SubmitEvent) {
+        evt.preventDefault()
+
+        errorMessage = null
+
+        client
+            .createRoom(deckId, customDeck)
+            .then((location) => {
+                window.location.href = location
+            })
+            .catch((error) => {
+                console.error("Couldn't create room:", error)
+                errorMessage = "Couldn't create room"
+            })
     }
 </script>
 
-<form class="box p-5" method="post" action="/room">
+<form class="box p-5" onsubmit={submit}>
     <div class="field">
         <label class="label" for="deck_field">{m.deck()}</label>
         <div class="control is-expanded">
@@ -55,18 +67,12 @@
         </div>
     {/if}
 
-    <div class="field">
+    <div class="field is-grouped-centered">
         <div class="control">
-            <div
-                class="is-flex is-flex-direction-row is-justify-content-center"
-            >
-                <button
-                    type="submit"
-                    class="button is-primary"
-                    class:is-loading={action === 'create'}
-                    on:click={createRoom}>{m.createRoom()}</button
-                >
-            </div>
+            <button type="submit" class="button is-primary">
+                {m.createRoom()}
+            </button>
         </div>
+        <p class="help is-danger">{errorMessage}</p>
     </div>
 </form>

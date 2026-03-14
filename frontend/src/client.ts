@@ -3,8 +3,6 @@ import { writable } from 'svelte/store'
 import type { Option } from './basetypes'
 import { Signal } from './events'
 
-// store
-
 // consts
 
 const reconnectTimeout = 5000
@@ -78,6 +76,8 @@ export class Client {
     roomId: Writable<Option<string>>
     lastError: Writable<Option<string>>
 
+    private wsService: WebSocketService
+
     welcome = new Signal<WelcomeMessageEvent>()
     joined = new Signal<JoinedEvent>()
     playerJoined = new Signal<PlayerJoinedEvent>()
@@ -91,6 +91,7 @@ export class Client {
         this.playerId = writable(null)
         this.roomId = writable(null)
         this.lastError = writable(null)
+        this.wsService = wsService
 
         wsService.ws_store.subscribe(($ws) => (this._ws = $ws))
         wsService.message.connect((evt) => this._onMessageArrived(evt))
@@ -140,12 +141,27 @@ export class Client {
         })
     }
 
-    createRoom(deck: string) {
-        this.state.set('joining')
-        this._send({
-            type: 'CreateRoom',
-            deck,
+    async createRoom(deckId: string, customDeck: string): Promise<string> {
+        const response = await fetch(`${this.wsService.backendUrl()}/room`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                deck: deckId,
+                custom_deck: customDeck,
+            }),
+            redirect: 'manual',
+            mode: 'cors',
         })
+
+        if (response.status === 200) {
+            return response.headers.get('Location') ?? ''
+        } else {
+            throw new Error(
+                `Failed to create room: ${response.status} (${response.type})`,
+            )
+        }
     }
 
     _send(payload: object) {
@@ -229,7 +245,6 @@ export class WebSocketService {
         this.connected_store = writable(false)
         this.error_store = writable(false)
         this.reconnectTimer = null
-        this.connect()
     }
 
     clearReconnectTimer() {
@@ -281,8 +296,29 @@ export class WebSocketService {
         this.startReconnectTimer()
     }
 
+    backendUrl() {
+        return (
+            import.meta.env.GOE_BACKEND_URL?.replace('/$', '') ??
+            `${window.location.protocol}//${window.location.host}/ws`
+        )
+    }
+
+    wsUrl() {
+        const backendUrl = this.backendUrl()
+        // noinspection HttpUrlsUsage
+        if (backendUrl.startsWith('http://')) {
+            // noinspection HttpUrlsUsage
+            return `ws://${backendUrl.substring('http://'.length)}/ws`
+        } else if (backendUrl.startsWith('https://')) {
+            return `wss://${backendUrl.substring('https://'.length)}/ws`
+        } else {
+            console.error('Invalid backend URL:', backendUrl)
+            return backendUrl
+        }
+    }
+
     connect() {
-        const url = import.meta.env.GOE_WEBSOCKET_URL || this.guessWsAddr()
+        const url = this.wsUrl()
         console.debug('connecting to ' + url + ' ...', url)
         this.connecting_store.set(true)
 
@@ -297,12 +333,6 @@ export class WebSocketService {
         )
 
         window.addEventListener('beforeunload', () => this.silent_disconnect())
-    }
-
-    private guessWsAddr(): string {
-        const loc = window.location
-        const protocol = loc.protocol === 'http:' ? 'ws:' : 'wss:'
-        return `${protocol}//${loc.host}/ws`
     }
 
     private silent_disconnect() {
