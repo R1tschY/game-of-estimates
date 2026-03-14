@@ -40,7 +40,7 @@ axum = { version = "0.8.6", features = ["ws", "form", "macros"] }
 rust-embed = { version = "8.5.0", features = ["mime-guess"] }
 prometheus-client = "0.22.3"
 tower = "0.5.2"
-tower-http = "0.6.6"
+tower-http = { version = "0.6.6", features = ["cors"] }
 pin-project-lite = "0.2"
 http-body = "1.0.1"
 http = "1.3.1"

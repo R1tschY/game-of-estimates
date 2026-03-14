@@ -11,14 +11,17 @@ use axum::{routing::get, Form, Router};
 use game_of_estimates::game_server::{GameServerAddr, GameServerMessage};
 use game_of_estimates::player::Player;
 use game_of_estimates::remote::RemoteConnection;
+use http::header::LOCATION;
 use http::{HeaderValue, StatusCode};
 use log::error;
 use prometheus_client::registry::Registry;
 use rust_embed::Embed;
 use serde::Deserialize;
 use std::sync::Arc;
+use tower::layer::util::Stack;
 use tower::ServiceBuilder;
 use tower_http::compression::CompressionLayer;
+use tower_http::cors::CorsLayer;
 use tower_serve_assets::embed::EmbedCatalog;
 use tower_serve_assets::ServeAssets;
 
@@ -43,7 +46,7 @@ struct CreateRoomFormData {
 async fn create_room(
     State(state): State<Arc<AppState>>,
     Form(data): Form<CreateRoomFormData>,
-) -> Result<Redirect, ErrorResponse> {
+) -> Result<Response, ErrorResponse> {
     let (tx, rx) = tokio::sync::oneshot::channel();
     let deck: String = if data.deck == "custom" {
         match data.custom_deck {
@@ -65,8 +68,16 @@ async fn create_room(
         return Err(StatusCode::SERVICE_UNAVAILABLE.into());
     }
 
+    // Can not use 303 SEE OTHER because of CORS
     match rx.await {
-        Ok(Some(room_id)) => Ok(Redirect::to(&format!("/room/{room_id}"))),
+        Ok(Some(room_id)) => Ok((
+            StatusCode::OK,
+            [(
+                LOCATION,
+                HeaderValue::from_str(&format!("/room?id={room_id}")).unwrap(),
+            )],
+        )
+            .into_response()),
         Ok(None) => Err(StatusCode::SERVICE_UNAVAILABLE.into()),
         Err(_) => {
             error!("Failed to create room: game service dropped message");
@@ -98,10 +109,25 @@ async fn websocket(State(state): State<Arc<AppState>>, ws: WebSocketUpgrade) -> 
     })
 }
 
+#[cfg(debug_assertions)]
+fn apply_cors<T>(svc_builder: ServiceBuilder<T>) -> ServiceBuilder<Stack<CorsLayer, T>> {
+    svc_builder.layer(CorsLayer::permissive())
+}
+
+#[cfg(not(debug_assertions))]
+fn apply_cors<T, U>(svc_builder: ServiceBuilder<T>) -> ServiceBuilder<T> {
+    svc_builder
+}
+
 pub async fn main(game_server: GameServerAddr, listen_addr: ListenAddr) {
     // i18n
     let mut registry = Registry::default();
     let req_metrics = RequestMetrics::new(&mut registry);
+
+    let svc_builder = ServiceBuilder::new()
+        .layer(CompressionLayer::new())
+        .layer(RequestMetricsLayer::new(req_metrics));
+    let layers = apply_cors(svc_builder);
 
     let app = Router::new()
         .route("/room", post(create_room))
@@ -110,11 +136,7 @@ pub async fn main(game_server: GameServerAddr, listen_addr: ListenAddr) {
         .route("/metrics", get(serve_metrics(Arc::new(registry))))
         .fallback_service(ServeAssets::builder(EmbedCatalog::<MyAssetCatalog>::default()).build())
         .with_state(Arc::new(AppState { game_server }))
-        .layer(
-            ServiceBuilder::new()
-                .layer(CompressionLayer::new())
-                .layer(RequestMetricsLayer::new(req_metrics)),
-        );
+        .layer(layers);
 
     let listener = tokio::net::TcpListener::bind(listen_addr.0)
         .await
