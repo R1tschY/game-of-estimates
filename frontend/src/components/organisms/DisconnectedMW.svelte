@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { connected } from '../stores'
+    import { connected } from '$/stores'
 </script>
 
 <div class="modal" class:is-active={!$connected}>

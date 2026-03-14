@@ -1,13 +1,13 @@
 <script lang="ts">
-    import { gameState, name, observer, players } from '../stores'
+    import { gameState, name, observer, players } from '$/stores'
 
     import { get } from 'svelte/store'
-    import DisconnectedMW from '../components/DisconnectedMW.svelte'
-    import SingleTextInput from '../components/SingleTextInput.svelte'
-    import Switch from '../components/Switch.svelte'
-    import PlayerEstimate from '../components/PlayerEstimate.svelte'
-    import EstimatesControl from '../components/EstimatesControl.svelte'
-    import { client, wsService } from '../client'
+    import DisconnectedMW from '$/components/organisms/DisconnectedMW.svelte'
+    import SingleTextInput from '$/components/atoms/SingleTextInput.svelte'
+    import Switch from '$/components/atoms/Switch.svelte'
+    import PlayerEstimate from '$/components/atoms/PlayerEstimate.svelte'
+    import EstimatesControl from '$/components/molecules/EstimatesControl.svelte'
+    import { client, wsService } from '$/client'
     import { m } from '$lib/paraglide/messages.js'
     import { onMount } from 'svelte'
 

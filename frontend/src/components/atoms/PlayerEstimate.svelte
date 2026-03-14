@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { PlayerExtInfo } from '../stores'
+    import type { PlayerExtInfo } from '$/stores'
 
     export let player: PlayerExtInfo
     export let open: boolean

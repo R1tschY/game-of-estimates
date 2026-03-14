@@ -1,8 +1,8 @@
 <script lang="ts">
-    import { decks } from '../deck'
-    import SelectWithButton from '../components/SelectWithButton.svelte'
+    import { decks } from '$/deck'
+    import SelectWithButton from '$/components/atoms/SelectWithButton.svelte'
     import { m } from '$lib/paraglide/messages.js'
-    import { client } from '../client'
+    import { client } from '$/client'
 
     let deckId = $state(decks[0].id)
     let customDeck = $state('')

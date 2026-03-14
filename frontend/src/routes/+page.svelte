@@ -2,7 +2,7 @@
     import { m } from '$lib/paraglide/messages.js'
     import Glasses from '@lucide/svelte/icons/glasses'
     import Bird from '@lucide/svelte/icons/bird'
-    import CreateRoomForm from '../components/CreateRoomForm.svelte'
+    import CreateRoomForm from '$/components/organisms/CreateRoomForm.svelte'
 </script>
 
 <main class="is-flex-grow-1 pt-3">
