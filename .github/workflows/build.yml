@@ -64,7 +64,7 @@ jobs:
         working-directory: frontend
 
       - name: Svelte check
-        run: npx svelte-kit sync && npm run check
+        run: npx svelte-kit sync && npx paraglide-js compile && npm run check
         working-directory: frontend
 
   build:
@@ -78,7 +78,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build frontend
-        run: npm clean-install && npm run build
+        run: npm clean-install && npx @inlang/paraglide-js compile --project ./project.inlang && npm run build
         working-directory: frontend
 
       - name: Setup Rust toolchain
