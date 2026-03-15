@@ -26,5 +26,6 @@
     "description": "Schnell Raum anlegen und Link an Teilnehmer senden.<p><ul><li>Keine Anmeldung nötig<li>Keine Werbung<li>Ohne Einschränkungen kostenlos<li>Open Source<li>Deine Privatsphäre wird geachtet</ul>",
     "noscript": "Bitte aktiviere JavaScript, um zu Spielen.",
     "anonymous": "Anonym",
-    "rename": "Umbenennen"
+    "rename": "Umbenennen",
+    "newName": "Neuer Name"
 }

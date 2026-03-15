@@ -9,6 +9,7 @@
     import { client, wsService } from '$/client'
     import { m } from '$lib/paraglide/messages.js'
     import { onMount } from 'svelte'
+    import RenamePlayerDialog from '$/components/organisms/RenamePlayerDialog.svelte'
 
     let { id } = $props()
 
@@ -45,7 +46,12 @@
             <!-- Name -->
             <div class="column is-flex is-gap-2 is-align-items-center">
                 <p class="is-size-4">{$name ? $name : m.anonymous()}</p>
-                <button type="button" class="button">{m.rename()}</button>
+                <button
+                    type="button"
+                    class="button"
+                    command="show-modal"
+                    commandfor="rename-dialog">{m.rename()}</button
+                >
             </div>
 
             <div class="column"></div>
@@ -96,3 +102,4 @@
 {/if}
 
 <DisconnectedMW />
+<RenamePlayerDialog id="rename-dialog" />

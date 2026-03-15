@@ -26,5 +26,6 @@
     "description": "Quickly create a room and send the link to participants.<p><ul><li>No registration required<li>No ads<li>Free without limitations<li>Open Source<li>Your privacy is respected</ul>",
     "noscript": "Please activate JavaScript to play.",
     "anonymous": "Anonymous",
-    "rename": "Rename"
+    "rename": "Rename",
+    "newName": "New name"
 }
