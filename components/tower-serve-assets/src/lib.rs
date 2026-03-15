@@ -1,7 +1,7 @@
 use crate::etag::ETag;
-use crate::response::{get, head, method_not_allowed, not_found, ResponseBody, ResponseFuture};
+use crate::response::{ResponseBody, ResponseFuture, get, head, method_not_allowed, not_found};
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
-use base64::{encoded_len, Engine};
+use base64::{Engine, encoded_len};
 use bytes::Bytes;
 use http::{HeaderValue, Method, Request};
 use std::borrow::Cow;
@@ -131,10 +131,7 @@ impl<T: AssetCatalog + Clone, F> ServeAssetsBuilder<T, F> {
 }
 
 impl<T: AssetCatalog + Clone, F: AssertResponseModifier> ServeAssetsBuilder<T, F> {
-    pub fn head_modifier(
-        self,
-        head_modifier: F,
-    ) -> ServeAssetsBuilder<T, F> {
+    pub fn head_modifier(self, head_modifier: F) -> ServeAssetsBuilder<T, F> {
         ServeAssetsBuilder {
             catalog: self.catalog,
             index_files: self.index_files,
@@ -163,7 +160,7 @@ impl<T: AssetCatalog + Clone> ServeAssets<T, ()> {
 impl<T, ReqBody, F> Service<http::Request<ReqBody>> for ServeAssets<T, F>
 where
     T: AssetCatalog + Clone,
-    F: AssertResponseModifier
+    F: AssertResponseModifier,
 {
     type Response = http::Response<ResponseBody>;
     type Error = Infallible;
