@@ -64,7 +64,7 @@ jobs:
         working-directory: frontend
 
       - name: Svelte check
-        run: npm run check
+        run: npx svelte-kit sync && npm run check
         working-directory: frontend
 
   build:
