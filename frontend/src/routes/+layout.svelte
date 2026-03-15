@@ -29,7 +29,12 @@
         <nav aria-label="Languages">
             {#each locales as locale}
                 <a
-                    href={localizeHref(page.url.pathname, { locale })}
+                    href={localizeHref(
+                        page.url.pathname + '?' + page.url.searchParams,
+                        {
+                            locale,
+                        },
+                    )}
                     data-sveltekit-reload
                 >
                     {locale}
