@@ -1,4 +1,3 @@
-use crate::etag::ETag;
 use crate::response::{ResponseBody, ResponseFuture, get, head, method_not_allowed, not_found};
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::{Engine, encoded_len};
@@ -8,9 +7,6 @@ use std::borrow::Cow;
 use std::convert::Infallible;
 use std::task::{Context, Poll};
 use tower_service::Service;
-
-#[cfg(feature = "rust-embed")]
-use rust_embed::Embed;
 
 #[cfg(feature = "rust-embed")]
 pub mod embed;
@@ -31,6 +27,10 @@ pub trait Asset {
     fn last_modified(&self) -> Option<u64>;
     fn sha256(&self) -> [u8; 32];
     fn mimetype(&self) -> &str;
+
+    fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
 }
 
 pub trait AssetCatalog {
@@ -58,9 +58,9 @@ fn gen_etag_header(file: &impl Asset) -> HeaderValue {
     HeaderValue::try_from(res).expect("invalid etag generated")
 }
 
-fn gen_etag(file: &impl Asset) -> ETag<'static> {
-    ETag::new_strong(URL_SAFE_NO_PAD.encode(file.sha256()).into_bytes())
-}
+// fn gen_etag(file: &impl Asset) -> ETag<'static> {
+//     ETag::new_strong(URL_SAFE_NO_PAD.encode(file.sha256()).into_bytes())
+// }
 
 // fn set_headers(response: &mut Response, metadata: &Metadata, cache_busting: bool) {
 //     let headers = response.headers_mut();

@@ -25,6 +25,7 @@ pub struct LanguageNegotiator {
 }
 
 impl LanguageNegotiator {
+    #[allow(dead_code)]
     pub fn new(translations: &'static [&'static str]) -> Self {
         Self { translations }
     }

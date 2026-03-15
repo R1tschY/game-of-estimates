@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use crate::headers::InvalidHeaderValue;
 use http::HeaderValue;
 use std::borrow::Cow;

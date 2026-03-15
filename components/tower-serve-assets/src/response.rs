@@ -30,6 +30,7 @@ pub(crate) fn head<A: Asset>(
     to_response(response.body(empty_body()))
 }
 
+#[allow(dead_code)]
 pub(crate) fn not_modified<A: Asset>(
     asset: &A,
     path: &str,
