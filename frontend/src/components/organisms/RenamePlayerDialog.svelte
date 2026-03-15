@@ -16,7 +16,7 @@
     }
 </script>
 
-<Dialog closedby="any" {id} bind:open>
+<Dialog closedby="any" {id} {open}>
     <form onsubmit={onSubmit}>
         <div class="field">
             <label class="label" for="name">{m.newName()}</label>

@@ -1,5 +1,3 @@
 declare namespace svelteHTML {
-    interface HTMLAttributes<T> {
-        [x: `g-${string}`]: any
-    }
+    type HTMLAttributes = Record<`g-${string}`, string | boolean | undefined>
 }

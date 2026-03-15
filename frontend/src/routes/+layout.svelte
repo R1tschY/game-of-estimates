@@ -10,6 +10,7 @@
     <div class="hero-body">
         <div class="container">
             <h1 class="title"><a href="/">{m.title()}</a></h1>
+            <!-- eslint-disable-next-line svelte/no-at-html-tags -->
             <h2 class="subtitle">{@html m.summary()}</h2>
         </div>
     </div>
@@ -19,7 +20,9 @@
 
 <footer class="footer">
     <div class="content has-text-centered">
+        <!-- eslint-disable-next-line svelte/no-at-html-tags -->
         <p>{@html m.byAuthor()}</p>
+        <!-- eslint-disable-next-line svelte/no-at-html-tags -->
         <p>{@html m.license()}</p>
         <div>
             <a href="/" class="footer-icon">
