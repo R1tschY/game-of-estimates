@@ -29,6 +29,7 @@
 @forward 'bulma/sass/helpers/visibility';
 @forward 'bulma/sass/helpers/spacing';
 @forward 'bulma/sass/helpers/gap';
+@forward 'bulma/sass/helpers/color';
 @forward 'bulma/sass/layout/section' with (
     $section-padding: 1rem 0.5rem,
     $section-padding-desktop: 1rem 1rem

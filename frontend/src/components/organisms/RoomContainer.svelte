@@ -45,7 +45,9 @@
         <div class="columns">
             <!-- Name -->
             <div class="column is-flex is-gap-2 is-align-items-center">
-                <p class="is-size-4">{$name ? $name : m.anonymous()}</p>
+                <p class="is-size-4" class:has-text-grey={!$name}>
+                    {$name ? $name : m.anonymous()}
+                </p>
                 <button
                     type="button"
                     class="button"
