@@ -16,7 +16,6 @@
     const open: boolean = $derived($gameState?.open ?? false)
 
     onMount(() => {
-        console.log('onMount')
         wsService.connect()
     })
 
