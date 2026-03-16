@@ -10,7 +10,7 @@
         onclick?: () => void
     }
 
-    const { primary = false, size = 1, label }: Props = $props()
+    const { primary = false, size = 'm', label }: Props = $props()
 </script>
 
 <button type="button" class="g-btn" g-size={size} g-primary={primary}>
