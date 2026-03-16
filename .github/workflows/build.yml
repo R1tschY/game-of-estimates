@@ -18,6 +18,22 @@ jobs:
       - name: Checkout sources
         uses: actions/checkout@v4
 
+      - name: Install NPM deps
+        run: npm clean-install
+        working-directory: frontend
+
+      - name: Prettier
+        run: npm run prettier
+        working-directory: frontend
+
+      - name: Build frontend
+        run: npm run build
+        working-directory: frontend
+
+      - name: Svelte check
+        run: npm run check
+        working-directory: frontend
+
       - name: Setup Rust toolchain
         run: |
           sudo apt-get install musl-tools
@@ -55,22 +71,6 @@ jobs:
 
       - name: Cargo Test
         run: cargo test --all-features
-
-      - name: Install NPM deps
-        run: npm clean-install
-        working-directory: frontend
-
-      - name: Prettier
-        run: npm run prettier
-        working-directory: frontend
-
-      - name: Build frontend
-        run: npm run build
-        working-directory: frontend
-
-      - name: Svelte check
-        run: npm run check
-        working-directory: frontend
 
       - name: Build backend
         run: cargo build --release --target $CARGO_BUILD_TARGET
