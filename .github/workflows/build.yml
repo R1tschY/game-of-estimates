@@ -55,6 +55,15 @@ jobs:
         run: npm install
         working-directory: frontend
 
+      - name: Generate files
+        run: |
+            npx svelte-kit sync &&\
+            npx @inlang/paraglide-js compile \
+              --project ./project.inlang \
+              --outdir ./src/lib/paraglide \
+              --strategy url cookie baseLocale
+        working-directory: frontend
+
       - name: Lint
         run: npm run lint
         working-directory: frontend
@@ -64,7 +73,7 @@ jobs:
         working-directory: frontend
 
       - name: Svelte check
-        run: npx svelte-kit sync && npx paraglide-js compile && npm run check
+        run: npm run check
         working-directory: frontend
 
   build:
