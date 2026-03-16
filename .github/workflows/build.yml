@@ -29,6 +29,22 @@ jobs:
         run: rustc --version --verbose
         shell: bash
 
+      - name: "Set version"
+        id: version
+        run: |
+          REF="${{ github.ref }}"
+          if [[ "$REF" =~ ^refs/tags/v ]] ; then
+            version=${REF#refs/tags/v}
+            # checks
+            grep "version = \"$version\"" Cargo.toml > /dev/null
+            grep "\"version\": \"$version\"" frontend/package.json > /dev/null
+          else
+            version=unreleased
+          fi
+          echo "version=$version" >> $GITHUB_OUTPUT
+          echo "Found version: $version"
+        shell: bash
+
       - uses: Swatinem/rust-cache@v2
 
       - name: Cargo Fmt
@@ -55,35 +71,6 @@ jobs:
       - name: Svelte check
         run: npm run check
         working-directory: frontend
-
-      - name: Setup Rust toolchain
-        run: |
-          sudo apt-get install musl-tools
-          rustup toolchain install stable --profile minimal --no-self-update -t $CARGO_BUILD_TARGET
-          rustup default stable
-        shell: bash
-
-      - name: "Print Rust toolchain version"
-        run: rustc --version --verbose
-        shell: bash
-
-      - name: "Set version"
-        id: version
-        run: |
-          REF="${{ github.ref }}"
-          if [[ "$REF" =~ ^refs/tags/v ]] ; then
-            version=${REF#refs/tags/v}
-            # checks
-            grep "version = \"$version\"" Cargo.toml > /dev/null
-            grep "\"version\": \"$version\"" frontend/package.json > /dev/null
-          else
-            version=unreleased
-          fi
-          echo "version=$version" >> $GITHUB_OUTPUT
-          echo "Found version: $version"
-        shell: bash
-
-      - uses: Swatinem/rust-cache@v2
 
       - name: Build backend
         run: cargo build --release --target $CARGO_BUILD_TARGET
