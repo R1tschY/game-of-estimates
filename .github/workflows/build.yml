@@ -27,7 +27,7 @@ jobs:
         working-directory: frontend
 
       - name: Sync SvelteKit
-        run: npx svelte-kit sync
+        run: npx svelte-kit sync && cat .svelte-kit/tsconfig.json
         working-directory: frontend
 
       - name: Build frontend
