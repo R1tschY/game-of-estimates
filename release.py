@@ -59,12 +59,14 @@ def main():
         "git", "push", "origin", f"v{release_version}"])
 
     replace_version(Path(ROOT / "Cargo.toml"), release_version, next_version)
-    replace_version(Path(ROOT / "frontend" / "package.json"), release_version, next_version)
+    subprocess.check_call(["cargo", "check"])
+    subprocess.check_call(["npm", "version", next_version])
     subprocess.check_call([
         "git", "commit", "-m", f"Bump version to {next_version}", "--",
         os.fspath(Path(ROOT / "Cargo.toml")),
         os.fspath(Path(ROOT / "Cargo.lock")),
-        os.fspath(Path(ROOT / "frontend" / "package.json"))])
+        os.fspath(Path(ROOT / "frontend" / "package.json")),
+        os.fspath(Path(ROOT / "frontend" / "package-lock.json"))])
     subprocess.check_call([
         "git", "push", "origin"])
 
