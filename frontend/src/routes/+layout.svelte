@@ -1,7 +1,6 @@
 <script lang="ts">
     import '../main.sass'
 
-    import { page } from '$app/state'
     import { locales, localizeHref } from '$lib/paraglide/runtime'
     import { m } from '$lib/paraglide/messages.js'
 </script>
@@ -32,12 +31,9 @@
         <nav aria-label="Languages">
             {#each locales as locale}
                 <a
-                    href={localizeHref(
-                        page.url.pathname + '?' + page.url.searchParams,
-                        {
-                            locale,
-                        },
-                    )}
+                    href={localizeHref('/', {
+                        locale,
+                    })}
                     data-sveltekit-reload
                 >
                     {locale}
