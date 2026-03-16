@@ -8,12 +8,43 @@ updates:
   - package-ecosystem: "npm"
     directory: "/frontend"
     schedule:
-      interval: "weekly"
-      day: "friday"
+      interval: "monthly"
     versioning-strategy: increase
     commit-message:
       prefix: "NPM"
     open-pull-requests-limit: 0
+    groups:
+      vite:
+        patterns:
+          - "vite"
+      storybook:
+          - "storybook"
+          - "@storybook/*"
+          - "*-storybook"
+      svelte:
+        patterns:
+          - "@sveltejs/*"
+          - "svelte"
+          - "svelte-*"
+          - "*-svelte"
+          - "@tsconfig/svelte"
+      eslint:
+        patterns:
+          - "eslint"
+          - "@eslint/js"
+          - "@types/eslint__js"
+          - "*-eslint"
+      typescript:
+        patterns:
+          - "@types/node"
+          - "globals"
+          - "typescript"
+          - "tslib"
+          - "@typescript-eslint/*"
+      prettier:
+        patterns:
+          - "prettier"
+          - "*-prettier"
 
   - package-ecosystem: "cargo"
     directory: "/"
