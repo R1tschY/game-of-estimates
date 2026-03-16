@@ -12,9 +12,8 @@ env:
   CARGO_BUILD_TARGET: x86_64-unknown-linux-musl
 
 jobs:
-  backend-check:
+  build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout sources
         uses: actions/checkout@v4
@@ -32,62 +31,29 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
 
-      - name: Fake frontend build
-        run: mkdir -p frontend/build
-
-      - name: Fmt
+      - name: Cargo Fmt
         run: cargo fmt --all -- --check
 
       - name: Clippy
         run: cargo clippy -- -D warnings
 
-      - name: Test
+      - name: Cargo Test
         run: cargo test --all-features
 
-  frontend-check:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout sources
-        uses: actions/checkout@v4
-
-      - name: Install deps
-        run: npm install
-        working-directory: frontend
-
-      - name: Generate files
-        run: |
-            npx svelte-kit sync &&\
-            npx @inlang/paraglide-js compile \
-              --project ./project.inlang \
-              --outdir ./src/lib/paraglide \
-              --strategy url baseLocale
-        working-directory: frontend
-
-      - name: Lint
-        run: npm run lint
+      - name: Install NPM deps
+        run: npm clean-install
         working-directory: frontend
 
       - name: Prettier
         run: npm run prettier
         working-directory: frontend
 
-      - name: Svelte check
-        run: npm run check
+      - name: Build frontend
+        run: npm run build
         working-directory: frontend
 
-  build:
-    runs-on: ubuntu-latest
-    needs:
-      - backend-check
-      - frontend-check
-
-    steps:
-      - name: Checkout sources
-        uses: actions/checkout@v4
-
-      - name: Build frontend
-        run: npm clean-install && npx @inlang/paraglide-js compile --project ./project.inlang && npm run build
+      - name: Svelte check
+        run: npm run check
         working-directory: frontend
 
       - name: Setup Rust toolchain
