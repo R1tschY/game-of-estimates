@@ -18,11 +18,11 @@ use prometheus_client::registry::Registry;
 use rust_embed::Embed;
 use serde::Deserialize;
 use std::sync::Arc;
-#[cfg(not(debug_assertions))]
+#[cfg(debug_assertions)]
 use tower::layer::util::Stack;
 use tower::ServiceBuilder;
 use tower_http::compression::CompressionLayer;
-#[cfg(not(debug_assertions))]
+#[cfg(debug_assertions)]
 use tower_http::cors::CorsLayer;
 use tower_serve_assets::embed::EmbedCatalog;
 use tower_serve_assets::ServeAssets;
