@@ -54,6 +54,6 @@
         "build-storybook": "storybook build"
     },
     "dependencies": {
-        "@lucide/svelte": "^0.563.1"
+        "@lucide/svelte": "^0.577.0"
     }
 }
