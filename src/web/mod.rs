@@ -88,20 +88,6 @@ async fn create_room(
     }
 }
 
-async fn room() -> Response {
-    // TODO: etag caching
-    if let Some(asset) = MyAssetCatalog::get("200.html") {
-        let mut response = Body::from(asset.data).into_response();
-        response.headers_mut().append(
-            http::header::CONTENT_TYPE,
-            HeaderValue::from_static("text/html"),
-        );
-        response
-    } else {
-        (StatusCode::NOT_FOUND, "Asset not found").into_response()
-    }
-}
-
 async fn websocket(State(state): State<Arc<AppState>>, ws: WebSocketUpgrade) -> Response {
     let game_server = state.game_server.clone();
     ws.on_upgrade(|socket: WebSocket| async {
@@ -132,8 +118,7 @@ pub async fn main(game_server: GameServerAddr, listen_addr: ListenAddr) {
     let layers = apply_cors(svc_builder);
 
     let app = Router::new()
-        .route("/room", post(create_room))
-        .route("/room/{id}", get(room))
+        .route("/mkroom", post(create_room))
         .route("/ws", any(websocket))
         .route("/metrics", get(serve_metrics(Arc::new(registry))))
         .fallback_service(ServeAssets::builder(EmbedCatalog::<MyAssetCatalog>::default()).build())

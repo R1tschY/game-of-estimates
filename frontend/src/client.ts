@@ -142,7 +142,7 @@ export class Client {
     }
 
     async createRoom(deckId: string, customDeck: string): Promise<string> {
-        const response = await fetch(`${this.wsService.backendUrl()}/room`, {
+        const response = await fetch(`${this.wsService.backendUrl()}/mkroom`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
