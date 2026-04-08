@@ -69,7 +69,7 @@ pub struct Main {
 
 #[tokio::main]
 async fn main() {
-    if let Err(_) = dotenvy::dotenv() {
+    if dotenvy::dotenv().is_err() {
         info!("No .env file found, using only environment variables")
     }
 
