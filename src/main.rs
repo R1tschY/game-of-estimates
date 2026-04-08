@@ -1,8 +1,8 @@
 use game_of_estimates::adapters::sqlx::SqlxModule;
 use game_of_estimates::game_server::{GameServer, GameServerAddr};
 use game_of_estimates::ports::{DatabaseMigratorRef, DatabaseUrl, RoomRepositoryRef};
-use std::env;
 use log::info;
+use std::env;
 use uactor::blocking::Actor;
 
 mod web;
