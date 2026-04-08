@@ -299,22 +299,23 @@ export class WebSocketService {
     backendUrl() {
         return (
             import.meta.env.GOE_BACKEND_URL?.replace('/$', '') ??
-            `${window.location.protocol}//${window.location.host}/ws`
+            `${window.location.protocol}//${window.location.host}`
         )
     }
 
     wsUrl() {
-        const backendUrl = this.backendUrl()
+        const backendUrl = new URL('/ws', this.backendUrl())
+
         // noinspection HttpUrlsUsage
-        if (backendUrl.startsWith('http://')) {
-            // noinspection HttpUrlsUsage
-            return `ws://${backendUrl.substring('http://'.length)}/ws`
-        } else if (backendUrl.startsWith('https://')) {
-            return `wss://${backendUrl.substring('https://'.length)}/ws`
+        if (backendUrl.protocol === 'http:') {
+            backendUrl.protocol = 'ws:'
+        } else if (backendUrl.protocol === 'https:') {
+            backendUrl.protocol = 'wss:'
         } else {
             console.error('Invalid backend URL:', backendUrl)
-            return backendUrl
         }
+
+        return backendUrl.toString()
     }
 
     connect() {
