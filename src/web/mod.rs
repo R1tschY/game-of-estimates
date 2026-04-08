@@ -2,7 +2,6 @@ use crate::web::metrics::handler::serve_metrics;
 use crate::web::metrics::prometheus::RequestMetrics;
 use crate::web::metrics::service::RequestMetricsLayer;
 use crate::ListenAddr;
-use axum::body::Body;
 use axum::extract::ws::WebSocket;
 use axum::extract::{State, WebSocketUpgrade};
 use axum::response::{ErrorResponse, IntoResponse, Response};
