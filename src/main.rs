@@ -2,6 +2,7 @@ use game_of_estimates::adapters::sqlx::SqlxModule;
 use game_of_estimates::game_server::{GameServer, GameServerAddr};
 use game_of_estimates::ports::{DatabaseMigratorRef, DatabaseUrl, RoomRepositoryRef};
 use std::env;
+use log::info;
 use uactor::blocking::Actor;
 
 mod web;
@@ -68,7 +69,9 @@ pub struct Main {
 
 #[tokio::main]
 async fn main() {
-    dotenvy::dotenv().expect("Unable to load .env files");
+    if let Err(_) = dotenvy::dotenv() {
+        info!("No .env file found, using only environment variables")
+    }
 
     let integrator = <dyn Integrator>::new().expect("Unable to build injector");
 
