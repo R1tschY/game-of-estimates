@@ -50,7 +50,7 @@ impl RequestMetrics {
     }
 }
 
-#[derive(Clone, Debug, Hash, PartialEq, Eq, EncodeLabelValue)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
 enum Method {
     Options,
     Get,
@@ -62,6 +62,25 @@ enum Method {
     Connect,
     Patch,
     Other,
+}
+
+impl prometheus_client::encoding::EncodeLabelValue for Method {
+    fn encode(&self, encoder: &mut LabelValueEncoder) -> Result<(), Error> {
+        use std::fmt::Write;
+        match self {
+            Method::Options => encoder.write_str("OPTIONS")?,
+            Method::Get => encoder.write_str("GET")?,
+            Method::Post => encoder.write_str("POST")?,
+            Method::Put => encoder.write_str("PUT")?,
+            Method::Delete => encoder.write_str("DELETE")?,
+            Method::Head => encoder.write_str("HEAD")?,
+            Method::Trace => encoder.write_str("TRACE")?,
+            Method::Connect => encoder.write_str("CONNECT")?,
+            Method::Patch => encoder.write_str("PATCH")?,
+            Method::Other => encoder.write_str("other")?,
+        }
+        Ok(())
+    }
 }
 
 impl From<&'_ http::Method> for Method {
