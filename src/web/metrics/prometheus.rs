@@ -102,15 +102,9 @@ impl From<&'_ http::Method> for Method {
 
 #[derive(Clone, Eq, Hash, PartialEq, EncodeLabelSet, Debug)]
 struct RequestLabels {
-    path: Path,
+    route: Option<Route>,
     method: Method,
     status: u16,
-}
-
-#[derive(Clone, Eq, Hash, PartialEq, Debug)]
-enum Path {
-    Route(Route),
-    Fallback(String),
 }
 
 #[derive(Clone, Debug)]
@@ -130,13 +124,9 @@ impl Hash for Route {
     }
 }
 
-impl EncodeLabelValue for Path {
+impl EncodeLabelValue for Route {
     fn encode(&self, encoder: &mut LabelValueEncoder) -> Result<(), Error> {
-        match self {
-            Path::Route(route) => LabelValueEncoder::write_str(encoder, route.0.as_str())?,
-            Path::Fallback(path) => LabelValueEncoder::write_str(encoder, path.as_str())?,
-        }
-        Ok(())
+        LabelValueEncoder::write_str(encoder, self.0.as_str())
     }
 }
 
@@ -146,15 +136,12 @@ impl RequestMetricsEmitterFactory for RequestMetrics {
     type Emitter = GoeRequestMetricsEmitter;
 
     fn new_emitter(&self, request: &Request<Self::RequestBody>) -> Self::Emitter {
-        let path = if let Some(path) = request.extensions().get::<MatchedPath>() {
-            Path::Route(Route(path.clone()))
-        } else {
-            Path::Fallback(request.uri().path().to_string())
-        };
-
         GoeRequestMetricsEmitter {
             start_time: Instant::now(),
-            path,
+            route: request
+                .extensions()
+                .get::<MatchedPath>()
+                .map(|path| Route(path.clone())),
             method: request.method().into(),
             status: 0,
             metrics: self.0.clone(),
@@ -164,7 +151,7 @@ impl RequestMetricsEmitterFactory for RequestMetrics {
 
 pub struct GoeRequestMetricsEmitter {
     start_time: Instant,
-    path: Path,
+    route: Option<Route>,
     method: Method,
     status: u16,
     metrics: Arc<InnerRequestMetrics>,
@@ -179,7 +166,7 @@ impl RequestMetricEmitter for GoeRequestMetricsEmitter {
 
     fn emit(self) {
         let labels = RequestLabels {
-            path: self.path,
+            route: self.route,
             method: self.method,
             status: self.status,
         };
