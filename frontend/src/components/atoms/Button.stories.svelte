@@ -26,6 +26,6 @@
 
 <Story name="Secondary" args={{ label: 'Button' }} />
 
-<Story name="Large" args={{ size: 'large', label: 'Button' }} />
+<Story name="Large" args={{ size: 'l', label: 'Button' }} />
 
-<Story name="Small" args={{ size: 'small', label: 'Button' }} />
+<Story name="Small" args={{ size: 's', label: 'Button' }} />

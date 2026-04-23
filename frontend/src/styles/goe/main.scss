@@ -46,7 +46,7 @@
     background-color: defaults.$secondary-bg-color;
     border-radius: defaults.$radius;
     border: defaults.$border-width solid defaults.$border-color;
-    padding: defaults.$size-8 defaults.$size-7;
+    padding: defaults.$size-4 defaults.$size-3;
 
     &:hover {
         background-color: defaults.$hover-color;
@@ -58,11 +58,11 @@
     }
 
     &[g-size='s'] {
-        padding: defaults.$size-8;
+        padding: defaults.$size-5 defaults.$size-4;
     }
 
     &[g-size='l'] {
-        padding: defaults.$size-6;
+        padding: defaults.$size-3 defaults.$size-2;
     }
 
     &[g-primary] {
@@ -78,4 +78,14 @@
         border-style: solid;
         background-color: defaults.$active-color;
     }
+}
+
+/* Box */
+
+.g-box {
+    border-radius: defaults.$radius;
+    border: defaults.$border-width solid defaults.$border-color;
+    background-color: defaults.$light-bg-color;
+    padding: defaults.$size-3;
+    display: flex;
 }
