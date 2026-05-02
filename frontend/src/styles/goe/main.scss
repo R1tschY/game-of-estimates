@@ -1,5 +1,6 @@
 @charset "utf-8";
 @use 'defaults';
+@use 'sass:string';
 
 /* Initial */
 
@@ -16,28 +17,41 @@
     display: flex;
 }
 
-.g-gap-1 {
+.g-gap-1,
+[g-gap='1'] {
     gap: defaults.$size-1;
 }
 
-.g-gap-2 {
+.g-gap-2,
+[g-gap='2'] {
     gap: defaults.$size-2;
 }
 
-.g-gap-3 {
+.g-gap-3,
+[g-gap='3'] {
     gap: defaults.$size-3;
 }
 
-.g-gap-4 {
+.g-gap-4,
+[g-gap='4'] {
     gap: defaults.$size-4;
 }
 
-.g-gap-5 {
+.g-gap-5,
+[g-gap='5'] {
     gap: defaults.$size-5;
 }
 
-.g-gap-6 {
+.g-gap-6,
+[g-gap='6'] {
     gap: defaults.$size-6;
+}
+
+$flex-dirs: row, row-reverse, column, column-reverse;
+@each $dir in $flex-dirs {
+    [g-flex-dir='#{$dir}'] {
+        flex-direction: $dir;
+    }
 }
 
 /* Button */

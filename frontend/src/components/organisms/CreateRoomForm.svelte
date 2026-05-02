@@ -36,7 +36,7 @@
     }
 </script>
 
-<form class="box p-5" onsubmit={submit}>
+<form class="g-box p-5" g-flex-dir="column" onsubmit={submit}>
     <div class="field">
         <label class="label" for="deck_field">{m.deck()}</label>
         <div class="control is-expanded">
