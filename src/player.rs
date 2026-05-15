@@ -9,6 +9,7 @@ use uactor::blocking::Addr;
 use crate::game_server::{GameServerAddr, GameServerMessage};
 use crate::remote::{RemoteConnection, RemoteMessage};
 use crate::room::{GamePlayerMessage, RoomAddr, RoomMessage};
+use crate::utils::{char_len, char_trim};
 
 const TO_BE_CREATED: &str = "<to be created>";
 
@@ -135,6 +136,14 @@ impl Player {
                     .await;
             }
             RemoteMessage::UpdatePlayer { voter, name } => {
+                let name = name.map(|name| {
+                    if char_len(&name) >= 32 {
+                        char_trim(&name, 32)
+                    } else {
+                        name
+                    }
+                });
+
                 debug!(
                     "{}: Update player: voter={:?} name={:?}",
                     self.id, &voter, &name

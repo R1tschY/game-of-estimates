@@ -50,6 +50,8 @@ pub mod ports;
 
 pub mod remote;
 
+mod utils;
+
 #[cfg(test)]
 mod tests {
     use env_logger::WriteStyle;
