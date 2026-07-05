@@ -1,15 +1,27 @@
 {
+    "$schema": "https://www.schemastore.org/tsconfig",
     "extends": "./.svelte-kit/tsconfig.json",
     "compilerOptions": {
+        "target": "es2023",
         "allowJs": true,
         "checkJs": true,
         "esModuleInterop": true,
-        "forceConsistentCasingInFileNames": true,
         "resolveJsonModule": true,
         "skipLibCheck": true,
         "sourceMap": true,
+
+        // See https://github.com/tsconfig/bases/blob/main/bases/strictest.json
         "strict": true,
-        "moduleResolution": "bundler"
+        "allowUnusedLabels": false,
+        "allowUnreachableCode": false,
+        "exactOptionalPropertyTypes": true,
+        "noFallthroughCasesInSwitch": true,
+        "noImplicitOverride": true,
+        "noImplicitReturns": true,
+        "noPropertyAccessFromIndexSignature": true,
+        "noUncheckedIndexedAccess": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true
     },
     "include": [
         "src/**/*.d.ts",
