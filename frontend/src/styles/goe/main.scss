@@ -9,6 +9,10 @@
     font-family: system-ui;
     color: defaults.$font-color;
     box-sizing: border-box;
+
+    --bg-dialog: #{defaults.$default-bg-color};
+    --bg-backdrop: #{defaults.$bg-backdrop};
+    --border-color: #{defaults.$border-color};
 }
 
 /* Flex */
@@ -102,4 +106,47 @@ $flex-dirs: row, row-reverse, column, column-reverse;
     background-color: defaults.$light-bg-color;
     padding: defaults.$size-3;
     display: flex;
+}
+
+/* Dialog */
+
+@keyframes backdrop-appear {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+.g-dialog::backdrop {
+    opacity: 1;
+    animation: backdrop-appear 150ms ease-in-out;
+    background-color: var(--bg-backdrop);
+}
+
+.g-dialog {
+    display: flex;
+    width: 640px;
+    min-width: 250px;
+    max-width: calc(100dvw - 32px);
+    max-height: calc(100dvh - 32px);
+    height: auto;
+    flex-direction: column;
+    opacity: 1;
+    border: 1px solid var(--border-color);
+    border-radius: defaults.$radius;
+    background-color: var(--bg-dialog);
+
+    &[g-size='s'] {
+        width: 300px;
+    }
+
+    &[g-size='m'] {
+        width: 320px;
+    }
+
+    &[g-size='l'] {
+        width: 480px;
+    }
 }

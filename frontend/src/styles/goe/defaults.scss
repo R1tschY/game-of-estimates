@@ -54,6 +54,7 @@ $default-color: #363636 !default;
 $active-color: color.scale($bg, $lightness: -10%) !default;
 $default-bg-color: color.adjust($bg, $lightness: -50%) !default;
 $secondary-bg-color: color.scale($bg, $lightness: 0%) !default;
+$bg-backdrop: #000;
 $hover-color: color.scale($bg, $lightness: -5%) !default;
 $light-bg-color: #fff;
 

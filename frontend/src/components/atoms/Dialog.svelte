@@ -30,6 +30,7 @@
 </script>
 
 <dialog
+    class="g-dialog"
     bind:this={dialog}
     {closedby}
     {id}
