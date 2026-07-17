@@ -5,7 +5,7 @@
     import { m } from '$lib/paraglide/messages.js'
 </script>
 
-<section class="hero head">
+<section class="hero head g-brand-hero">
     <div class="hero-body">
         <div class="container">
             <h1 class="title"><a href="/">{m.title()}</a></h1>

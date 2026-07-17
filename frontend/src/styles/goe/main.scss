@@ -150,3 +150,13 @@ $flex-dirs: row, row-reverse, column, column-reverse;
         width: 480px;
     }
 }
+
+/* Brand */
+.g-brand-hero {
+    background-image: radial-gradient(
+        ellipse 100% 50% at center -50px,
+        #2f717eff 10%,
+        white 150%
+    );
+    padding-top: 50px;
+}
